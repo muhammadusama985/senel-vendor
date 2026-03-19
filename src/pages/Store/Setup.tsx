@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { ImageUpload } from '../../components/common/ImageUpload';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { useLocationOptions } from '../../hooks/useLocationOptions';
 
 export const StoreSetup: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +31,23 @@ export const StoreSetup: React.FC = () => {
     { type: 'business_license', file: null },
     { type: 'tax_certificate', file: null },
   ]);
+  const { countries, cities } = useLocationOptions(profileData.address.country);
+
+  const handlePhoneChange = (value: string) => {
+    const numericPhone = value.replace(/\D/g, '');
+    setProfileData((prev) => ({ ...prev, phone: numericPhone }));
+  };
+
+  const handleCountryChange = (country: string) => {
+    setProfileData((prev) => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        country,
+        city: '',
+      },
+    }));
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,8 +193,10 @@ export const StoreSetup: React.FC = () => {
             <input
               type="tel"
               value={profileData.phone}
-              onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+              onChange={(e) => handlePhoneChange(e.target.value)}
               style={inputStyle}
+              inputMode="numeric"
+              pattern="[0-9]*"
             />
           </div>
 
@@ -198,8 +218,7 @@ export const StoreSetup: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>City</label>
-              <input
-                type="text"
+              <select
                 value={profileData.address.city}
                 onChange={(e) =>
                   setProfileData({
@@ -208,21 +227,30 @@ export const StoreSetup: React.FC = () => {
                   })
                 }
                 style={inputStyle}
-              />
+                disabled={!profileData.address.country}
+              >
+                <option value="">{profileData.address.country ? 'Select city' : 'Select country first'}</option>
+                {cities.map((city) => (
+                  <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Country</label>
-              <input
-                type="text"
+              <select
                 value={profileData.address.country}
-                onChange={(e) =>
-                  setProfileData({
-                    ...profileData,
-                    address: { ...profileData.address, country: e.target.value },
-                  })
-                }
+                onChange={(e) => handleCountryChange(e.target.value)}
                 style={inputStyle}
-              />
+              >
+                <option value="">Select country</option>
+                {countries.map((country) => (
+                  <option key={country.isoCode} value={country.name}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

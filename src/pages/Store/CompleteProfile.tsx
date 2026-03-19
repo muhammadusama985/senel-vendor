@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { ImageUpload } from '../../components/common/ImageUpload';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { useLocationOptions } from '../../hooks/useLocationOptions';
 
 interface BusinessDetails {
   companyName: string;
@@ -56,12 +57,26 @@ export const CompleteProfile: React.FC = () => {
     { type: 'tax_certificate', file: null, uploaded: false },
     { type: 'id_proof', file: null, uploaded: false },
   ]);
+  const { countries: allCountries, cities: availableCities } = useLocationOptions(businessData.country);
 
   useEffect(() => {
     if (vendor && vendor.status !== 'draft') {
       navigate('/dashboard');
     }
   }, [vendor, navigate]);
+
+  const handlePhoneChange = (value: string) => {
+    const numericPhone = value.replace(/\D/g, '');
+    setBusinessData((prev) => ({ ...prev, contactPhone: numericPhone }));
+  };
+
+  const handleCountryChange = (country: string) => {
+    setBusinessData((prev) => ({
+      ...prev,
+      country,
+      city: '',
+    }));
+  };
 
   const handleLogoUpload = (file: File) => {
     setLogoFile(file);
@@ -203,7 +218,14 @@ export const CompleteProfile: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: colors.pageBg,
+        padding: '2rem 1rem',
+      }}
+    >
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', position: 'relative' }}>
         <div
           style={{
@@ -339,24 +361,35 @@ export const CompleteProfile: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>Country</label>
-            <input
-              type="text"
+            <select
               value={businessData.country}
-              onChange={(e) => setBusinessData({ ...businessData, country: e.target.value })}
+              onChange={(e) => handleCountryChange(e.target.value)}
               style={inputStyle}
-              placeholder="Germany"
-            />
+            >
+              <option value="">Select country</option>
+              {allCountries.map((country) => (
+                <option key={country.isoCode} value={country.name}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>City</label>
-            <input
-              type="text"
+            <select
               value={businessData.city}
               onChange={(e) => setBusinessData({ ...businessData, city: e.target.value })}
               style={inputStyle}
-              placeholder="Berlin"
-            />
+              disabled={!businessData.country}
+            >
+              <option value="">{businessData.country ? 'Select city' : 'Select country first'}</option>
+              {availableCities.map((city) => (
+                <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -392,9 +425,11 @@ export const CompleteProfile: React.FC = () => {
             <input
               type="tel"
               value={businessData.contactPhone}
-              onChange={(e) => setBusinessData({ ...businessData, contactPhone: e.target.value })}
+              onChange={(e) => handlePhoneChange(e.target.value)}
               style={inputStyle}
-              placeholder="+49 123 456789"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="49123456789"
             />
           </div>
 
@@ -514,6 +549,7 @@ export const CompleteProfile: React.FC = () => {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };

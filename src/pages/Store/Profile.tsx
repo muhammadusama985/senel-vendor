@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../hooks/useStore';
 import { useTheme } from '../../context/ThemeContext';
 import { ImageUpload } from '../../components/common/ImageUpload';
+import { useLocationOptions } from '../../hooks/useLocationOptions';
 
 export const StoreProfile: React.FC = () => {
   const { vendor, loading, saving, updateVendor } = useStore();
@@ -20,6 +21,8 @@ export const StoreProfile: React.FC = () => {
     },
   });
 
+  const { countries, cities } = useLocationOptions(formData.address.country);
+
   useEffect(() => {
     if (vendor) {
       setFormData({
@@ -37,7 +40,7 @@ export const StoreProfile: React.FC = () => {
     }
   }, [vendor]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('address.')) {
       const field = name.split('.')[1];
@@ -48,6 +51,22 @@ export const StoreProfile: React.FC = () => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const numericPhone = value.replace(/\D/g, '');
+    setFormData((prev) => ({ ...prev, phone: numericPhone }));
+  };
+
+  const handleCountryChange = (country: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        country,
+        city: '',
+      },
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,8 +180,10 @@ export const StoreProfile: React.FC = () => {
                     type="tel"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     style={inputStyle}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
                 </div>
               </div>
@@ -202,13 +223,20 @@ export const StoreProfile: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
                     City
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="address.city"
                     value={formData.address.city}
                     onChange={handleChange}
                     style={inputStyle}
-                  />
+                    disabled={!formData.address.country}
+                  >
+                    <option value="">{formData.address.country ? 'Select city' : 'Select country first'}</option>
+                    {cities.map((city) => (
+                      <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -229,13 +257,19 @@ export const StoreProfile: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
                     Country
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="address.country"
                     value={formData.address.country}
-                    onChange={handleChange}
+                    onChange={(e) => handleCountryChange(e.target.value)}
                     style={inputStyle}
-                  />
+                  >
+                    <option value="">Select country</option>
+                    {countries.map((country) => (
+                      <option key={country.isoCode} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
