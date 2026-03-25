@@ -165,7 +165,7 @@ export const ProductList: React.FC = () => {
                     />
                   </td>
                   <td style={bodyCell(colors.text)}>{product.title}</td>
-                  <td style={bodyCell(colors.textMuted)}>{product.variants?.[0]?.sku || '-'}</td>
+                  <td style={bodyCell(colors.textMuted)}>{product.sku || product.variants?.[0]?.sku || '-'}</td>
                   <td style={bodyCell(colors.text)}>EUR {product.priceTiers[0]?.unitPrice.toFixed(2)}</td>
                   <td style={bodyCell(colors.text)}>
                     <span
@@ -174,7 +174,9 @@ export const ProductList: React.FC = () => {
                         fontWeight: product.lowStockActive ? 'bold' : 'normal',
                       }}
                     >
-                      {product.stockQty}
+                      {product.hasVariants
+                        ? (product.variants || []).reduce((sum, variant) => sum + Number(variant.stockQty || 0), 0)
+                        : product.stockQty}
                       {product.lowStockActive && ' ⚠️'}
                     </span>
                   </td>

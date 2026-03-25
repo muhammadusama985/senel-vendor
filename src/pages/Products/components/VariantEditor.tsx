@@ -10,13 +10,15 @@ interface VariantEditorProps {
 export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange }) => {
   const { colors } = useTheme();
 
+  const nextSku = `VAR-${String(variants.length + 1).padStart(3, '0')}`;
+
   const addVariant = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onChange([
       ...variants,
       {
-        sku: `VAR-${variants.length + 1}`,
+        sku: nextSku,
         attributes: {},
         stockQty: 0,
         imageUrls: [],

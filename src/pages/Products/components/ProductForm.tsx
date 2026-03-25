@@ -107,9 +107,38 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
 
     const sortedTiers = [...formData.priceTiers].sort((a, b) => a.minQty - b.minQty);
+    if (sortedTiers.some((tier) => tier.minQty < 1 || tier.unitPrice < 0)) {
+      alert('Each price tier must have a valid minimum quantity and unit price.');
+      return;
+    }
+
+    const duplicateTierQty = sortedTiers.find((tier, index) => index > 0 && tier.minQty === sortedTiers[index - 1].minQty);
+    if (duplicateTierQty) {
+      alert(`Duplicate price tier quantity found: ${duplicateTierQty.minQty}`);
+      return;
+    }
+
     if (sortedTiers[0].minQty > formData.moq) {
       alert('First price tier min quantity cannot be greater than MOQ');
       return;
+    }
+
+    if (formData.hasVariants) {
+      if (!formData.variants?.length) {
+        alert('Please add at least one variant.');
+        return;
+      }
+
+      const normalizedSkus = formData.variants.map((variant) => variant.sku.trim().toUpperCase());
+      if (normalizedSkus.some((sku) => !sku)) {
+        alert('Each variant must include a SKU.');
+        return;
+      }
+
+      if (new Set(normalizedSkus).size !== normalizedSkus.length) {
+        alert('Variant SKUs must be unique.');
+        return;
+      }
     }
 
     await onSubmit({
