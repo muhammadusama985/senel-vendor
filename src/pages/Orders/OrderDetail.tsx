@@ -102,9 +102,15 @@ export const OrderDetail: React.FC = () => {
     setPackages(updated);
   };
 
+  const panelBackground = colors.cardBg;
+  const panelBorder = `1px solid ${colors.border}`;
+  const panelShadow = '0 6px 18px rgba(0,0,0,0.12)';
+  const textPrimary = colors.text;
+  const textMuted = colors.textMuted;
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', color: '#ffffff' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', color: textPrimary }}>
         <div className="loading-spinner" style={{ width: '40px', height: '40px' }} />
       </div>
     );
@@ -112,7 +118,7 @@ export const OrderDetail: React.FC = () => {
 
   if (!order) {
     return (
-      <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.75)' }}>
+      <div style={{ textAlign: 'center', padding: '3rem', color: textMuted }}>
         Order not found
       </div>
     );
@@ -133,12 +139,12 @@ export const OrderDetail: React.FC = () => {
         marginBottom: '2rem' 
       }}>
         <div>
-          <h1 style={{ color: '#ffffff', fontSize: '2rem', fontWeight: 'bold' }}>
+          <h1 style={{ color: textPrimary, fontSize: '2rem', fontWeight: 'bold' }}>
             Order {order.vendorOrderNumber}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', alignItems: 'center' }}>
             <OrderStatusBadge status={order.status} />
-            <span style={{ color: 'rgba(255,255,255,0.75)' }}>
+            <span style={{ color: textMuted }}>
               {new Date(order.createdAt).toLocaleDateString()}
             </span>
           </div>
@@ -218,8 +224,8 @@ export const OrderDetail: React.FC = () => {
             onClick={() => navigate('/orders')}
             style={{
               backgroundColor: 'transparent',
-              color: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.25)',
+              color: textPrimary,
+              border: panelBorder,
               borderRadius: '8px',
               padding: '0.75rem 1.5rem',
               cursor: 'pointer',
@@ -233,19 +239,11 @@ export const OrderDetail: React.FC = () => {
       {/* Timeline */}
       <div
         style={{
-          background: `
-            linear-gradient(
-              145deg,
-              #0D1A63 0%,
-              #12227a 40%,
-              #0D1A63 100%
-            )
-          `,
+          background: panelBackground,
           borderRadius: '12px',
           padding: '2rem',
           boxShadow: `
-            inset 0 1px 0 rgba(255,255,255,0.15),
-            0 6px 18px rgba(0,0,0,0.35)
+            ${panelShadow}
           `,
           marginBottom: '2rem'
         }}
@@ -266,36 +264,28 @@ export const OrderDetail: React.FC = () => {
         {/* Items */}
         <div
           style={{
-            background: `
-              linear-gradient(
-                145deg,
-                #0D1A63 0%,
-                #12227a 40%,
-                #0D1A63 100%
-              )
-            `,
+            background: panelBackground,
             borderRadius: '12px',
             padding: '1.5rem',
             boxShadow: `
-              inset 0 1px 0 rgba(255,255,255,0.15),
-              0 6px 18px rgba(0,0,0,0.35)
+            ${panelShadow}
             `
           }}
         >
-          <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Items</h3>
+          <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Items</h3>
           
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.15)` }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left', color: 'rgba(255,255,255,0.75)' }}>Product</th>
-                <th style={{ padding: '0.75rem', textAlign: 'center', color: 'rgba(255,255,255,0.75)' }}>Qty</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: 'rgba(255,255,255,0.75)' }}>Unit Price</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: 'rgba(255,255,255,0.75)' }}>Total</th>
+              <tr style={{ borderBottom: panelBorder }}>
+                <th style={{ padding: '0.75rem', textAlign: 'left', color: textMuted }}>Product</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', color: textMuted }}>Qty</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>Unit Price</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {order.items?.map((item) => (
-                <tr key={item._id} style={{ borderBottom: `1px solid rgba(255,255,255,0.10)` }}>
+                <tr key={item._id} style={{ borderBottom: panelBorder }}>
                   <td style={{ padding: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       {item.imageUrl && (
@@ -306,14 +296,14 @@ export const OrderDetail: React.FC = () => {
                         />
                       )}
                       <div>
-                        <div style={{ fontWeight: 'bold', color: '#ffffff' }}>{item.title}</div>
+                        <div style={{ fontWeight: 'bold', color: textPrimary }}>{item.title}</div>
                         {item.variantSku && (
-                          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
+                          <div style={{ fontSize: '0.85rem', color: textMuted }}>
                             SKU: {item.variantSku}
                           </div>
                         )}
                         {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
-                          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
+                          <div style={{ fontSize: '0.85rem', color: textMuted }}>
                             {Object.entries(item.variantAttributes).map(([key, value]) => (
                               <span key={key}>{key}: {value} </span>
                             ))}
@@ -322,13 +312,13 @@ export const OrderDetail: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center', color: '#ffffff' }}>
+                  <td style={{ padding: '0.75rem', textAlign: 'center', color: textPrimary }}>
                     {item.qty}
                   </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff' }}>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary }}>
                     {formatCurrency(item.unitPrice, item.currency || order.currency)}
                   </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                     {formatCurrency(item.lineTotal, item.currency || order.currency)}
                   </td>
                 </tr>
@@ -336,16 +326,16 @@ export const OrderDetail: React.FC = () => {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: 'rgba(255,255,255,0.75)' }}>
+                <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
                   Subtotal:
                 </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                   {formatCurrency(order.subtotal, order.currency)}
                 </td>
               </tr>
               {order.discountTotal > 0 && (
                 <tr>
-                  <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: 'rgba(255,255,255,0.75)' }}>
+                  <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
                     Discount:
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: colors.accentRed, fontWeight: 'bold' }}>
@@ -355,16 +345,16 @@ export const OrderDetail: React.FC = () => {
               )}
               {order.shippingTotal > 0 && (
                 <tr>
-                  <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: 'rgba(255,255,255,0.75)' }}>
+                  <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
                     Shipping:
                   </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                     {formatCurrency(order.shippingTotal, order.currency)}
                   </td>
                 </tr>
               )}
               <tr>
-                <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
+                <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                   Total:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffd43b', fontWeight: 'bold', fontSize: '1.2rem' }}>
@@ -380,36 +370,27 @@ export const OrderDetail: React.FC = () => {
           {/* Customer Info */}
           <div
             style={{
-              background: `
-                linear-gradient(
-                  145deg,
-                  #0D1A63 0%,
-                  #12227a 40%,
-                  #0D1A63 100%
-                )
-              `,
+              background: panelBackground,
               borderRadius: '12px',
               padding: '1.5rem',
-              boxShadow: `
-                inset 0 1px 0 rgba(255,255,255,0.15),
-                0 6px 18px rgba(0,0,0,0.35)
-              `,
+              boxShadow: panelShadow,
+              border: panelBorder,
               marginBottom: '1rem'
             }}
           >
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Order Information</h3>
+            <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Order Information</h3>
             
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
                 Order Number
               </div>
-              <div style={{ fontWeight: 'bold', color: '#ffffff' }}>
+              <div style={{ fontWeight: 'bold', color: textPrimary }}>
                 {order.vendorOrderNumber}
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
                 Payment Status
               </div>
               <div>
@@ -428,10 +409,10 @@ export const OrderDetail: React.FC = () => {
 
             {order.boxCount && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
                   Box Count
                 </div>
-                <div style={{ fontWeight: 'bold', color: '#ffffff' }}>
+                <div style={{ fontWeight: 'bold', color: textPrimary }}>
                   {order.boxCount} boxes
                 </div>
               </div>
@@ -439,10 +420,10 @@ export const OrderDetail: React.FC = () => {
 
             {order.handoverNote && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
                   Handover Note
                 </div>
-                <div style={{ color: '#ffffff', fontStyle: 'italic' }}>
+                <div style={{ color: textPrimary, fontStyle: 'italic' }}>
                   {order.handoverNote}
                 </div>
               </div>
@@ -450,10 +431,10 @@ export const OrderDetail: React.FC = () => {
 
             {order.tracking?.trackingNumber && (
               <div>
-                <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
                   Tracking
                 </div>
-                <div style={{ color: '#ffffff' }}>
+                <div style={{ color: textPrimary }}>
                   {order.tracking.carrier}: {order.tracking.trackingNumber}
                   {order.tracking.trackingUrl && (
                     <a
@@ -474,44 +455,35 @@ export const OrderDetail: React.FC = () => {
           {order.shippingPrep && (order.shippingPrep.weightKg || order.shippingPrep.boxCount) && (
             <div
               style={{
-                background: `
-                  linear-gradient(
-                    145deg,
-                    #0D1A63 0%,
-                    #12227a 40%,
-                    #0D1A63 100%
-                  )
-                `,
+                background: panelBackground,
                 borderRadius: '12px',
                 padding: '1.5rem',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255,255,255,0.15),
-                  0 6px 18px rgba(0,0,0,0.35)
-                `
+                boxShadow: panelShadow,
+                border: panelBorder,
               }}
             >
-              <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Shipping Details</h3>
+              <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Shipping Details</h3>
               
               {order.shippingPrep.weightKg && (
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.75)' }}>Weight: </span>
-                  <span style={{ fontWeight: 'bold', color: '#ffffff' }}>{order.shippingPrep.weightKg} kg</span>
+                  <span style={{ color: textMuted }}>Weight: </span>
+                  <span style={{ fontWeight: 'bold', color: textPrimary }}>{order.shippingPrep.weightKg} kg</span>
                 </div>
               )}
               
               {order.shippingPrep.lengthCm && order.shippingPrep.widthCm && order.shippingPrep.heightCm && (
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.75)' }}>Dimensions: </span>
-                  <span style={{ fontWeight: 'bold', color: '#ffffff' }}>
-                    {order.shippingPrep.lengthCm} × {order.shippingPrep.widthCm} × {order.shippingPrep.heightCm} cm
+                  <span style={{ color: textMuted }}>Dimensions: </span>
+                  <span style={{ fontWeight: 'bold', color: textPrimary }}>
+                    {order.shippingPrep.lengthCm} x {order.shippingPrep.widthCm} x {order.shippingPrep.heightCm} cm
                   </span>
                 </div>
               )}
               
               {order.shippingPrep.boxCount && (
                 <div>
-                  <span style={{ color: 'rgba(255,255,255,0.75)' }}>Boxes: </span>
-                  <span style={{ fontWeight: 'bold', color: '#ffffff' }}>{order.shippingPrep.boxCount}</span>
+                  <span style={{ color: textMuted }}>Boxes: </span>
+                  <span style={{ fontWeight: 'bold', color: textPrimary }}>{order.shippingPrep.boxCount}</span>
                 </div>
               )}
             </div>
@@ -535,32 +507,23 @@ export const OrderDetail: React.FC = () => {
         }}>
           <div
             style={{
-              background: `
-                linear-gradient(
-                  145deg,
-                  #0D1A63 0%,
-                  #12227a 40%,
-                  #0D1A63 100%
-                )
-              `,
+              background: panelBackground,
               borderRadius: '12px',
               padding: '2rem',
               width: '600px',
               maxHeight: '80vh',
               overflowY: 'auto',
-              boxShadow: `
-                inset 0 1px 0 rgba(255,255,255,0.15),
-                0 8px 24px rgba(0,0,0,0.4)
-              `,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.24)',
+              border: panelBorder,
             }}
           >
-            <h2 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>
+            <h2 style={{ color: textPrimary, marginBottom: '1.5rem' }}>
               Mark Ready for Pickup
             </h2>
 
             {/* Packages */}
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ffffff', fontWeight: 'bold' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: textPrimary, fontWeight: 'bold' }}>
                 Package Details
               </label>
               
@@ -568,15 +531,15 @@ export const OrderDetail: React.FC = () => {
                 <div
                   key={index}
                   style={{
-                    border: `1px solid rgba(255,255,255,0.15)`,
+                    border: panelBorder,
                     borderRadius: '8px',
                     padding: '1rem',
                     marginBottom: '1rem',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    backgroundColor: colors.inputBg,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <h4 style={{ color: '#ffffff' }}>Box {pkg.boxIndex}</h4>
+                    <h4 style={{ color: textPrimary }}>Box {pkg.boxIndex}</h4>
                     <button
                       onClick={() => removePackage(index)}
                       style={{
@@ -599,10 +562,10 @@ export const OrderDetail: React.FC = () => {
                       onChange={(e) => updatePackage(index, 'weightKg', parseFloat(e.target.value) || 0)}
                       style={{
                         padding: '0.5rem',
-                        border: '1px solid rgba(255,255,255,0.18)',
+                        border: panelBorder,
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        color: '#ffffff',
+                        backgroundColor: colors.surface,
+                        color: textPrimary,
                       }}
                     />
                     <input
@@ -612,10 +575,10 @@ export const OrderDetail: React.FC = () => {
                       onChange={(e) => updatePackage(index, 'lengthCm', parseFloat(e.target.value) || 0)}
                       style={{
                         padding: '0.5rem',
-                        border: '1px solid rgba(255,255,255,0.18)',
+                        border: panelBorder,
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        color: '#ffffff',
+                        backgroundColor: colors.surface,
+                        color: textPrimary,
                       }}
                     />
                     <input
@@ -625,10 +588,10 @@ export const OrderDetail: React.FC = () => {
                       onChange={(e) => updatePackage(index, 'widthCm', parseFloat(e.target.value) || 0)}
                       style={{
                         padding: '0.5rem',
-                        border: '1px solid rgba(255,255,255,0.18)',
+                        border: panelBorder,
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        color: '#ffffff',
+                        backgroundColor: colors.surface,
+                        color: textPrimary,
                       }}
                     />
                     <input
@@ -638,10 +601,10 @@ export const OrderDetail: React.FC = () => {
                       onChange={(e) => updatePackage(index, 'heightCm', parseFloat(e.target.value) || 0)}
                       style={{
                         padding: '0.5rem',
-                        border: '1px solid rgba(255,255,255,0.18)',
+                        border: panelBorder,
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        color: '#ffffff',
+                        backgroundColor: colors.surface,
+                        color: textPrimary,
                       }}
                     />
                   </div>
@@ -670,8 +633,8 @@ export const OrderDetail: React.FC = () => {
                 onClick={() => setShowPickupModal(false)}
                 style={{
                   backgroundColor: 'transparent',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.25)',
+                  color: textPrimary,
+                  border: panelBorder,
                   borderRadius: '4px',
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
