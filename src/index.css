@@ -17,11 +17,26 @@ body {
 
 /* Your theme colors */
 :root {
+  --primary-bg: #f7f8fc;
+  --primary-text: #111827;
+  --text-muted: #4b5563;
+  --accent-gold: #FFD700;
+  --accent-blue: #4169E1;
+  --accent-green: #16a34a;
+  --accent-red: #dc2626;
+  --accent-orange: #f97316;
+  --accent-purple: #7c3aed;
+  --sidebar-hover: rgba(91,46,255,0.08);
+  --border-color: rgba(17,24,39,0.12);
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --button-gradient: linear-gradient(90deg, #5B2EFF 0%, #8A2BE2 40%, #FF6A00 100%);
+}
+
+[data-theme='dark'] {
   --primary-bg: #080321;
   --primary-text: #ffffff;
   --text-muted: rgba(255,255,255,0.75);
-  --accent-gold: #FFD700;
-  --accent-blue: #4169E1;
   --accent-green: #32CD32;
   --accent-red: #FF4444;
   --accent-orange: #FFA500;
@@ -30,13 +45,17 @@ body {
   --border-color: #2a3a8a;
   --card-bg: #1a2a7a;
   --input-bg: #2a3a8a;
-  --button-gradient: linear-gradient(90deg, #5B2EFF 0%, #8A2BE2 40%, #FF6A00 100%);
 }
 
 [data-theme='light'] {
   --primary-bg: #f7f8fc;
   --primary-text: #111827;
   --text-muted: #4b5563;
+  --accent-green: #16a34a;
+  --accent-red: #dc2626;
+  --accent-orange: #f97316;
+  --accent-purple: #7c3aed;
+  --sidebar-hover: rgba(91,46,255,0.08);
   --border-color: rgba(17,24,39,0.12);
   --card-bg: #ffffff;
   --input-bg: #ffffff;

@@ -76,7 +76,7 @@ const getColors = (mode: ThemeMode): ThemeColors =>
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('vendorThemeMode');
-    return saved === 'light' ? 'light' : 'dark';
+    return saved === 'dark' ? 'dark' : 'light';
   });
 
   const colors = useMemo(() => getColors(mode), [mode]);
