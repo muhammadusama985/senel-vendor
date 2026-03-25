@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useTheme } from '../../context/ThemeContext';
 import { Product } from '../../types/product';
+import { formatCurrency } from '../../utils/formatters';
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -201,7 +202,7 @@ export const ProductDetail: React.FC = () => {
                   {product.priceTiers.map((tier, index) => (
                     <tr key={index}>
                       <td style={{ padding: '0.5rem', color: colors.textMuted }}>{tier.minQty}+</td>
-                      <td style={{ padding: '0.5rem', color: colors.textMuted }}>EUR {tier.unitPrice.toFixed(2)}</td>
+                      <td style={{ padding: '0.5rem', color: colors.textMuted }}>{formatCurrency(tier.unitPrice, product.currency)}</td>
                     </tr>
                   ))}
                 </tbody>

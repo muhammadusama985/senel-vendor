@@ -2,13 +2,22 @@
  * General formatting utilities
  */
 
+export type CurrencyCode = 'EUR' | 'USD' | 'TRY';
+
+const SUPPORTED_CURRENCIES: CurrencyCode[] = ['EUR', 'USD', 'TRY'];
+
+export const normalizeCurrency = (currency?: string | null): CurrencyCode => {
+  const normalized = String(currency || '').toUpperCase() as CurrencyCode;
+  return SUPPORTED_CURRENCIES.includes(normalized) ? normalized : 'EUR';
+};
+
 /**
- * Format currency (EUR)
+ * Format currency
  */
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('de-DE', {
+export const formatCurrency = (amount: number, currency?: string | null): string => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'EUR',
+    currency: normalizeCurrency(currency),
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);

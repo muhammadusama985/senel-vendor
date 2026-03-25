@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../context/ThemeContext';
 import { VendorOrder } from '../../types/order';
+import { formatCurrency } from '../../utils/formatters';
 
 export const PackingSlip: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,10 +24,6 @@ export const PackingSlip: React.FC = () => {
     };
     loadOrder();
   }, [id, getOrder]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
 
   if (loading) {
     return (
@@ -170,7 +167,7 @@ export const PackingSlip: React.FC = () => {
                     {item.qty}
                   </td>
                   <td style={{ padding: '0.5rem', textAlign: 'right', color: '#ffffff' }}>
-                    {formatCurrency(item.lineTotal)}
+                    {formatCurrency(item.lineTotal, item.currency || order.currency)}
                   </td>
                 </tr>
               ))}

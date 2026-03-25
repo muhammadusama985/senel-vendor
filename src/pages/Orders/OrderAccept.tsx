@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../context/ThemeContext';
 import { VendorOrder } from '../../types/order';
+import { formatCurrency } from '../../utils/formatters';
 
 export const OrderAccept: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,10 +34,6 @@ export const OrderAccept: React.FC = () => {
       navigate(`/orders/${id}`);
     }
     setAccepting(false);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   if (loading) {
@@ -104,7 +101,7 @@ export const OrderAccept: React.FC = () => {
             <div>
               <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Total Amount</div>
               <div style={{ fontWeight: 'bold', color: '#ffd43b' }}>
-                {formatCurrency(order.grandTotal)}
+                {formatCurrency(order.grandTotal, order.currency)}
               </div>
             </div>
           </div>
@@ -128,11 +125,11 @@ export const OrderAccept: React.FC = () => {
                 <div>
                   <div style={{ fontWeight: 'bold', color: '#ffffff' }}>{item.title}</div>
                   <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
-                    Qty: {item.qty} × {formatCurrency(item.unitPrice)}
+                    Qty: {item.qty} x {formatCurrency(item.unitPrice, item.currency || order.currency)}
                   </div>
                 </div>
                 <div style={{ fontWeight: 'bold', color: '#ffffff' }}>
-                  {formatCurrency(item.lineTotal)}
+                  {formatCurrency(item.lineTotal, item.currency || order.currency)}
                 </div>
               </div>
             ))}

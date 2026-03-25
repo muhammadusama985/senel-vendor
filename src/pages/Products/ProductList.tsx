@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
+import { formatCurrency } from '../../utils/formatters';
 
 export const ProductList: React.FC = () => {
   const navigate = useNavigate();
@@ -166,7 +167,7 @@ export const ProductList: React.FC = () => {
                   </td>
                   <td style={bodyCell(colors.text)}>{product.title}</td>
                   <td style={bodyCell(colors.textMuted)}>{product.sku || product.variants?.[0]?.sku || '-'}</td>
-                  <td style={bodyCell(colors.text)}>EUR {product.priceTiers[0]?.unitPrice.toFixed(2)}</td>
+                  <td style={bodyCell(colors.text)}>{formatCurrency(product.priceTiers[0]?.unitPrice || 0, product.currency)}</td>
                   <td style={bodyCell(colors.text)}>
                     <span
                       style={{

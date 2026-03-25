@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useOrders } from '../../hooks/useOrders';
 import { OrderStatusBadge } from './components/OrderStatusBadge';
 import { OrderFiltersComponent } from './components/OrderFilters';
+import { formatCurrency } from '../../utils/formatters';
 
 export const OrderList: React.FC = () => {
   const navigate = useNavigate();
@@ -18,10 +19,6 @@ export const OrderList: React.FC = () => {
     updateFilters,
     goToPage 
   } = useOrders();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -95,7 +92,7 @@ export const OrderList: React.FC = () => {
                     {order.items?.length || 0} items
                   </td>
                   <td style={{ padding: '1rem', color: colors.text, textAlign: 'right', fontWeight: 'bold' }}>
-                    {formatCurrency(order.grandTotal)}
+                    {formatCurrency(order.grandTotal, order.currency)}
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <OrderStatusBadge status={order.status} />

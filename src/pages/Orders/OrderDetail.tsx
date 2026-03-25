@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { OrderStatusBadge } from './components/OrderStatusBadge';
 import { OrderTimeline } from './components/OrderTimeline';
 import { VendorOrder } from '../../types/order';
+import { formatCurrency } from '../../utils/formatters';
 
 export const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,10 +100,6 @@ export const OrderDetail: React.FC = () => {
     const updated = packages.filter((_, i) => i !== index);
     updated.forEach((pkg, i) => { pkg.boxIndex = i + 1; });
     setPackages(updated);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   if (loading) {
@@ -329,10 +326,10 @@ export const OrderDetail: React.FC = () => {
                     {item.qty}
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff' }}>
-                    {formatCurrency(item.unitPrice)}
+                    {formatCurrency(item.unitPrice, item.currency || order.currency)}
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
-                    {formatCurrency(item.lineTotal)}
+                    {formatCurrency(item.lineTotal, item.currency || order.currency)}
                   </td>
                 </tr>
               ))}
@@ -343,7 +340,7 @@ export const OrderDetail: React.FC = () => {
                   Subtotal:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
-                  {formatCurrency(order.subtotal)}
+                  {formatCurrency(order.subtotal, order.currency)}
                 </td>
               </tr>
               {order.discountTotal > 0 && (
@@ -352,7 +349,7 @@ export const OrderDetail: React.FC = () => {
                     Discount:
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: colors.accentRed, fontWeight: 'bold' }}>
-                    -{formatCurrency(order.discountTotal)}
+                    -{formatCurrency(order.discountTotal, order.currency)}
                   </td>
                 </tr>
               )}
@@ -362,7 +359,7 @@ export const OrderDetail: React.FC = () => {
                     Shipping:
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
-                    {formatCurrency(order.shippingTotal)}
+                    {formatCurrency(order.shippingTotal, order.currency)}
                   </td>
                 </tr>
               )}
@@ -371,7 +368,7 @@ export const OrderDetail: React.FC = () => {
                   Total:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffd43b', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                  {formatCurrency(order.grandTotal)}
+                  {formatCurrency(order.grandTotal, order.currency)}
                 </td>
               </tr>
             </tfoot>

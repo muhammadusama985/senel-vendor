@@ -9,6 +9,7 @@ export interface OrderItem {
   unitPrice: number;
   tierMinQtyApplied: number;
   lineTotal: number;
+  currency?: 'EUR' | 'TRY' | 'USD';
 }
 
 export interface ShippingPrep {
@@ -66,6 +67,7 @@ export interface VendorOrder {
   shippingTotal: number;
   grandTotal: number;
   discountTotal: number;
+  currency?: 'EUR' | 'TRY' | 'USD';
   
   vendorOrderNumber: string;
   vendorNote?: string;
