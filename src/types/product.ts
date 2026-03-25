@@ -49,6 +49,8 @@ export interface ProductFormData {
   stockQty?: number;
   variants?: Variant[];
   imageUrls: string[];
+  trackInventory?: boolean;
+  lowStockThreshold?: number;
   requiresManualShipping?: boolean;
 }
 

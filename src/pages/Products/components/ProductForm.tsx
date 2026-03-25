@@ -35,6 +35,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     stockQty: 0,
     variants: [],
     imageUrls: [],
+    trackInventory: true,
+    lowStockThreshold: 5,
     requiresManualShipping: false,
     ...initialData,
   });
@@ -288,6 +290,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </label>
             </div>
 
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: colors.text }}>
+                <input
+                  type="checkbox"
+                  name="trackInventory"
+                  checked={Boolean(formData.trackInventory)}
+                  onChange={handleChange}
+                />
+                Track inventory for this product
+              </label>
+            </div>
+
             {!formData.hasVariants ? (
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
@@ -310,6 +324,28 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 variants={formData.variants || []}
                 onChange={(variants) => setFormData(prev => ({ ...prev, variants }))}
               />
+            )}
+
+            {formData.trackInventory && (
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                  Low Stock Threshold
+                </label>
+                <input
+                  type="number"
+                  name="lowStockThreshold"
+                  value={formData.lowStockThreshold ?? 5}
+                  onChange={handleNumberChange}
+                  min="0"
+                  style={{
+                    ...inputStyle,
+                    width: '200px',
+                  }}
+                />
+                <div style={{ marginTop: '0.35rem', color: colors.textMuted, fontSize: '0.85rem' }}>
+                  The warning becomes active when stock is at or below this number. Use 0 to disable it.
+                </div>
+              </div>
             )}
           </div>
 
