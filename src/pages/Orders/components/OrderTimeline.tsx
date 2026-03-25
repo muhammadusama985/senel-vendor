@@ -69,7 +69,7 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
           left: '2rem',
           right: '2rem',
           height: '2px',
-          backgroundColor: 'rgba(255,255,255,0.18)',
+          backgroundColor: colors.border,
           zIndex: 1,
         }}
       >
@@ -96,24 +96,24 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
                   width: '3rem',
                   height: '3rem',
                   borderRadius: '50%',
-                  backgroundColor: isCompleted ? colors.accentGold : 'rgba(255,255,255,0.12)',
-                  color: isCompleted ? colors.primary : 'rgba(255,255,255,0.75)',
+                  backgroundColor: isCompleted ? colors.accentGold : colors.inputBg,
+                  color: isCompleted ? colors.primary : colors.textMuted,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 0.5rem',
                   fontSize: '1.2rem',
-                  border: isCurrent ? `3px solid ${colors.accentBlue}` : '1px solid rgba(255,255,255,0.12)',
+                  border: isCurrent ? `3px solid ${colors.accentBlue}` : `1px solid ${colors.border}`,
                   boxShadow: isCurrent ? '0 0 0 3px rgba(65, 105, 225, 0.2)' : 'none',
                 }}
               >
                 {step.icon}
               </div>
-              <div style={{ fontWeight: isCurrent ? 'bold' : 'normal', color: '#ffffff' }}>
+              <div style={{ fontWeight: isCurrent ? 'bold' : 'normal', color: colors.text }}>
                 {step.label}
               </div>
               {step.date && (
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.25rem' }}>
                   {formatDate(step.date)}
                 </div>
               )}
