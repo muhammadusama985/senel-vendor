@@ -164,14 +164,19 @@ export const DisputeDetail: React.FC = () => {
                     }}
                   >
                     <div style={{ marginBottom: '0.25rem', fontSize: '0.85rem', color: colors.textMuted }}>
-                      {msg.senderRole === 'vendor' ? 'You' : 'Customer'}
+                      {msg.senderRole === 'vendor' ? 'You' : msg.senderRole === 'admin' ? 'Admin' : 'Customer'}
                     </div>
                     <div
                       style={{
                         maxWidth: '80%',
                         padding: '1rem',
                         borderRadius: '12px',
-                        backgroundColor: msg.senderRole === 'vendor' ? `${colors.accentGold}20` : colors.inputBg,
+                        backgroundColor:
+                          msg.senderRole === 'vendor'
+                            ? `${colors.accentGold}20`
+                            : msg.senderRole === 'admin'
+                              ? `${colors.accentBlue}15`
+                              : colors.inputBg,
                         borderBottomRightRadius: msg.senderRole === 'vendor' ? '4px' : '12px',
                         borderBottomLeftRadius: msg.senderRole === 'vendor' ? '12px' : '4px',
                       }}
