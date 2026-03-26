@@ -34,7 +34,7 @@ export const Announcements: React.FC = () => {
         <div style={{ display: 'grid', gap: '1rem' }}>
           {items.map((item) => (
             <div
-              key={item._id}
+              key={item.id}
               style={{
                 backgroundColor: colors.cardBg,
                 border: `1px solid ${colors.border}`,
@@ -49,8 +49,8 @@ export const Announcements: React.FC = () => {
                     className="vendor-gradient-button"
                     style={{ padding: '0.5rem 0.9rem', borderRadius: '10px', cursor: 'pointer' }}
                     onClick={async () => {
-                      await api.post(`/announcements/${item._id}/read`);
-                      setItems((current) => current.map((entry) => (entry._id === item._id ? { ...entry, isRead: true } : entry)));
+                      await api.post(`/announcements/${item.id}/read`);
+                      setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, isRead: true } : entry)));
                     }}
                   >
                     Mark Read
