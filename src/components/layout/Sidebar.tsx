@@ -52,7 +52,7 @@ const navigation: NavItem[] = [
     path: '/support',
     icon: LifebuoyIcon,
     children: [
-      { label: 'Support Tickets', path: '/support' },
+      { label: 'Support Tickets', path: '/support', icon: TicketIcon },
       { label: 'Disputes', path: '/support/disputes', icon: ExclamationTriangleIcon },
     ],
   },

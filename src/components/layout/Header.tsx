@@ -1,4 +1,6 @@
 import React from 'react';
+import { BellIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
@@ -12,6 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const { vendor, logout } = useAuthStore();
   const { colors, mode, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
+  const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = React.useState(false);
   const isMobile = window.innerWidth < 900;
 
@@ -130,6 +133,28 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         }}
       >
         {mode === 'light' ? '🌙' : '☀️'}
+      </button>
+
+      <button
+        onClick={() => navigate('/notifications')}
+        aria-label={t('notifications')}
+        title={t('notifications')}
+        style={{
+          marginRight: '12px',
+          width: '42px',
+          height: '42px',
+          padding: 0,
+          borderRadius: '12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `1px solid ${colors.border}`,
+          backgroundColor: colors.surface,
+          color: colors.text,
+        }}
+      >
+        <BellIcon width={20} height={20} strokeWidth={2} />
       </button>
 
       <div style={{ position: 'relative' }}>
