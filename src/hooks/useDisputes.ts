@@ -43,7 +43,7 @@ export const useDisputes = () => {
     }
   }, [colors.accentRed]);
 
-  const getDispute = async (id: string): Promise<Dispute | null> => {
+  const getDispute = useCallback(async (id: string): Promise<Dispute | null> => {
     try {
       const response = await api.get(`/disputes/${id}`);
       setCurrentDispute(response.data.dispute);
@@ -56,9 +56,9 @@ export const useDisputes = () => {
       });
       return null;
     }
-  };
+  }, [colors.accentRed]);
 
-  const getMessages = async (disputeId: string) => {
+  const getMessages = useCallback(async (disputeId: string) => {
     setMessagesLoading(true);
     try {
       const response = await api.get(`/disputes/${disputeId}`);
@@ -71,9 +71,9 @@ export const useDisputes = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
+  }, [colors.accentRed]);
 
-  const addMessage = async (disputeId: string, message: string): Promise<boolean> => {
+  const addMessage = useCallback(async (disputeId: string, message: string): Promise<boolean> => {
     try {
       await api.post(`/disputes/${disputeId}/messages`, { message });
       toast.success('Reply sent', {
@@ -87,7 +87,7 @@ export const useDisputes = () => {
       });
       return false;
     }
-  };
+  }, [colors.accentGreen, colors.accentRed, getMessages]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();

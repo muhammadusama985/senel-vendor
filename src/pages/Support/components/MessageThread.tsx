@@ -1,5 +1,6 @@
 import React from 'react';
 import { TicketMessage } from '../../../types/ticket';
+import { useTheme } from '../../../context/ThemeContext';
 
 interface MessageThreadProps {
   messages: TicketMessage[];
@@ -12,9 +13,11 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   loading,
   formatDate,
 }) => {
+  const { colors } = useTheme();
+
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem', color: 'white' }}>
+      <div style={{ textAlign: 'center', padding: '2rem', color: colors.text }}>
         <div className="loading-spinner" style={{ width: '30px', height: '30px', margin: '0 auto' }} />
       </div>
     );
@@ -22,7 +25,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
   if (messages.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem', color: '#d1d5db' }}>
+      <div style={{ textAlign: 'center', padding: '2rem', color: colors.textMuted }}>
         No messages yet. Start the conversation!
       </div>
     );
@@ -31,7 +34,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   const getMessageStyle = (role: string) => {
     const isVendor = role === 'vendor' || role === 'staff';
     return {
-      backgroundColor: isVendor ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)',
+      backgroundColor: isVendor ? `${colors.accentGold}20` : colors.inputBg,
       borderBottomRightRadius: isVendor ? '4px' : '12px',
       borderBottomLeftRadius: isVendor ? '12px' : '4px',
     };
@@ -51,7 +54,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
               alignItems: isVendor ? 'flex-end' : 'flex-start',
             }}
           >
-            <div style={{ marginBottom: '0.25rem', fontSize: '0.85rem', color: '#d1d5db' }}>
+            <div style={{ marginBottom: '0.25rem', fontSize: '0.85rem', color: colors.textMuted }}>
               {isVendor ? 'You' : msg.userRole === 'admin' ? 'Support Team' : 'System'}
               {msg.isInternal && (
                 <span
@@ -75,11 +78,11 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
                 maxWidth: '80%',
                 padding: '1rem',
                 borderRadius: '12px',
-                color: 'white',
+                color: colors.text,
                 ...getMessageStyle(msg.userRole),
               }}
             >
-              <p style={{ margin: 0, color: 'white', whiteSpace: 'pre-wrap' }}>
+              <p style={{ margin: 0, color: colors.text, whiteSpace: 'pre-wrap' }}>
                 {msg.message}
               </p>
 
@@ -93,21 +96,22 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
                       rel="noopener noreferrer"
                       style={{
                         fontSize: '0.85rem',
-                        color: 'white',
+                        color: colors.text,
                         textDecoration: 'none',
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
+                        backgroundColor: colors.cardBg,
+                        border: `1px solid ${colors.border}`,
                         borderRadius: '4px',
                       }}
                     >
-                      📎 {att.filename}
+                      Attachment: {att.filename}
                     </a>
                   ))}
                 </div>
               )}
             </div>
 
-            <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#9ca3af' }}>
+            <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: colors.textMuted }}>
               {formatDate(msg.createdAt)}
             </div>
           </div>
