@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
+import { PayoutBankDetails } from '../../types/wallet';
 
 export const RequestPayout: React.FC = () => {
   const navigate = useNavigate();
@@ -11,15 +12,31 @@ export const RequestPayout: React.FC = () => {
   const [amount, setAmount] = useState<number>(0);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ amount?: string }>({});
+  const [bankDetails, setBankDetails] = useState<PayoutBankDetails>({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    iban: '',
+    swiftCode: '',
+    country: '',
+  });
+  const [errors, setErrors] = useState<{ amount?: string; accountHolderName?: string; accountNumber?: string }>({});
 
   const validate = (): boolean => {
-    const newErrors: { amount?: string } = {};
+    const newErrors: { amount?: string; accountHolderName?: string; accountNumber?: string } = {};
 
     if (!amount || amount <= 0) {
       newErrors.amount = 'Please enter a valid amount';
     } else if (wallet && amount > wallet.balance) {
       newErrors.amount = `Amount cannot exceed your balance of ${formatCurrency(wallet.balance)}`;
+    }
+
+    if (!bankDetails.accountHolderName.trim()) {
+      newErrors.accountHolderName = 'Please enter the account holder name';
+    }
+
+    if (!bankDetails.accountNumber.trim()) {
+      newErrors.accountNumber = 'Please enter the account number';
     }
 
     setErrors(newErrors);
@@ -32,7 +49,15 @@ export const RequestPayout: React.FC = () => {
     if (!validate()) return;
 
     setLoading(true);
-    const success = await requestPayout(amount, note);
+    const success = await requestPayout(amount, note, {
+      ...bankDetails,
+      accountHolderName: bankDetails.accountHolderName.trim(),
+      bankName: bankDetails.bankName.trim(),
+      accountNumber: bankDetails.accountNumber.trim(),
+      iban: bankDetails.iban?.trim(),
+      swiftCode: bankDetails.swiftCode?.trim(),
+      country: bankDetails.country?.trim(),
+    });
     if (success) {
       navigate('/wallet/payouts');
     }
@@ -56,6 +81,10 @@ export const RequestPayout: React.FC = () => {
     fontSize: '1.1rem',
     backgroundColor: colors.inputBg,
     color: colors.text,
+  };
+
+  const handleBankFieldChange = (field: keyof PayoutBankDetails, value: string) => {
+    setBankDetails((prev) => ({ ...prev, [field]: value }));
   };
 
   if (!wallet) {
@@ -138,6 +167,106 @@ export const RequestPayout: React.FC = () => {
             />
           </div>
 
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Bank Account Details</h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  Account Holder Name *
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.accountHolderName}
+                  onChange={(e) => handleBankFieldChange('accountHolderName', e.target.value)}
+                  style={{
+                    ...inputStyle,
+                    border: `1px solid ${errors.accountHolderName ? colors.accentRed : colors.border}`,
+                  }}
+                  placeholder="Enter account holder name"
+                />
+                {errors.accountHolderName && (
+                  <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.accountHolderName}</p>
+                )}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.bankName}
+                  onChange={(e) => handleBankFieldChange('bankName', e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter bank name"
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  Account Number *
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.accountNumber}
+                  onChange={(e) => handleBankFieldChange('accountNumber', e.target.value)}
+                  style={{
+                    ...inputStyle,
+                    border: `1px solid ${errors.accountNumber ? colors.accentRed : colors.border}`,
+                  }}
+                  placeholder="Enter account number"
+                />
+                {errors.accountNumber && (
+                  <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.accountNumber}</p>
+                )}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  IBAN
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.iban}
+                  onChange={(e) => handleBankFieldChange('iban', e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter IBAN"
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  SWIFT / BIC
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.swiftCode}
+                  onChange={(e) => handleBankFieldChange('swiftCode', e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter SWIFT or BIC"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={bankDetails.country}
+                  onChange={(e) => handleBankFieldChange('country', e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter country"
+                />
+              </div>
+            </div>
+          </div>
+
           <div
             style={{
               backgroundColor: colors.inputBg,
@@ -148,8 +277,8 @@ export const RequestPayout: React.FC = () => {
             }}
           >
             <p style={{ color: colors.textMuted, fontSize: '0.9rem' }}>
-              <strong>Note:</strong> Payouts will be processed via bank transfer to your registered bank account.
-              The admin will review and approve your request.
+              <strong>Note:</strong> Payouts will be processed manually using the bank details you provide here.
+              The admin will review your request, copy the account details, complete the transfer manually, and then mark it paid.
             </p>
           </div>
 

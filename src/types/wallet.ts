@@ -46,6 +46,15 @@ export interface PayoutRequest {
   updatedAt: string;
 }
 
+export interface PayoutBankDetails {
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  iban?: string;
+  swiftCode?: string;
+  country?: string;
+}
+
 export interface PayoutFilters {
   status?: string;
   from?: string;

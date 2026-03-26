@@ -179,18 +179,24 @@ export const PayoutDetail: React.FC = () => {
         {payout.payoutDetails && Object.keys(payout.payoutDetails).length > 0 && (
           <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '2rem', marginTop: '1rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Bank Details</h3>
-            <pre
+            <div
               style={{
                 backgroundColor: colors.inputBg,
                 color: colors.text,
                 padding: '1rem',
                 borderRadius: '8px',
-                overflow: 'auto',
                 border: `1px solid ${colors.border}`,
               }}
             >
-              {JSON.stringify(payout.payoutDetails, null, 2)}
-            </pre>
+              {Object.entries(payout.payoutDetails).map(([key, value]) => (
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '1rem', padding: '0.35rem 0' }}>
+                  <div style={{ color: colors.textMuted }}>
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, (text) => text.toUpperCase())}
+                  </div>
+                  <div style={{ color: colors.text }}>{String(value || '-')}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

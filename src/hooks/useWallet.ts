@@ -4,6 +4,7 @@ import {
   Wallet, 
   WalletTransaction, 
   PayoutRequest, 
+  PayoutBankDetails,
   WalletSummary,
   TransactionFilters,
   PayoutFilters,
@@ -156,12 +157,13 @@ export const useWallet = () => {
     }
   }, []);
 
-  const requestPayout = async (amount: number, note?: string): Promise<boolean> => {
+  const requestPayout = async (amount: number, note?: string, payoutDetails?: PayoutBankDetails): Promise<boolean> => {
     try {
       await api.post('/wallet/me/payout-requests', {
         amount,
         payoutMethod: 'bank_transfer',
         requestedNote: note,
+        payoutDetails,
       });
       
       toast.success('Payout request submitted', {
