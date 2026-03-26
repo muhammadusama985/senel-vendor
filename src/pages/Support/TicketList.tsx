@@ -97,20 +97,74 @@ export const TicketList: React.FC = () => {
             Manage your support requests
           </p>
         </div>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button
+            onClick={() => navigate('/support/disputes')}
+            style={{
+              backgroundColor: 'transparent',
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              padding: '0.75rem 1.25rem',
+              fontSize: '0.95rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
+          >
+            Customer Disputes
+          </button>
+          <button
+            onClick={() => navigate('/support/new')}
+            style={{
+              background: colors.buttonGradient,
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
+          >
+            + New Ticket
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          backgroundColor: colors.cardBg,
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          marginBottom: '1.5rem',
+          border: `1px solid ${colors.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, color: colors.text }}>Customer Disputes</h3>
+          <p style={{ margin: '0.35rem 0 0', color: colors.textMuted }}>
+            View disputes opened by customers for delivered orders and reply directly to them.
+          </p>
+        </div>
         <button
-          onClick={() => navigate('/support/new')}
+          onClick={() => navigate('/support/disputes')}
           style={{
             background: colors.buttonGradient,
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
+            padding: '0.7rem 1.25rem',
             fontWeight: 'bold',
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >
-          + New Ticket
+          Open Disputes
         </button>
       </div>
 
