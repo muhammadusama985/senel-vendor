@@ -26,6 +26,10 @@ export interface Product {
   imageUrls: string[];
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
   isFeatured: boolean;
+  hotRequestStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  hotRequestNote?: string;
+  hotRequestedAt?: string | null;
+  hotReviewedAt?: string | null;
   lowStockActive?: boolean;
   lowStockThreshold?: number;
   trackInventory?: boolean;

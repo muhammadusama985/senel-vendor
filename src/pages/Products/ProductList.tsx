@@ -9,9 +9,10 @@ export const ProductList: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
   const { t } = useI18n();
-  const { products, loading, total, page, limit, fetchProducts, deleteProduct, submitProduct } = useProducts();
+  const { products, loading, total, page, limit, fetchProducts, deleteProduct, submitProduct, requestHotProduct } = useProducts();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [requestingHot, setRequestingHot] = useState<string | null>(null);
 
   const handlePageChange = (newPage: number) => {
     fetchProducts(newPage, statusFilter);
@@ -30,6 +31,48 @@ export const ProductList: React.FC = () => {
     setSubmitting(id);
     await submitProduct(id);
     setSubmitting(null);
+  };
+
+  const handleRequestHot = async (id: string) => {
+    setRequestingHot(id);
+    await requestHotProduct(id);
+    setRequestingHot(null);
+  };
+
+  const getHotStatusLabel = (product: any) => {
+    if (product.isFeatured) return 'Hot Product';
+    if (product.hotRequestStatus === 'pending') return 'Requested';
+    if (product.hotRequestStatus === 'rejected') return 'Rejected';
+    return 'Not Requested';
+  };
+
+  const getHotStatusStyles = (product: any) => {
+    if (product.isFeatured) {
+      return {
+        backgroundColor: `${colors.accentOrange}20`,
+        color: colors.accentOrange,
+        border: `1px solid ${colors.accentOrange}40`,
+      };
+    }
+    if (product.hotRequestStatus === 'pending') {
+      return {
+        backgroundColor: `${colors.accentBlue}20`,
+        color: colors.accentBlue,
+        border: `1px solid ${colors.accentBlue}40`,
+      };
+    }
+    if (product.hotRequestStatus === 'rejected') {
+      return {
+        backgroundColor: `${colors.accentRed}20`,
+        color: colors.accentRed,
+        border: `1px solid ${colors.accentRed}40`,
+      };
+    }
+    return {
+      backgroundColor: `${colors.textMuted}12`,
+      color: colors.textMuted,
+      border: `1px solid ${colors.border}`,
+    };
   };
 
   const getStatusColor = (status: string) => {
@@ -145,13 +188,14 @@ export const ProductList: React.FC = () => {
               <th style={headerCell(colors.text)}>Price</th>
               <th style={headerCell(colors.text)}>Stock</th>
               <th style={headerCell(colors.text)}>Status</th>
+              <th style={headerCell(colors.text)}>Hot Products</th>
               <th style={headerCell(colors.text)}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted, backgroundColor: colors.cardBg }}>
+                <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted, backgroundColor: colors.cardBg }}>
                   No products found
                 </td>
               </tr>
@@ -197,10 +241,32 @@ export const ProductList: React.FC = () => {
                     </span>
                   </td>
                   <td style={bodyCell(colors.text)}>
+                    <span
+                      style={{
+                        ...getHotStatusStyles(product),
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '999px',
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {getHotStatusLabel(product)}
+                    </span>
+                  </td>
+                  <td style={bodyCell(colors.text)}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button onClick={() => navigate(`/products/${product._id}`)} style={actionButton}>
                         View
                       </button>
+                      {product.status === 'approved' && !product.isFeatured && product.hotRequestStatus !== 'pending' && (
+                        <button
+                          onClick={() => handleRequestHot(product._id)}
+                          disabled={requestingHot === product._id}
+                          style={{ ...actionButton, opacity: requestingHot === product._id ? 0.55 : 1, cursor: requestingHot === product._id ? 'not-allowed' : 'pointer' }}
+                        >
+                          {requestingHot === product._id ? '...' : 'Request Hot Product'}
+                        </button>
+                      )}
                       {product.status === 'draft' && (
                         <>
                           <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>

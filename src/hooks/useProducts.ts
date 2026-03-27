@@ -19,7 +19,7 @@ export const useProducts = () => {
     try {
       const params: any = { page: pageNum, limit };
       if (status) params.status = status;
-      
+
       const response = await api.get('/products/me', { params });
       setProducts(response.data.products || []);
       setTotal(response.data.total || 0);
@@ -59,57 +59,57 @@ export const useProducts = () => {
     }
   };
 
-const createProduct = async (data: ProductFormData): Promise<Product | null> => {
-  setSaving(true);
-  try {
-    const payload = {
-      ...data,
-      imageUrls: data.imageUrls || [],
-    };
+  const createProduct = async (data: ProductFormData): Promise<Product | null> => {
+    setSaving(true);
+    try {
+      const payload = {
+        ...data,
+        imageUrls: data.imageUrls || [],
+      };
 
-    const response = await api.post('/products/me', payload);
+      const response = await api.post('/products/me', payload);
 
-    toast.success('Product created successfully', {
-      style: { backgroundColor: colors.accentGreen, color: 'white' }
-    });
+      toast.success('Product created successfully', {
+        style: { backgroundColor: colors.accentGreen, color: 'white' }
+      });
 
-    await fetchProducts();
-    return response.data.product;
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || error.message || 'Failed to create product', {
-      style: { backgroundColor: colors.accentRed, color: 'white' }
-    });
-    return null;
-  } finally {
-    setSaving(false);
-  }
-};
+      await fetchProducts();
+      return response.data.product;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to create product', {
+        style: { backgroundColor: colors.accentRed, color: 'white' }
+      });
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
 
-const updateProduct = async (id: string, data: Partial<ProductFormData>): Promise<Product | null> => {
-  setSaving(true);
-  try {
-    const payload = {
-      ...data,
-      imageUrls: data.imageUrls || [],
-    };
+  const updateProduct = async (id: string, data: Partial<ProductFormData>): Promise<Product | null> => {
+    setSaving(true);
+    try {
+      const payload = {
+        ...data,
+        imageUrls: data.imageUrls || [],
+      };
 
-    const response = await api.patch(`/products/me/${id}`, payload);
+      const response = await api.patch(`/products/me/${id}`, payload);
 
-    toast.success('Product updated successfully', {
-      style: { backgroundColor: colors.accentGreen, color: 'white' }
-    });
+      toast.success('Product updated successfully', {
+        style: { backgroundColor: colors.accentGreen, color: 'white' }
+      });
 
-    await fetchProducts();
-    return response.data.product;
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || error.message || 'Failed to update product', {
-      style: { backgroundColor: colors.accentRed, color: 'white' }
-    });
-    return null;
-  } finally {
-    setSaving(false);
-  }
-};
+      await fetchProducts();
+      return response.data.product;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to update product', {
+        style: { backgroundColor: colors.accentRed, color: 'white' }
+      });
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const deleteProduct = async (id: string): Promise<boolean> => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
@@ -147,26 +147,41 @@ const updateProduct = async (id: string, data: Partial<ProductFormData>): Promis
     }
   };
 
-  // ✅ NEW: Add this function
+  const requestHotProduct = async (id: string): Promise<boolean> => {
+    try {
+      await api.post(`/products/me/${id}/hot-request`);
+      toast.success('Hot product request sent to admin', {
+        style: { backgroundColor: colors.accentGreen, color: 'white' }
+      });
+      await fetchProducts();
+      return true;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to request hot product', {
+        style: { backgroundColor: colors.accentRed, color: 'white' }
+      });
+      return false;
+    }
+  };
+
   const uploadProductImage = async (file: File): Promise<string | null> => {
-  const formData = new FormData();
-  formData.append('productImage', file);
+    const formData = new FormData();
+    formData.append('productImage', file);
 
-  try {
-    const response = await api.post('/products/me/images', formData);
+    try {
+      const response = await api.post('/products/me/images', formData);
 
-    toast.success('Image uploaded successfully', {
-      style: { backgroundColor: colors.accentGreen, color: 'white' }
-    });
+      toast.success('Image uploaded successfully', {
+        style: { backgroundColor: colors.accentGreen, color: 'white' }
+      });
 
-    return response.data.imageUrl || null;
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || error.message || 'Failed to upload image', {
-      style: { backgroundColor: colors.accentRed, color: 'white' }
-    });
-    return null;
-  }
-};
+      return response.data.imageUrl || null;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to upload image', {
+        style: { backgroundColor: colors.accentRed, color: 'white' }
+      });
+      return null;
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -187,6 +202,7 @@ const updateProduct = async (id: string, data: Partial<ProductFormData>): Promis
     updateProduct,
     deleteProduct,
     submitProduct,
-    uploadProductImage, // ✅ Add this to the return object
+    requestHotProduct,
+    uploadProductImage,
   };
 };
