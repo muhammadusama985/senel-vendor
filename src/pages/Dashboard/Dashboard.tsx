@@ -24,9 +24,10 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [ordersRes, productsRes, walletRes] = await Promise.all([
+        const [ordersRes, productsRes, lowStockRes, walletRes] = await Promise.all([
           api.get('/vendor-orders/me?limit=1'),
           api.get('/products/me?limit=1'),
+          api.get('/vendor/inventory/low-stock'),
           api.get('/wallet/me'),
         ]);
 
@@ -34,7 +35,7 @@ export const Dashboard: React.FC = () => {
           totalOrders: ordersRes.data.total || 0,
           pendingOrders: ordersRes.data.items?.filter((o: any) => o.status === 'placed').length || 0,
           totalProducts: productsRes.data.total || 0,
-          lowStockCount: productsRes.data.items?.filter((p: any) => p.lowStockActive).length || 0,
+          lowStockCount: lowStockRes.data.total || lowStockRes.data.items?.length || 0,
           walletBalance: walletRes.data.wallet?.balance || 0,
         });
       } catch (error) {
