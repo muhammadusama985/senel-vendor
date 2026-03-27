@@ -107,6 +107,11 @@ export const ProductList: React.FC = () => {
     cursor: 'pointer',
     fontSize: '0.9rem',
     fontWeight: 700,
+    whiteSpace: 'nowrap' as const,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '38px',
   } as const;
 
   if (loading) {
@@ -253,8 +258,8 @@ export const ProductList: React.FC = () => {
                       {getHotStatusLabel(product)}
                     </span>
                   </td>
-                  <td style={bodyCell(colors.text)}>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <td style={{ ...bodyCell(colors.text), minWidth: '230px' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                       <button onClick={() => navigate(`/products/${product._id}`)} style={actionButton}>
                         View
                       </button>
@@ -262,7 +267,12 @@ export const ProductList: React.FC = () => {
                         <button
                           onClick={() => handleRequestHot(product._id)}
                           disabled={requestingHot === product._id}
-                          style={{ ...actionButton, opacity: requestingHot === product._id ? 0.55 : 1, cursor: requestingHot === product._id ? 'not-allowed' : 'pointer' }}
+                          style={{
+                            ...actionButton,
+                            opacity: requestingHot === product._id ? 0.55 : 1,
+                            cursor: requestingHot === product._id ? 'not-allowed' : 'pointer',
+                            paddingInline: '0.7rem',
+                          }}
                         >
                           {requestingHot === product._id ? '...' : 'Request Hot Product'}
                         </button>
