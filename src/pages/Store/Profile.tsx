@@ -14,6 +14,8 @@ export const StoreProfile: React.FC = () => {
     phone: '',
     companyName: '',
     taxId: '',
+    contactName: '',
+    contactPhone: '',
     address: {
       line1: '',
       city: '',
@@ -31,6 +33,8 @@ export const StoreProfile: React.FC = () => {
         phone: vendor.phone || '',
         companyName: vendor.business?.companyName || vendor.companyName || '',
         taxId: vendor.business?.taxId || vendor.taxId || '',
+        contactName: vendor.business?.contactName || '',
+        contactPhone: vendor.business?.contactPhone || '',
         address: {
           line1: vendor.business?.addressLine ?? vendor.address?.line1 ?? '',
           city: vendor.business?.city ?? vendor.address?.city ?? '',
@@ -58,6 +62,11 @@ export const StoreProfile: React.FC = () => {
     setFormData((prev) => ({ ...prev, phone: numericPhone }));
   };
 
+  const handleContactPhoneChange = (value: string) => {
+    const numericPhone = value.replace(/\D/g, '');
+    setFormData((prev) => ({ ...prev, contactPhone: numericPhone }));
+  };
+
   const handleCountryChange = (country: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -81,6 +90,8 @@ export const StoreProfile: React.FC = () => {
         addressLine: formData.address.line1,
         city: formData.address.city,
         country: formData.address.country,
+        contactName: formData.contactName,
+        contactPhone: formData.contactPhone,
       },
     });
   };
@@ -204,6 +215,35 @@ export const StoreProfile: React.FC = () => {
                   required
                   style={inputStyle}
                 />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                    Contact Person
+                  </label>
+                  <input
+                    type="text"
+                    name="contactName"
+                    value={formData.contactName}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                    Contact Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => handleContactPhoneChange(e.target.value)}
+                    style={inputStyle}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

@@ -60,6 +60,15 @@ export interface Vendor {
   isVerified: boolean;
   logoUrl?: string;
   bannerUrl?: string;
+  business?: {
+    companyName?: string;
+    taxId?: string;
+    country?: string;
+    city?: string;
+    addressLine?: string;
+    contactName?: string;
+    contactPhone?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
