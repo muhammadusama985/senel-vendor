@@ -4,6 +4,50 @@ import { Product, ProductFormData, Category } from '../types/product';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 
+const asCleanString = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  if (!value || typeof value !== 'object') return '';
+
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.url === 'string') return candidate.url;
+  if (typeof candidate.imageUrl === 'string') return candidate.imageUrl;
+  if (typeof candidate.fileUrl === 'string') return candidate.fileUrl;
+  if (typeof candidate.src === 'string') return candidate.src;
+  if (typeof candidate.name === 'string') return candidate.name;
+  if (typeof candidate.title === 'string') return candidate.title;
+
+  return '';
+};
+
+const normalizeImageUrls = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => asCleanString(item))
+    .filter((item) => item.trim().length > 0);
+};
+
+const normalizeProduct = (product: any): Product => ({
+  ...product,
+  title: asCleanString(product?.title),
+  description: asCleanString(product?.description),
+  country: asCleanString(product?.country),
+  imageUrls: normalizeImageUrls(product?.imageUrls),
+  variants: Array.isArray(product?.variants)
+    ? product.variants.map((variant: any) => ({
+        ...variant,
+        sku: asCleanString(variant?.sku),
+        imageUrls: normalizeImageUrls(variant?.imageUrls),
+      }))
+    : [],
+});
+
+const normalizeCategory = (category: any): Category => ({
+  ...category,
+  name: asCleanString(category?.name),
+  slug: asCleanString(category?.slug),
+});
+
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +65,7 @@ export const useProducts = () => {
       if (status) params.status = status;
 
       const response = await api.get('/products/me', { params });
-      setProducts(response.data.products || []);
+      setProducts((response.data.products || []).map(normalizeProduct));
       setTotal(response.data.total || 0);
       setPage(response.data.page || 1);
     } catch (error) {
@@ -37,7 +81,7 @@ export const useProducts = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await api.get('/catalog/categories/public');
-      setCategories(response.data.categories || []);
+      setCategories((response.data.categories || []).map(normalizeCategory));
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories', {
@@ -49,7 +93,7 @@ export const useProducts = () => {
   const getProduct = async (id: string): Promise<Product | null> => {
     try {
       const response = await api.get(`/products/me/${id}`);
-      return response.data.product;
+      return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Failed to load product', {
@@ -74,7 +118,7 @@ export const useProducts = () => {
       });
 
       await fetchProducts();
-      return response.data.product;
+      return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Failed to create product', {
         style: { backgroundColor: colors.accentRed, color: 'white' }
@@ -100,7 +144,7 @@ export const useProducts = () => {
       });
 
       await fetchProducts();
-      return response.data.product;
+      return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Failed to update product', {
         style: { backgroundColor: colors.accentRed, color: 'white' }
@@ -174,7 +218,8 @@ export const useProducts = () => {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
-      return response.data.imageUrl || null;
+      const imageUrl = asCleanString(response.data.imageUrl);
+      return imageUrl || null;
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Failed to upload image', {
         style: { backgroundColor: colors.accentRed, color: 'white' }
