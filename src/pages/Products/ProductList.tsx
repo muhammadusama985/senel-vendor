@@ -224,9 +224,7 @@ export const ProductList: React.FC = () => {
                         fontWeight: product.lowStockActive ? 'bold' : 'normal',
                       }}
                     >
-                      {product.hasVariants
-                        ? (product.variants || []).reduce((sum, variant) => sum + Number(variant.stockQty || 0), 0)
-                        : product.stockQty}
+                      {product.stockQty}
                       {product.lowStockActive && ' ⚠️'}
                     </span>
                   </td>

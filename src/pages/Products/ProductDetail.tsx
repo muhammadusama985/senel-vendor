@@ -250,7 +250,6 @@ export const ProductDetail: React.FC = () => {
                     <tr>
                       <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>SKU</th>
                       <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>Attributes</th>
-                      <th style={{ textAlign: 'right', padding: '0.5rem', color: colors.text }}>Stock</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -264,7 +263,6 @@ export const ProductDetail: React.FC = () => {
                             </span>
                           ))}
                         </td>
-                        <td style={{ padding: '0.5rem', color: colors.textMuted, textAlign: 'right' }}>{variant.stockQty}</td>
                       </tr>
                     ))}
                   </tbody>
