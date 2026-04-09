@@ -103,7 +103,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       if (imageUrl) {
         setFormData((prev) => ({
           ...prev,
-          imageUrls: [...prev.imageUrls, imageUrl],
+          imageUrls: prev.imageUrls.includes(imageUrl) ? prev.imageUrls : [...prev.imageUrls, imageUrl],
         }));
       }
     } catch (error) {
@@ -469,8 +469,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 >
   <ImageUpload
     onImageUpload={handleImageUpload}
-    label={uploading ? "Uploading..." : "Upload Image"}
+    label={uploading ? "Uploading..." : "Upload Images"}
     uploading={uploading}
+    multiple
   />
 </div>
 

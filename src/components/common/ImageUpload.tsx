@@ -6,12 +6,14 @@ interface ImageUploadProps {
   currentImage?: string;
   label?: string;
   uploading?: boolean;
+  multiple?: boolean;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   onImageUpload,
   currentImage,
-  label = 'Upload Image'
+  label = 'Upload Image',
+  multiple = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
@@ -26,15 +28,17 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      const previewFile = files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
-      onImageUpload(file);
+      reader.readAsDataURL(previewFile);
+      files.forEach((file) => onImageUpload(file));
     }
+    event.target.value = '';
   };
 
   return (
@@ -87,6 +91,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple={multiple}
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />
