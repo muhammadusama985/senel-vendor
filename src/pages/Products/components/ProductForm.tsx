@@ -302,7 +302,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   checked={formData.hasVariants}
                   onChange={handleChange}
                 />
-                This product has variants (size, color, etc.)
+                This product has attributes and options (color, size, etc.)
               </label>
             </div>
 

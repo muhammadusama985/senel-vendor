@@ -133,7 +133,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Variants</label>
+      <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Attributes & Options</label>
 
       {variants.map((variant, index) => (
         <div
@@ -148,9 +148,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
-              <h4 style={{ color: colors.text, fontWeight: 'bold', margin: 0 }}>Variant {index + 1}</h4>
+              <h4 style={{ color: colors.text, fontWeight: 'bold', margin: 0 }}>Option {index + 1}</h4>
               <div style={{ color: colors.textMuted, fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                One variant can represent one value like Blue, or a combination like Blue + Large, with its own images.
+                One option can represent one value like Blue, or a combination like Blue + Large, with its own images.
               </div>
             </div>
             <button
@@ -210,7 +210,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ color: colors.textMuted, fontSize: '0.9rem' }}>Attributes</label>
+              <label style={{ color: colors.textMuted, fontSize: '0.9rem' }}>Attribute Titles & Option Values</label>
               <button
                 type="button"
                 onClick={() => addAttribute(index)}
@@ -247,7 +247,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                   <input
                     type="text"
                     value={key}
-                    placeholder="Attribute name"
+                        placeholder="Attribute title (e.g. Color, Size)"
                     onChange={(e) => renameAttribute(index, key, e.target.value)}
                     style={{
                       width: '100%',
@@ -301,7 +301,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     <input
                       type="text"
                       value={String(value || '')}
-                      placeholder={key.trim().toLowerCase() === 'size' ? 'e.g. Small, Medium, Large' : 'Attribute value'}
+                        placeholder={key.trim().toLowerCase() === 'size' ? 'Option value (e.g. Small, Medium, Large)' : 'Option value'}
                       onChange={(e) => updateAttribute(index, key, e.target.value)}
                       style={{
                         width: '100%',
@@ -337,7 +337,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
 
           <div style={{ marginTop: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ color: colors.textMuted, fontSize: '0.9rem' }}>Variant Images (Optional)</label>
+              <label style={{ color: colors.textMuted, fontSize: '0.9rem' }}>Option Images (Optional)</label>
               <label
                 style={{
                   background: colors.buttonGradient,
@@ -368,7 +368,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                   <div key={imageUrl} style={{ position: 'relative' }}>
                     <img
                       src={imageUrl}
-                      alt={`${variant.sku} variant`}
+                      alt={`${variant.sku} option`}
                       style={{ width: '100%', height: '88px', objectFit: 'cover', borderRadius: '8px', border: `1px solid ${colors.border}` }}
                     />
                     <button
@@ -393,7 +393,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                 ))}
               </div>
             ) : (
-              <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>No variant images added</span>
+              <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>No option images added</span>
             )}
           </div>
         </div>
@@ -412,7 +412,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
           cursor: 'pointer',
         }}
       >
-        + Add Variant
+        + Add Option
       </button>
     </div>
   );
