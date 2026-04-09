@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { Variant } from '../../../types/product';
 
@@ -39,8 +39,10 @@ const colorHexFromValue = (value: string) => {
 
 export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange, uploadImage }) => {
   const { colors } = useTheme();
+  const [draftAttributeNames, setDraftAttributeNames] = useState<Record<string, string>>({});
 
   const nextSku = `VAR-${String(variants.length + 1).padStart(3, '0')}`;
+  const getDraftId = (variantIndex: number, key: string) => `${variantIndex}:${key}`;
 
   const addVariant = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,6 +78,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
 
   const renameAttribute = (index: number, oldKey: string, nextKey: string) => {
     const cleanKey = nextKey.trim();
+    if (!cleanKey || cleanKey === oldKey) return;
     const newVariants = [...variants];
     const currentAttributes = { ...(newVariants[index].attributes || {}) };
     const currentValue = currentAttributes[oldKey] ?? '';
@@ -83,6 +86,20 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
     currentAttributes[cleanKey || oldKey] = currentValue;
     newVariants[index].attributes = currentAttributes;
     onChange(newVariants);
+  };
+
+  const syncDraftAttributeName = (index: number, oldKey: string, nextKey: string) => {
+    const oldDraftId = getDraftId(index, oldKey);
+    const newDraftId = getDraftId(index, nextKey);
+    setDraftAttributeNames((prev) => {
+      const next = { ...prev };
+      const currentDraft = next[oldDraftId];
+      delete next[oldDraftId];
+      if (currentDraft !== undefined) {
+        next[newDraftId] = currentDraft;
+      }
+      return next;
+    });
   };
 
   const removeAttribute = (index: number, key: string) => {
@@ -95,15 +112,16 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
   const addAttribute = (index: number) => {
     const newVariants = [...variants];
     const currentAttributes = { ...(newVariants[index].attributes || {}) };
-    let placeholderKey = 'attribute';
+    let placeholderKey = 'Attribute';
     let counter = 1;
     while (Object.prototype.hasOwnProperty.call(currentAttributes, placeholderKey)) {
       counter += 1;
-      placeholderKey = `attribute${counter}`;
+      placeholderKey = `Attribute ${counter}`;
     }
     currentAttributes[placeholderKey] = '';
     newVariants[index].attributes = currentAttributes;
     onChange(newVariants);
+    setDraftAttributeNames((prev) => ({ ...prev, [getDraftId(index, placeholderKey)]: placeholderKey }));
   };
 
   const handleVariantImages = async (index: number, files: FileList | null) => {
@@ -246,13 +264,23 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                 >
                   <input
                     type="text"
-                    value={key}
-                        placeholder="Attribute title (e.g. Color, Size)"
-                    onChange={(e) => renameAttribute(index, key, e.target.value)}
+                    value={draftAttributeNames[getDraftId(index, key)] ?? key}
+                    placeholder="Attribute title (e.g. Color, Size)"
+                    onChange={(e) =>
+                      setDraftAttributeNames((prev) => ({
+                        ...prev,
+                        [getDraftId(index, key)]: e.target.value,
+                      }))
+                    }
+                    onBlur={() => {
+                      const draftValue = draftAttributeNames[getDraftId(index, key)] ?? key;
+                      renameAttribute(index, key, draftValue);
+                      syncDraftAttributeName(index, key, draftValue.trim() || key);
+                    }}
                     style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: `1px solid ${colors.border}`,
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: `1px solid ${colors.border}`,
                       borderRadius: '6px',
                       backgroundColor: colors.cardBg,
                       color: colors.text,
@@ -272,13 +300,14 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           backgroundColor: colors.cardBg,
                         }}
                       />
-                      <input
-                        type="text"
-                        value={String(value || '')}
-                        readOnly
-                        style={{
-                          width: '100%',
-                          padding: '0.5rem',
+                        <input
+                          type="text"
+                          value={String(value || '')}
+                          readOnly
+                          placeholder="Color name"
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
                           border: `1px solid ${colors.border}`,
                           borderRadius: '6px',
                           backgroundColor: colors.cardBg,
@@ -301,7 +330,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     <input
                       type="text"
                       value={String(value || '')}
-                        placeholder={key.trim().toLowerCase() === 'size' ? 'Option value (e.g. Small, Medium, Large)' : 'Option value'}
+                      placeholder={key.trim().toLowerCase() === 'size' ? 'Option name (e.g. Small, Medium, Large)' : 'Option name (e.g. Yellow, Blue)'}
                       onChange={(e) => updateAttribute(index, key, e.target.value)}
                       style={{
                         width: '100%',
@@ -348,7 +377,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                   padding: '0.45rem 0.75rem',
                 }}
               >
-                Upload Images
+                Upload Option Images
                 <input
                   type="file"
                   accept="image/*"
