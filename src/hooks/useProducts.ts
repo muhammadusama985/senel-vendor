@@ -4,6 +4,40 @@ import { Product, ProductFormData, Category } from '../types/product';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 
+const getApiOrigin = () => {
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://holiday-occurrence-grace-display.trycloudflare.com/api/v1';
+  try {
+    const parsed = new URL(baseUrl);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return 'https://holiday-occurrence-grace-display.trycloudflare.com';
+  }
+};
+
+const resolveMediaUrl = (value: unknown): string => {
+  const raw = asCleanString(value).trim();
+  if (!raw) return '';
+
+  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('blob:')) {
+    try {
+      const mediaUrl = new URL(raw);
+      const apiUrl = new URL(getApiOrigin());
+      if (mediaUrl.hostname === 'localhost' || mediaUrl.hostname === '127.0.0.1') {
+        mediaUrl.protocol = apiUrl.protocol;
+        mediaUrl.hostname = apiUrl.hostname;
+        mediaUrl.port = apiUrl.port;
+        return mediaUrl.toString();
+      }
+    } catch {
+      return raw;
+    }
+    return raw;
+  }
+
+  if (raw.startsWith('/')) return `${getApiOrigin()}${raw}`;
+  return `${getApiOrigin()}/${raw}`;
+};
+
 const asCleanString = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
@@ -23,7 +57,7 @@ const asCleanString = (value: unknown): string => {
 const normalizeImageUrls = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
   return value
-    .map((item) => asCleanString(item))
+    .map((item) => resolveMediaUrl(item))
     .filter((item) => item.trim().length > 0);
 };
 
@@ -90,7 +124,7 @@ export const useProducts = () => {
     }
   }, [colors.accentRed]);
 
-  const getProduct = async (id: string): Promise<Product | null> => {
+  const getProduct = useCallback(async (id: string): Promise<Product | null> => {
     try {
       const response = await api.get(`/products/me/${id}`);
       return response.data.product ? normalizeProduct(response.data.product) : null;
@@ -101,7 +135,7 @@ export const useProducts = () => {
       });
       return null;
     }
-  };
+  }, [colors.accentRed]);
 
   const createProduct = async (data: ProductFormData): Promise<Product | null> => {
     setSaving(true);
@@ -218,7 +252,7 @@ export const useProducts = () => {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
-      const imageUrl = asCleanString(response.data.imageUrl);
+      const imageUrl = resolveMediaUrl(response.data.imageUrl);
       return imageUrl || null;
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Failed to upload image', {

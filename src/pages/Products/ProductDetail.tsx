@@ -20,8 +20,16 @@ export const ProductDetail: React.FC = () => {
       if (id) {
         const data = await getProduct(id);
         if (data) {
+          const initialGalleryImages = Array.from(
+            new Set(
+              [
+                ...(data.imageUrls || []),
+                ...((data.variants || []).flatMap((variant) => variant.imageUrls || [])),
+              ].filter(Boolean),
+            ),
+          );
           setProduct(data);
-          setSelectedImage(data.imageUrls[0] || '');
+          setSelectedImage(initialGalleryImages[0] || '');
         } else {
           navigate('/products');
         }
