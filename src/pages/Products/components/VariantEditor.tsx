@@ -291,7 +291,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr 1fr auto' : '1.6fr 1fr 1fr auto',
+                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr auto' : '1.6fr 1fr auto',
                         gap: '0.75rem',
                         alignItems: 'end',
                         marginBottom: '0.9rem',
@@ -380,29 +380,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           type="text"
                           value={option.sku}
                           onChange={(e) => updateOption(variantIndex, (variant) => ({ ...variant, sku: e.target.value }))}
-                          style={{
-                            width: '100%',
-                            padding: '0.55rem',
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: '6px',
-                            backgroundColor: colors.cardBg,
-                            color: colors.text,
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>Stock</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={option.stockQty}
-                          onChange={(e) =>
-                            updateOption(variantIndex, (variant) => ({
-                              ...variant,
-                              stockQty: Math.max(0, parseInt(e.target.value, 10) || 0),
-                            }))
-                          }
                           style={{
                             width: '100%',
                             padding: '0.55rem',

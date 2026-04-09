@@ -78,6 +78,16 @@ export const ProductDetail: React.FC = () => {
     return <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>Product not found</div>;
   }
 
+  const galleryImages = Array.from(
+    new Set(
+      [
+        ...(product.imageUrls || []),
+        ...((product.variants || []).flatMap((variant) => variant.imageUrls || [])),
+      ].filter(Boolean),
+    ),
+  );
+  const mainImage = selectedImage || galleryImages[0] || 'https://via.placeholder.com/400';
+
   return (
     <div style={{ minHeight: '100vh', padding: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -158,11 +168,11 @@ export const ProductDetail: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         <div>
           <div style={{ ...cardStyle, marginBottom: '1rem' }}>
-            <img src={selectedImage || 'https://via.placeholder.com/400'} alt={product.title} style={{ width: '100%', height: '400px', objectFit: 'contain' }} />
+            <img src={mainImage} alt={product.title} style={{ width: '100%', height: '400px', objectFit: 'contain' }} />
           </div>
-          {product.imageUrls.length > 1 && (
+          {galleryImages.length > 1 && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {product.imageUrls.map((url, index) => (
+              {galleryImages.map((url, index) => (
                 <img
                   key={index}
                   src={url}
@@ -174,7 +184,7 @@ export const ProductDetail: React.FC = () => {
                     objectFit: 'cover',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    border: selectedImage === url ? `3px solid ${colors.accentOrange}` : `1px solid ${colors.border}`,
+                    border: mainImage === url ? `3px solid ${colors.accentOrange}` : `1px solid ${colors.border}`,
                   }}
                 />
               ))}

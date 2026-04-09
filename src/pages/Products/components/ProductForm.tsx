@@ -73,7 +73,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    const numericValue = parseFloat(value) || 0;
+    setFormData(prev => {
+      if (name === 'stockQty' && prev.hasVariants) {
+        return {
+          ...prev,
+          stockQty: numericValue,
+          variants: (prev.variants || []).map((variant) => ({
+            ...variant,
+            stockQty: numericValue,
+          })),
+        };
+      }
+      return { ...prev, [name]: numericValue };
+    });
   };
 
   const handleImageUpload = async (file: File) => {
@@ -161,6 +174,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     await onSubmit({
       ...formData,
+      stockQty: Number(formData.stockQty) || 0,
+      variants: formData.hasVariants
+        ? (formData.variants || []).map((variant) => ({
+            ...variant,
+            stockQty: Number(formData.stockQty) || 0,
+          }))
+        : formData.variants,
       imageUrls: [...formData.imageUrls],
     });
   };
@@ -318,30 +338,30 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </label>
             </div>
 
-            {!formData.hasVariants ? (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Stock Quantity
-                </label>
-                <input
-                  type="number"
-                  name="stockQty"
-                  value={formData.stockQty}
-                  onChange={handleNumberChange}
-                  min="0"
-                  style={{
-                    ...inputStyle,
-                    width: '200px',
-                  }}
-                />
-              </div>
-            ) : (
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                Stock Quantity
+              </label>
+              <input
+                type="number"
+                name="stockQty"
+                value={formData.stockQty}
+                onChange={handleNumberChange}
+                min="0"
+                style={{
+                  ...inputStyle,
+                  width: '200px',
+                }}
+              />
+            </div>
+
+            {formData.hasVariants ? (
               <VariantEditor
                 variants={formData.variants || []}
                 onChange={(variants) => setFormData(prev => ({ ...prev, variants }))}
                 uploadImage={uploadProductImage}
               />
-            )}
+            ) : null}
 
             {formData.trackInventory && (
               <div style={{ marginTop: '1rem' }}>
