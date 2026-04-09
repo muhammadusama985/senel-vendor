@@ -36,6 +36,9 @@ export interface Product {
   country?: string;
   currency?: 'EUR' | 'TRY' | 'USD';
   requiresManualShipping?: boolean;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +59,9 @@ export interface ProductFormData {
   trackInventory?: boolean;
   lowStockThreshold?: number;
   requiresManualShipping?: boolean;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
 }
 
 export interface Category {

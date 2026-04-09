@@ -38,6 +38,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     trackInventory: true,
     lowStockThreshold: 5,
     requiresManualShipping: false,
+    lengthCm: 0,
+    widthCm: 0,
+    heightCm: 0,
     ...initialData,
   });
 
@@ -141,6 +144,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         alert('Variant SKUs must be unique.');
         return;
       }
+
+      const hasInvalidAttributes = formData.variants.some((variant) =>
+        Object.entries(variant.attributes || {}).some(([key, value]) => !String(key || '').trim() || !String(value || '').trim())
+      );
+      if (hasInvalidAttributes) {
+        alert('Each variant attribute must include both a name and a value.');
+        return;
+      }
+    }
+
+    if ([formData.lengthCm, formData.widthCm, formData.heightCm].some((value) => Number(value || 0) < 0)) {
+      alert('Product dimensions cannot be negative.');
+      return;
     }
 
     await onSubmit({
@@ -323,6 +339,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <VariantEditor
                 variants={formData.variants || []}
                 onChange={(variants) => setFormData(prev => ({ ...prev, variants }))}
+                uploadImage={uploadProductImage}
               />
             )}
 
@@ -351,6 +368,51 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Shipping</h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                  Length (cm)
+                </label>
+                <input
+                  type="number"
+                  name="lengthCm"
+                  value={formData.lengthCm ?? 0}
+                  onChange={handleNumberChange}
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                  Width (cm)
+                </label>
+                <input
+                  type="number"
+                  name="widthCm"
+                  value={formData.widthCm ?? 0}
+                  onChange={handleNumberChange}
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                  Height (cm)
+                </label>
+                <input
+                  type="number"
+                  name="heightCm"
+                  value={formData.heightCm ?? 0}
+                  onChange={handleNumberChange}
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: colors.text }}>
               <input
