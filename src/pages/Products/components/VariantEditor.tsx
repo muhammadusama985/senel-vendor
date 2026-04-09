@@ -147,7 +147,12 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h4 style={{ color: colors.text, fontWeight: 'bold' }}>Variant {index + 1}</h4>
+            <div>
+              <h4 style={{ color: colors.text, fontWeight: 'bold', margin: 0 }}>Variant {index + 1}</h4>
+              <div style={{ color: colors.textMuted, fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                One variant can represent one value like Blue, or a combination like Blue + Large, with its own images.
+              </div>
+            </div>
             <button
               type="button"
               onClick={(e) => removeVariant(index, e)}
@@ -233,7 +238,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     borderRadius: '12px',
                     padding: '0.75rem',
                     display: 'grid',
-                    gridTemplateColumns: isColorAttribute(key) ? '1fr 130px 120px 36px' : '1fr 1fr 36px',
+                    gridTemplateColumns: isColorAttribute(key) ? '1fr 130px 120px 36px 36px' : '1fr 1fr 36px',
                     gap: '0.75rem',
                     alignItems: 'center',
                     border: `1px solid ${colors.border}`,
@@ -278,6 +283,17 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           borderRadius: '6px',
                           backgroundColor: colors.cardBg,
                           color: colors.text,
+                        }}
+                      />
+                      <div
+                        title={String(value || '')}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          border: `1px solid ${colors.border}`,
+                          backgroundColor: colorHexFromValue(String(value || '')),
+                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.35)',
                         }}
                       />
                     </>
