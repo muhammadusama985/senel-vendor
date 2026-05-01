@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../context/ThemeContext';
 import { useWallet } from '../../../hooks/useWallet';
 import { WalletTransaction } from '../../../types/wallet';
+import { useI18n } from '../../../context/I18nContext';
 
 interface TransactionListProps {
   transactions: WalletTransaction[];
@@ -14,6 +15,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const navigate = useNavigate();
   const { colors } = useTheme();
   const { wallet } = useWallet();
+  const { t } = useI18n();
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString(undefined, {
@@ -44,10 +46,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const getTransactionText = (kind: string) => {
     const map: Record<string, string> = {
-      EARNING_CREDIT: 'Earning Credit',
-      PAYOUT_DEBIT: 'Payout Debit',
-      ADJUSTMENT_CREDIT: 'Adjustment Credit',
-      ADJUSTMENT_DEBIT: 'Adjustment Debit',
+      EARNING_CREDIT: t('earningCredit'),
+      PAYOUT_DEBIT: t('payoutDebit'),
+      ADJUSTMENT_CREDIT: t('adjustmentCredit'),
+      ADJUSTMENT_DEBIT: t('adjustmentDebit'),
     };
     return map[kind] || kind;
   };
@@ -66,7 +68,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   if (transactions.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>
-        No transactions found
+        {t('noTransactionsFound')}
       </div>
     );
   }
@@ -121,7 +123,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: colors.textMuted, gap: '1rem' }}>
               <span>{tx.note || '-'}</span>
-              <span>Balance: {formatCurrency(tx.balanceAfter)}</span>
+              <span>{t('balanceLabel')}: {formatCurrency(tx.balanceAfter)}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.25rem' }}>

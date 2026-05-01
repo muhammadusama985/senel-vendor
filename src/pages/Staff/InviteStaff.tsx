@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../hooks/useStaff';
 import { useTheme } from '../../context/ThemeContext';
 import { StaffRole, STAFF_ROLES } from '../../types/staff';
+import { useI18n } from '../../context/I18nContext';
 
 export const InviteStaff: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { inviteStaff, loading } = useStaff();
 
   const [email, setEmail] = useState('');
@@ -29,7 +31,7 @@ export const InviteStaff: React.FC = () => {
     if (result.success) {
       navigate('/staff');
     } else {
-      setError(result.message || 'Failed to send invitation');
+      setError(result.message || t('failedSendInvitation'));
     }
 
     setSubmitting(false);
@@ -39,10 +41,10 @@ export const InviteStaff: React.FC = () => {
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Invite Team Member
+          {t('inviteTeamMember')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Add a new member to your vendor team
+          {t('manageStaffPermissions')}
         </p>
       </div>
 
@@ -74,7 +76,7 @@ export const InviteStaff: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Email Address *
+              {t('authEmailAddress')} *
             </label>
             <input
               type="email"
@@ -95,7 +97,7 @@ export const InviteStaff: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Role *
+              {t('priority', 'Role')} *
             </label>
             <select
               value={role}
@@ -122,7 +124,7 @@ export const InviteStaff: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Notes
+              {t('notes')}
             </label>
             <textarea
               value={notes}
@@ -166,7 +168,7 @@ export const InviteStaff: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              Cancel
+              {t('cancel')}
             </button>
 
             <button
@@ -183,7 +185,7 @@ export const InviteStaff: React.FC = () => {
                 opacity: submitting || loading ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Sending...' : 'Send Invitation'}
+              {submitting ? t('sendingInvitation') : t('sendInvitation')}
             </button>
           </div>
         </form>

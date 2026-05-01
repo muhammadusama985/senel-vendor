@@ -1,6 +1,7 @@
 import React from 'react';
 import { TicketMessage } from '../../../types/ticket';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface MessageThreadProps {
   messages: TicketMessage[];
@@ -14,6 +15,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   formatDate,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   if (loading) {
     return (
@@ -26,7 +28,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   if (messages.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem', color: colors.textMuted }}>
-        No messages yet. Start the conversation!
+        {t('noMessagesYet')}
       </div>
     );
   }
@@ -55,7 +57,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
             }}
           >
             <div style={{ marginBottom: '0.25rem', fontSize: '0.85rem', color: colors.textMuted }}>
-              {isVendor ? 'You' : msg.userRole === 'admin' ? 'Support Team' : 'System'}
+              {isVendor ? t('youLabel') : msg.userRole === 'admin' ? t('supportTeam') : t('systemLabel')}
               {msg.isInternal && (
                 <span
                   style={{
@@ -104,7 +106,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
                         borderRadius: '4px',
                       }}
                     >
-                      Attachment: {att.filename}
+                      {t('attachmentLabel')}: {att.filename}
                     </a>
                   ))}
                 </div>

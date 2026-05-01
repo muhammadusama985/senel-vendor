@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../../context/I18nContext';
 
 interface TicketPriorityBadgeProps {
   priority: string;
@@ -9,6 +10,7 @@ export const TicketPriorityBadge: React.FC<TicketPriorityBadgeProps> = ({
   priority,
   size = 'medium',
 }) => {
+  const { t } = useI18n();
   const getPriorityColor = (value: string): string => {
     const colorMap: Record<string, string> = {
       low: '#60a5fa',
@@ -47,7 +49,7 @@ export const TicketPriorityBadge: React.FC<TicketPriorityBadgeProps> = ({
       }}
     >
       <span>{getPriorityIcon(priority)}</span>
-      <span>{priority.toUpperCase()}</span>
+      <span>{t(priority, priority).toUpperCase()}</span>
     </span>
   );
 };

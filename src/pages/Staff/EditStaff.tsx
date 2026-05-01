@@ -11,11 +11,13 @@ import {
   EditableStaffStatus,
   STAFF_ROLES,
 } from '../../types/staff';
+import { useI18n } from '../../context/I18nContext';
 
 export const EditStaff: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { staff, updateStaff, loading } = useStaff();
 
   const [member, setMember] = useState<StaffMember | null>(null);
@@ -76,7 +78,7 @@ export const EditStaff: React.FC = () => {
   if (!member) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>
-        Staff member not found
+        {t('staffMemberNotFound', 'Staff member not found')}
       </div>
     );
   }
@@ -85,10 +87,10 @@ export const EditStaff: React.FC = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Edit Staff Member
+          {t('editStaffMember', 'Edit Staff Member')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Update role and permissions for {member.user?.email ?? 'staff member'}
+          {t('updateRolePermissions', 'Update role and permissions for')} {member.user?.email ?? t('staffMember', 'staff member')}
         </p>
       </div>
 
@@ -111,7 +113,7 @@ export const EditStaff: React.FC = () => {
             }}
           >
             <div style={{ marginBottom: '0.5rem' }}>
-              <span style={{ color: colors.textMuted, marginRight: '1rem' }}>Current Role:</span>
+                <span style={{ color: colors.textMuted, marginRight: '1rem' }}>{t('currentRole', 'Current Role')}:</span>
               <StaffRoleBadge role={member.role} />
             </div>
           </div>
@@ -125,7 +127,7 @@ export const EditStaff: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              New Role
+              {t('newRole', 'New Role')}
             </label>
             <select
               value={role}
@@ -160,7 +162,7 @@ export const EditStaff: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              Status
+              {t('status')}
             </label>
             <select
               value={status}
@@ -174,9 +176,9 @@ export const EditStaff: React.FC = () => {
                 color: colors.text,
               }}
             >
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="inactive">Inactive</option>
+              <option value="active">{t('activeLabel', 'Active')}</option>
+              <option value="suspended">{t('suspended', 'Suspended')}</option>
+              <option value="inactive">{t('inactive', 'Inactive')}</option>
             </select>
           </div>
 
@@ -196,7 +198,7 @@ export const EditStaff: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              Notes
+              {t('notes')}
             </label>
             <textarea
               value={notes}
@@ -227,7 +229,7 @@ export const EditStaff: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -243,7 +245,7 @@ export const EditStaff: React.FC = () => {
                 opacity: submitting || loading ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Saving...' : 'Save Changes'}
+              {submitting ? t('savingLabel') : t('saveChanges')}
             </button>
           </div>
         </form>

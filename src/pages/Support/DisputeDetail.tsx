@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDisputes } from '../../hooks/useDisputes';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 
 export const DisputeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { 
     currentDispute, 
     messages, 
@@ -27,7 +29,7 @@ export const DisputeDetail: React.FC = () => {
       getDispute(id);
       getMessages(id);
     }
-  }, [id, getDispute, getMessages]);
+  }, [id, getDispute, getMessages, language]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !id) return;
@@ -69,7 +71,7 @@ export const DisputeDetail: React.FC = () => {
                 {currentDispute.status.replace('_', ' ')}
               </span>
               <span style={{ color: colors.textMuted }}>
-                Created: {formatDate(currentDispute.createdAt)}
+                {t('created')}: {formatDate(currentDispute.createdAt)}
               </span>
             </div>
           </div>
@@ -84,7 +86,7 @@ export const DisputeDetail: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Back to List
+            {t('backToList')}
           </button>
         </div>
       </div>
@@ -109,7 +111,7 @@ export const DisputeDetail: React.FC = () => {
             
             {currentDispute.attachments && currentDispute.attachments.length > 0 && (
               <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>Attachments</h4>
+                <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('attachments')}</h4>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {currentDispute.attachments.map((att, index) => (
                     <a
@@ -142,7 +144,7 @@ export const DisputeDetail: React.FC = () => {
             padding: '2rem',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
           }}>
-            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Conversation</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('conversation')}</h3>
             
             {messagesLoading ? (
               <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -150,7 +152,7 @@ export const DisputeDetail: React.FC = () => {
               </div>
             ) : messages.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: colors.textMuted }}>
-                No messages yet. Reply to start the conversation.
+                {t('noMessagesYet')}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -218,7 +220,7 @@ export const DisputeDetail: React.FC = () => {
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your reply..."
+                placeholder={t('typeReply')}
                 rows={4}
                 style={{
                   width: '100%',
@@ -246,7 +248,7 @@ export const DisputeDetail: React.FC = () => {
                     opacity: (sending || !newMessage.trim()) ? 0.7 : 1,
                   }}
                 >
-                  {sending ? 'Sending...' : 'Send Reply'}
+                  {sending ? t('sendingLabel') : t('sendReply')}
                 </button>
               </div>
             </div>

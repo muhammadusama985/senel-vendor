@@ -4,10 +4,12 @@ import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
 import { TransactionList } from './components/TransactionList';
 import { TransactionFilters } from '../../types/wallet';
+import { useI18n } from '../../context/I18nContext';
 
 export const Transactions: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const {
     transactions,
     transactionsLoading,
@@ -32,7 +34,7 @@ export const Transactions: React.FC = () => {
       page: filters.page,
       limit: filters.limit,
     });
-  }, [fetchTransactions, filters.page, filters.limit]);
+  }, [fetchTransactions, filters.page, filters.limit, language]);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
@@ -86,10 +88,10 @@ export const Transactions: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-            Transactions
+            {t('transactionsTitle')}
           </h1>
           <p style={{ color: colors.textMuted }}>
-            View all your financial transactions
+            {t('transactionsSubtitle')}
           </p>
         </div>
         <button
@@ -103,7 +105,7 @@ export const Transactions: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Back to Wallet
+          {t('backToWallet')}
         </button>
       </div>
 
@@ -117,24 +119,24 @@ export const Transactions: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Transaction Type
+              {t('transactionType')}
             </label>
             <select
               value={kindFilter}
               onChange={(e) => setKindFilter(e.target.value)}
               style={inputStyle}
             >
-              <option value="" style={{ color: '#000' }}>All Types</option>
-              <option value="EARNING_CREDIT" style={{ color: '#000' }}>Earning Credit</option>
-              <option value="PAYOUT_DEBIT" style={{ color: '#000' }}>Payout Debit</option>
-              <option value="ADJUSTMENT_CREDIT" style={{ color: '#000' }}>Adjustment Credit</option>
-              <option value="ADJUSTMENT_DEBIT" style={{ color: '#000' }}>Adjustment Debit</option>
+              <option value="" style={{ color: '#000' }}>{t('allTypes')}</option>
+              <option value="EARNING_CREDIT" style={{ color: '#000' }}>{t('earningCredit')}</option>
+              <option value="PAYOUT_DEBIT" style={{ color: '#000' }}>{t('payoutDebit')}</option>
+              <option value="ADJUSTMENT_CREDIT" style={{ color: '#000' }}>{t('adjustmentCredit')}</option>
+              <option value="ADJUSTMENT_DEBIT" style={{ color: '#000' }}>{t('adjustmentDebit')}</option>
             </select>
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              From Date
+              {t('fromDate')}
             </label>
             <input
               type="date"
@@ -146,7 +148,7 @@ export const Transactions: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              To Date
+              {t('toDate')}
             </label>
             <input
               type="date"
@@ -169,7 +171,7 @@ export const Transactions: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Clear
+            {t('clear')}
           </button>
           <button
             onClick={handleFilter}
@@ -183,7 +185,7 @@ export const Transactions: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            Apply Filters
+            {t('applyFilters')}
           </button>
         </div>
       </div>
@@ -216,7 +218,7 @@ export const Transactions: React.FC = () => {
                     cursor: transactionPage === 1 ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  Previous
+                  {t('previous')}
                 </button>
 
                 {Array.from({ length: Math.min(5, transactionPages) }, (_, i) => {
@@ -262,13 +264,13 @@ export const Transactions: React.FC = () => {
                     cursor: transactionPage === transactionPages ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  Next
+                  {t('next')}
                 </button>
               </div>
             )}
 
             <div style={{ marginTop: '1rem', textAlign: 'right', color: colors.textMuted }}>
-              Showing {filteredTransactions.length} of {transactionTotal} transactions
+              {t('showing')} {filteredTransactions.length} {t('of')} {transactionTotal} {t('transactionsLabel')}
             </div>
           </>
         )}

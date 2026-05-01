@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { ActivityLog } from '../../../types/staff';
+import { useI18n } from '../../../context/I18nContext';
 
 interface ActivityTimelineProps {
   activities: ActivityLog[];
@@ -12,6 +13,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
   formatDate,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const getActionIcon = (action: string): string => {
     const normalized = action.toLowerCase();
@@ -46,7 +48,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
   if (activities.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>
-        No activity records found
+        {t('noActivityRecords', 'No activity records found')}
       </div>
     );
   }
@@ -106,7 +108,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 
             {activity.user && (
               <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>
-                By: {activity.user.email}
+                {t('createdBy', 'By')}: {activity.user.email}
               </div>
             )}
 

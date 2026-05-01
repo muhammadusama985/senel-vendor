@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { VendorOrder } from '../../types/order';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -9,6 +10,7 @@ export const PackingSlip: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { getOrder } = useOrders();
   
   const [order, setOrder] = useState<VendorOrder | null>(null);
@@ -35,8 +37,8 @@ export const PackingSlip: React.FC = () => {
 
   if (!order) {
     return (
-      <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.75)' }}>
-        Order not found
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.75)' }}>
+        {t('orderNotFound')}
       </div>
     );
   }
@@ -66,7 +68,7 @@ export const PackingSlip: React.FC = () => {
       <div className="no-print" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ color: '#ffffff', fontSize: '2rem', fontWeight: 'bold' }}>
-            Packing Slip
+            {t('packingSlipTitle')}
           </h1>
           <div>
             <button
@@ -81,7 +83,7 @@ export const PackingSlip: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              Print
+              {t('printLabel')}
             </button>
             <button
               onClick={() => navigate(`/orders/${id}`)}
@@ -94,7 +96,7 @@ export const PackingSlip: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              Back
+              {t('back')}
             </button>
           </div>
         </div>
@@ -124,17 +126,17 @@ export const PackingSlip: React.FC = () => {
         {/* Header */}
         <div style={{ marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '2px solid rgba(255,255,255,0.3)' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#ffffff' }}>
-            PACKING SLIP
+            {t('packingSlipTitle').toUpperCase()}
           </h1>
           <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)' }}>
-            <div>Order #: {order.vendorOrderNumber}</div>
-            <div>Date: {new Date(order.createdAt).toLocaleDateString()}</div>
+            <div>{t('orderNumber')}: {order.vendorOrderNumber}</div>
+            <div>{t('date')}: {new Date(order.createdAt).toLocaleDateString()}</div>
           </div>
         </div>
 
         {/* Store Info */}
         <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#ffffff' }}>Store Information</h3>
+          <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#ffffff' }}>{t('storeInformation')}</h3>
           <div style={{ fontSize: '0.9rem', color: '#ffffff' }}>
             <div>{order.vendorStoreName}</div>
           </div>
@@ -142,14 +144,14 @@ export const PackingSlip: React.FC = () => {
 
         {/* Items */}
         <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', color: '#ffffff' }}>Items</h3>
+          <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', color: '#ffffff' }}>{t('items')}</h3>
           
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid rgba(255,255,255,0.3)' }}>
-                <th style={{ padding: '0.5rem', textAlign: 'left', color: '#ffffff' }}>Item</th>
-                <th style={{ padding: '0.5rem', textAlign: 'center', color: '#ffffff' }}>Qty</th>
-                <th style={{ padding: '0.5rem', textAlign: 'right', color: '#ffffff' }}>Total</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', color: '#ffffff' }}>{t('itemLabel')}</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', color: '#ffffff' }}>{t('qtyShort')}</th>
+                <th style={{ padding: '0.5rem', textAlign: 'right', color: '#ffffff' }}>{t('total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -178,21 +180,21 @@ export const PackingSlip: React.FC = () => {
         {/* Box Count */}
         {order.boxCount && (
           <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
-            <strong>Total Boxes:</strong> {order.boxCount}
+            <strong>{t('totalBoxes')}:</strong> {order.boxCount}
           </div>
         )}
 
         {/* Notes */}
         {order.labelNotes && (
           <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
-            <strong style={{ color: '#ffffff' }}>Notes:</strong>
+            <strong style={{ color: '#ffffff' }}>{t('notesLabel')}:</strong>
             <p style={{ color: '#ffffff' }}>{order.labelNotes}</p>
           </div>
         )}
 
         {/* Footer */}
         <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)' }}>
-          Thank you for your business!
+          {t('thankYouBusiness')}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { ImageUpload } from '../../components/common/ImageUpload';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useLocationOptions } from '../../hooks/useLocationOptions';
+import { useI18n } from '../../context/I18nContext';
 
 interface BusinessDetails {
   companyName: string;
@@ -27,6 +28,7 @@ interface DocumentItem {
 export const CompleteProfile: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { vendor, checkAuth } = useAuthStore();
 
   const [step, setStep] = useState(1);
@@ -81,7 +83,7 @@ export const CompleteProfile: React.FC = () => {
   const handleLogoUpload = (file: File) => {
     setLogoFile(file);
     setStoreData((prev) => ({ ...prev, logoUrl: URL.createObjectURL(file) }));
-    toast.success('Logo selected successfully!', {
+    toast.success(t('imageUploadedSuccess', 'Logo selected successfully!'), {
       style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
     });
   };
@@ -89,7 +91,7 @@ export const CompleteProfile: React.FC = () => {
   const handleBannerUpload = (file: File) => {
     setBannerFile(file);
     setStoreData((prev) => ({ ...prev, bannerUrl: URL.createObjectURL(file) }));
-    toast.success('Banner selected successfully!', {
+    toast.success(t('imageUploadedSuccess', 'Banner selected successfully!'), {
       style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
     });
   };
@@ -109,7 +111,7 @@ export const CompleteProfile: React.FC = () => {
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!storeData.storeName.trim()) {
-      toast.error('Store name is required', { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
+      toast.error(t('storeNameLabel') + ' ' + t('descriptionRequired', 'is required'), { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
       return;
     }
     setStep(2);
@@ -118,7 +120,7 @@ export const CompleteProfile: React.FC = () => {
   const handleBusinessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!businessData.companyName.trim()) {
-      toast.error('Company name is required', { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
+      toast.error(t('companyNameLabel') + ' ' + t('descriptionRequired', 'is required'), { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
       return;
     }
     setStep(3);
@@ -273,17 +275,17 @@ export const CompleteProfile: React.FC = () => {
       </div>
 
       <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-        {step === 1 && 'Complete Your Store Profile'}
-        {step === 2 && 'Business Details'}
-        {step === 3 && 'Upload Verification Documents'}
-        {step === 4 && 'Review & Submit'}
+        {step === 1 && t('completeStoreProfile')}
+        {step === 2 && t('businessDetails')}
+        {step === 3 && t('uploadVerificationDocuments')}
+        {step === 4 && t('reviewSubmit')}
       </h1>
 
       {step === 1 && (
         <form onSubmit={handleStoreSubmit} style={cardStyle}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Store Name *
+              {t('storeNameLabel')} *
             </label>
             <input
               type="text"
@@ -291,26 +293,26 @@ export const CompleteProfile: React.FC = () => {
               onChange={(e) => setStoreData({ ...storeData, storeName: e.target.value })}
               required
               style={inputStyle}
-              placeholder="My Awesome Store"
+              placeholder={t('storeNameLabel')}
             />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Store Description
+              {t('descriptionLabel')}
             </label>
             <textarea
               value={storeData.description}
               onChange={(e) => setStoreData({ ...storeData, description: e.target.value })}
               rows={4}
               style={{ ...inputStyle, resize: 'vertical' }}
-              placeholder="Tell customers about your store..."
+              placeholder={t('descriptionLabel')}
             />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>Store Logo</label>
-            <ImageUpload onImageUpload={handleLogoUpload} currentImage={storeData.logoUrl} label="Upload Logo (Optional)" />
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>{t('uploadLogo')}</label>
+            <ImageUpload onImageUpload={handleLogoUpload} currentImage={storeData.logoUrl} label={`${t('uploadLogo')} (${t('noteOptional')})`} />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -320,12 +322,12 @@ export const CompleteProfile: React.FC = () => {
             <ImageUpload
               onImageUpload={handleBannerUpload}
               currentImage={storeData.bannerUrl}
-              label="Upload Banner (Optional)"
+              label={`Upload Banner (${t('noteOptional')})`}
             />
           </div>
 
           <button type="submit" disabled={loading} style={primaryButton}>
-            {loading ? 'Saving...' : 'Continue to Business Details'}
+            {loading ? t('savingLabel') : t('continueToBusinessDetails')}
           </button>
         </form>
       )}
@@ -334,7 +336,7 @@ export const CompleteProfile: React.FC = () => {
         <form onSubmit={handleBusinessSubmit} style={cardStyle}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Company Name *
+              {t('companyNameLabel')} *
             </label>
             <input
               type="text"
@@ -348,7 +350,7 @@ export const CompleteProfile: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Tax ID / VAT Number
+              {t('taxIdLabel')}
             </label>
             <input
               type="text"
@@ -360,13 +362,13 @@ export const CompleteProfile: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>Country</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>{t('countryLabel')}</label>
             <select
               value={businessData.country}
               onChange={(e) => handleCountryChange(e.target.value)}
               style={inputStyle}
             >
-              <option value="">Select country</option>
+              <option value="">{t('selectCountry')}</option>
               {allCountries.map((country) => (
                 <option key={country.isoCode} value={country.name}>
                   {country.name}
@@ -376,14 +378,14 @@ export const CompleteProfile: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>City</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>{t('cityLabel')}</label>
             <select
               value={businessData.city}
               onChange={(e) => setBusinessData({ ...businessData, city: e.target.value })}
               style={inputStyle}
               disabled={!businessData.country}
             >
-              <option value="">{businessData.country ? 'Select city' : 'Select country first'}</option>
+              <option value="">{businessData.country ? t('selectCity') : t('selectCountryFirst')}</option>
               {availableCities.map((city) => (
                 <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
                   {city.name}
@@ -394,7 +396,7 @@ export const CompleteProfile: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Address Line
+              {t('addressLabel')}
             </label>
             <input
               type="text"
@@ -407,7 +409,7 @@ export const CompleteProfile: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Contact Person Name
+              {t('contactPerson')}
             </label>
             <input
               type="text"
@@ -420,7 +422,7 @@ export const CompleteProfile: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Contact Phone
+              {t('contactNumber')}
             </label>
             <input
               type="tel"
@@ -434,7 +436,7 @@ export const CompleteProfile: React.FC = () => {
           </div>
 
           <button type="submit" disabled={loading} style={primaryButton}>
-            {loading ? 'Saving...' : 'Continue to Documents'}
+            {loading ? t('savingLabel') : t('continueToDocuments')}
           </button>
         </form>
       )}
@@ -474,7 +476,7 @@ export const CompleteProfile: React.FC = () => {
               marginTop: '1rem',
             }}
           >
-            Continue to Review
+            {t('continueToReview')}
           </button>
         </div>
       )}
@@ -482,12 +484,12 @@ export const CompleteProfile: React.FC = () => {
       {step === 4 && (
         <div>
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Store Information</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('storeInformation')}</h3>
             <p style={{ color: colors.text }}>
-              <strong>Store Name:</strong> {storeData.storeName}
+              <strong>{t('storeNameLabel')}:</strong> {storeData.storeName}
             </p>
             <p style={{ color: colors.text }}>
-              <strong>Description:</strong> {storeData.description || 'Not provided'}
+              <strong>{t('descriptionLabel')}:</strong> {storeData.description || t('notAvailable')}
             </p>
             {storeData.logoUrl && (
               <p style={{ color: colors.text }}>
@@ -502,26 +504,26 @@ export const CompleteProfile: React.FC = () => {
           </div>
 
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Business Details</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('businessDetails')}</h3>
             <p style={{ color: colors.text }}>
-              <strong>Company:</strong> {businessData.companyName}
+              <strong>{t('companyNameLabel')}:</strong> {businessData.companyName}
             </p>
             <p style={{ color: colors.text }}>
-              <strong>Tax ID:</strong> {businessData.taxId || 'Not provided'}
+              <strong>{t('taxIdLabel')}:</strong> {businessData.taxId || t('notAvailable')}
             </p>
             <p style={{ color: colors.text }}>
-              <strong>Location:</strong> {businessData.city}, {businessData.country}
+              <strong>{t('businessLocation')}:</strong> {businessData.city}, {businessData.country}
             </p>
             <p style={{ color: colors.text }}>
-              <strong>Address:</strong> {businessData.addressLine || 'Not provided'}
+              <strong>{t('addressLabel')}:</strong> {businessData.addressLine || t('notAvailable')}
             </p>
             <p style={{ color: colors.text }}>
-              <strong>Contact:</strong> {businessData.contactName} ({businessData.contactPhone})
+              <strong>{t('contactPerson')}:</strong> {businessData.contactName} ({businessData.contactPhone})
             </p>
           </div>
 
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Documents Uploaded</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('documentsUploaded')}</h3>
             {documents.map((doc) => (
               <p key={doc.type} style={{ color: colors.text }}>
                 ✓ {doc.type.replace('_', ' ')}
@@ -539,13 +541,13 @@ export const CompleteProfile: React.FC = () => {
             }}
           >
             <p style={{ color: colors.textMuted, margin: 0 }}>
-              <strong>Important:</strong> By submitting this application, you confirm that all information provided is
+              <strong>{t('importantLabel')}:</strong> By submitting this application, you confirm that all information provided is
               accurate. Your application will be reviewed by our admin team within 1-2 business days.
             </p>
           </div>
 
           <button onClick={handleSubmitForReview} disabled={loading} style={primaryButton}>
-            {loading ? 'Submitting...' : 'Submit for Admin Review'}
+            {loading ? t('submitting') : t('submitForAdminReview')}
           </button>
         </div>
       )}

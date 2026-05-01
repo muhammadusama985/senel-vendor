@@ -4,10 +4,12 @@ import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
 import { PayoutStatusBadge } from './components/PayoutStatusBadge';
 import { PayoutFilters } from '../../types/wallet';
+import { useI18n } from '../../context/I18nContext';
 
 export const PayoutRequests: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { payouts, payoutsLoading, payoutTotal, payoutPage, payoutPages, limit, fetchPayouts, formatCurrency } =
     useWallet();
 
@@ -18,7 +20,7 @@ export const PayoutRequests: React.FC = () => {
 
   useEffect(() => {
     fetchPayouts({ page: filters.page, limit: filters.limit });
-  }, [fetchPayouts, filters.page, filters.limit]);
+  }, [fetchPayouts, filters.page, filters.limit, language]);
 
   const filteredPayouts = useMemo(() => {
     return payouts.filter((payout) => {
@@ -61,8 +63,8 @@ export const PayoutRequests: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>Payout Requests</h1>
-          <p style={{ color: colors.textMuted }}>Track and manage your payout requests</p>
+          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>{t('payoutRequestsTitle')}</h1>
+          <p style={{ color: colors.textMuted }}>{t('payoutRequestsSubtitle')}</p>
         </div>
         <button
           onClick={() => navigate('/wallet/request-payout')}
@@ -76,7 +78,7 @@ export const PayoutRequests: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          New Payout Request
+          {t('newPayoutRequest')}
         </button>
       </div>
 

@@ -22,7 +22,7 @@ export const ResetPassword: React.FC = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match', {
+      toast.error(t('authPasswordsMismatch'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
       return;
@@ -31,12 +31,12 @@ export const ResetPassword: React.FC = () => {
     setLoading(true);
     try {
       await api.post('/auth/password/reset', { email, otp, newPassword });
-      toast.success('Password reset successfully! Please login.', {
+      toast.success(t('authResetSuccess'), {
         style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
       });
       navigate('/login');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to reset password', {
+      toast.error(error.response?.data?.message || t('authResetFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
@@ -85,7 +85,7 @@ export const ResetPassword: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Reset Code
+              {t('authResetCode')}
             </label>
             <input
               type="text"
@@ -173,13 +173,13 @@ export const ResetPassword: React.FC = () => {
               marginBottom: '1rem',
             }}
           >
-            {loading ? 'Resetting...' : t('authResetPassword')}
+            {loading ? t('authResetting') : t('authResetPassword')}
           </button>
         </form>
 
         <div style={{ textAlign: 'center' }}>
           <Link to="/login" style={{ color: colors.accentBlue, fontSize: '0.9rem', textDecoration: 'none' }}>
-            Back to Login
+            {t('authBackToLogin')}
           </Link>
         </div>
       </div>

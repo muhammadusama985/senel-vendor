@@ -13,6 +13,7 @@ import {
 } from '../types/wallet';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 
 export const useWallet = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -30,6 +31,7 @@ export const useWallet = () => {
   const [payoutPages, setPayoutPages] = useState(1);
   const [limit] = useState(20);
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   const fetchWallet = useCallback(async () => {
     try {
@@ -38,7 +40,7 @@ export const useWallet = () => {
       return response.data.wallet;
     } catch (error) {
       console.error('Error fetching wallet:', error);
-      toast.error('Failed to load wallet', {
+      toast.error(t('failedLoadWallet', 'Failed to load wallet'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -67,7 +69,7 @@ export const useWallet = () => {
       setTransactionPages(data.pages || 1);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      toast.error('Failed to load transactions', {
+      toast.error(t('failedLoadTransactions', 'Failed to load transactions'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -96,7 +98,7 @@ export const useWallet = () => {
       setPayoutPages(data.pages || 1);
     } catch (error) {
       console.error('Error fetching payouts:', error);
-      toast.error('Failed to load payout requests', {
+      toast.error(t('failedLoadPayoutRequests', 'Failed to load payout requests'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -166,7 +168,7 @@ export const useWallet = () => {
         payoutDetails,
       });
       
-      toast.success('Payout request submitted', {
+      toast.success(t('payoutRequestSubmitted', 'Payout request submitted'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       
@@ -177,7 +179,7 @@ export const useWallet = () => {
       
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to request payout', {
+      toast.error(error.message || t('failedRequestPayout', 'Failed to request payout'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -190,7 +192,7 @@ export const useWallet = () => {
       return response.data.payoutRequest;
     } catch (error) {
       console.error('Error fetching payout:', error);
-      toast.error('Failed to load payout details', {
+      toast.error(t('failedLoadPayoutDetails', 'Failed to load payout details'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -198,20 +200,20 @@ export const useWallet = () => {
   };
 
   const cancelPayout = async (id: string): Promise<boolean> => {
-    if (!window.confirm('Are you sure you want to cancel this payout request?')) {
+    if (!window.confirm(t('cancelPayoutConfirm', 'Are you sure you want to cancel this payout request?'))) {
       return false;
     }
 
     try {
       await api.post(`/wallet/me/payout-requests/${id}/cancel`);
-      toast.success('Payout request cancelled', {
+      toast.success(t('payoutRequestCancelled', 'Payout request cancelled'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchPayouts({ page: 1, limit });
       await fetchSummary();
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to cancel payout', {
+      toast.error(error.message || t('failedCancelPayout', 'Failed to cancel payout'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -237,7 +239,7 @@ export const useWallet = () => {
       setLoading(false);
     };
     loadInitialData();
-  }, [fetchWallet, fetchTransactions, fetchPayouts, fetchSummary, limit]);
+  }, [fetchWallet, fetchTransactions, fetchPayouts, fetchSummary, language, limit]);
 
   return {
     wallet,

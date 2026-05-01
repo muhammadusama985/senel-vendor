@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 import { HandoverOrder, ShippingFilters, ShippingOrdersResponse } from '../types/shipping';
 
 export const useShipping = () => {
@@ -19,6 +20,7 @@ export const useShipping = () => {
   });
 
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   const fetchOrders = useCallback(async (currentFilters: ShippingFilters) => {
     setLoading(true);
@@ -40,7 +42,7 @@ export const useShipping = () => {
       setPages(data.pages || 1);
     } catch (error) {
       console.error('Error fetching shipping orders:', error);
-      toast.error('Failed to load shipping orders', {
+      toast.error(t('failedLoadShippingOrders', 'Failed to load shipping orders'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -54,7 +56,7 @@ export const useShipping = () => {
       return response.data.vendorOrder || null;
     } catch (error) {
       console.error('Error fetching handover order:', error);
-      toast.error('Failed to load order details', {
+      toast.error(t('failedLoadOrderDetails', 'Failed to load order details'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -83,14 +85,14 @@ export const useShipping = () => {
     try {
       await api.post(`/vendor-orders/me/${id}/ready-pickup`, data);
 
-      toast.success('Order marked ready for pickup', {
+      toast.success(t('orderReadyForPickupToast', 'Order marked ready for pickup'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
       await fetchOrders(filters);
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to mark ready for pickup', {
+      toast.error(error.message || t('failedReadyPickup', 'Failed to mark ready for pickup'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -109,7 +111,7 @@ export const useShipping = () => {
 
   useEffect(() => {
     fetchOrders(filters);
-  }, [fetchOrders, filters]);
+  }, [fetchOrders, filters, language]);
 
   return {
     orders,

@@ -27,12 +27,12 @@ export const Register: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.acceptTerms) newErrors.acceptTerms = 'You must accept the terms and conditions';
+    if (!formData.email) newErrors.email = t('authEmailRequired');
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t('authEmailInvalid');
+    if (!formData.password) newErrors.password = t('authPasswordRequired');
+    else if (formData.password.length < 8) newErrors.password = t('authPasswordMinLength');
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('authPasswordsDoNotMatch');
+    if (!formData.acceptTerms) newErrors.acceptTerms = t('authAcceptTermsError');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -49,7 +49,7 @@ export const Register: React.FC = () => {
         role: 'vendor',
       });
 
-      toast.success('Registration successful! Please login to continue.', {
+      toast.success(t('registrationSuccessfulLogin'), {
         style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
         duration: 4000,
       });
@@ -58,7 +58,7 @@ export const Register: React.FC = () => {
         state: { email: formData.email, fromRegistration: true },
       });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed', {
+      toast.error(error.response?.data?.message || t('registerFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
@@ -118,7 +118,7 @@ export const Register: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Email Address *
+              {t('authEmailAddress')} *
             </label>
             <input
               type="email"
@@ -136,14 +136,14 @@ export const Register: React.FC = () => {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              placeholder="vendor@example.com"
+              placeholder={t('emailPlaceholderVendor')}
             />
             {errors.email && <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.email}</p>}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Password *
+              {t('passwordLabel')} *
             </label>
             <input
               type="password"
@@ -161,7 +161,7 @@ export const Register: React.FC = () => {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              placeholder="********"
+              placeholder={t('passwordPlaceholder')}
             />
             {errors.password && (
               <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.password}</p>
@@ -170,7 +170,7 @@ export const Register: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Confirm Password *
+              {t('authConfirmPassword')} *
             </label>
             <input
               type="password"
@@ -188,7 +188,7 @@ export const Register: React.FC = () => {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              placeholder="********"
+              placeholder={t('passwordPlaceholder')}
             />
             {errors.confirmPassword && (
               <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.confirmPassword}</p>
@@ -205,9 +205,9 @@ export const Register: React.FC = () => {
                 style={{ width: '18px', height: '18px', cursor: 'pointer' }}
               />
               <span style={{ color: colors.text, fontSize: '0.9rem' }}>
-                I accept the{' '}
+                {t('authAcceptTermsLabel')}{' '}
                 <a href="/terms" style={{ color: colors.accentGold, textDecoration: 'none' }}>
-                  Terms and Conditions
+                  {t('authTermsAndConditions')}
                 </a>
               </span>
             </label>
@@ -233,13 +233,13 @@ export const Register: React.FC = () => {
               marginBottom: '1rem',
             }}
           >
-            {loading ? 'Creating Account...' : t('authCreateVendorAccount')}
+            {loading ? t('authCreateAccountLoading') : t('authCreateVendorAccount')}
           </button>
 
           <div style={{ textAlign: 'center' }}>
-            <span style={{ color: colors.textMuted }}>Already have an account? </span>
+            <span style={{ color: colors.textMuted }}>{t('authAlreadyHaveAccount')} </span>
             <Link to="/login" style={{ color: colors.accentBlue, textDecoration: 'none', fontWeight: 'bold' }}>
-              Login
+              {t('authVendorLogin')}
             </Link>
           </div>
         </form>

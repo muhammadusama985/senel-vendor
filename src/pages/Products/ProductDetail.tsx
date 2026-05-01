@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { Product } from '../../types/product';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -9,6 +10,7 @@ export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { getProduct, deleteProduct, submitProduct } = useProducts();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export const ProductDetail: React.FC = () => {
   }, [id, getProduct, navigate]);
 
   const handleDelete = async () => {
-    if (id && window.confirm('Are you sure you want to delete this product?')) {
+    if (id && window.confirm(t('deleteConfirmProduct', 'Are you sure you want to delete this product?'))) {
       await deleteProduct(id);
       navigate('/products');
     }
@@ -83,7 +85,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   if (!product) {
-    return <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>Product not found</div>;
+    return <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>{t('failedLoadProduct', 'Product not found')}</div>;
   }
 
   const galleryImages = Array.from(
@@ -127,7 +129,7 @@ export const ProductDetail: React.FC = () => {
                   border: `1px solid ${colors.accentRed}40`,
                 }}
               >
-                LOW STOCK
+                {t('lowStockLabel', 'LOW STOCK')}
               </span>
             )}
           </div>
@@ -139,7 +141,7 @@ export const ProductDetail: React.FC = () => {
                 onClick={() => navigate(`/products/${id}/edit`)}
                 style={{ background: colors.buttonGradient, color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', cursor: 'pointer' }}
               >
-                Edit
+                {t('editLabel', 'Edit')}
               </button>
               <button
                 onClick={handleSubmit}
@@ -154,13 +156,13 @@ export const ProductDetail: React.FC = () => {
                   opacity: submitting ? 0.7 : 1,
                 }}
               >
-                {submitting ? 'Submitting...' : 'Submit for Approval'}
+                {submitting ? t('submitting', 'Submitting...') : t('submitForApproval', 'Submit for Approval')}
               </button>
               <button
                 onClick={handleDelete}
                 style={{ background: colors.buttonGradient, color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', cursor: 'pointer' }}
               >
-                Delete
+                {t('deleteLabel', 'Delete')}
               </button>
             </>
           )}
@@ -168,7 +170,7 @@ export const ProductDetail: React.FC = () => {
             onClick={() => navigate('/products')}
             style={{ background: colors.buttonGradient, color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', cursor: 'pointer' }}
           >
-            Back
+            {t('back', 'Back')}
           </button>
         </div>
       </div>
@@ -202,18 +204,18 @@ export const ProductDetail: React.FC = () => {
 
         <div>
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Description</h3>
-            <p style={{ color: colors.textMuted, lineHeight: '1.6' }}>{product.description || 'No description provided.'}</p>
+            <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('descriptionLabel', 'Description')}</h3>
+            <p style={{ color: colors.textMuted, lineHeight: '1.6' }}>{product.description || t('noDescriptionProvided', 'No description provided.')}</p>
           </div>
 
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Pricing Tiers</h3>
+            <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('pricingTiersLabel', 'Pricing Tiers')}</h3>
             <div style={{ backgroundColor: colors.inputBg, borderRadius: '8px', padding: '1rem', border: `1px solid ${colors.border}` }}>
               <table style={{ width: '100%' }}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>Min Quantity</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>Unit Price</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('minQuantity', 'Min Quantity')}</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('unitPrice', 'Unit Price')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -230,34 +232,34 @@ export const ProductDetail: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
             <div style={cardStyle}>
-              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>MOQ</h3>
+              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('moqLabel', 'MOQ')}</h3>
               <p style={{ color: colors.textMuted }}>{product.moq} units</p>
             </div>
             <div style={cardStyle}>
-              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Stock</h3>
+              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('stockLabel', 'Stock')}</h3>
               <p style={{ color: colors.textMuted }}>{product.stockQty} units</p>
             </div>
             <div style={cardStyle}>
-              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Country</h3>
-              <p style={{ color: colors.textMuted }}>{product.country || 'Not specified'}</p>
+              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('countryLabel', 'Country')}</h3>
+              <p style={{ color: colors.textMuted }}>{product.country || t('notSpecifiedLabel', 'Not specified')}</p>
             </div>
             <div style={cardStyle}>
-              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Shipping</h3>
+              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('shipping', 'Shipping')}</h3>
               <p style={{ color: colors.textMuted }}>
-                {product.requiresManualShipping ? 'Manual quote required' : 'Standard shipping'}
+                {product.requiresManualShipping ? t('manualQuoteRequired', 'Manual quote required') : t('standardShippingLabel', 'Standard shipping')}
               </p>
             </div>
           </div>
 
           {product.hasVariants && product.variants && product.variants.length > 0 && (
             <div style={{ ...cardStyle, marginBottom: '2rem' }}>
-              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>Variants</h3>
+              <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('variantsLabel', 'Variants')}</h3>
               <div style={{ backgroundColor: colors.inputBg, borderRadius: '8px', padding: '1rem', border: `1px solid ${colors.border}` }}>
                 <table style={{ width: '100%' }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>SKU</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>Attributes</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('skuLabel', 'SKU')}</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('productLabel', 'Attributes')}</th>
                     </tr>
                   </thead>
                   <tbody>

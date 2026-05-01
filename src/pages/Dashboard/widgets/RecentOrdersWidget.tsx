@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import api from '../../../api/client';
+import { useI18n } from '../../../context/I18nContext';
 
 interface Order {
   _id: string;
@@ -14,6 +15,7 @@ export const RecentOrdersWidget: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -28,7 +30,7 @@ export const RecentOrdersWidget: React.FC = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [language]);
 
   const getStatusColor = (status: string) => {
     const statusMap: Record<string, string> = {
@@ -58,7 +60,7 @@ export const RecentOrdersWidget: React.FC = () => {
           border: `1px solid ${colors.border}`,
         }}
       >
-        <p style={{ color: colors.text }}>Loading orders...</p>
+        <p style={{ color: colors.text }}>{t('loading')}</p>
       </div>
     );
   }
@@ -75,7 +77,7 @@ export const RecentOrdersWidget: React.FC = () => {
       }}
     >
       <h3 style={{ color: colors.text, marginBottom: '1rem', fontSize: '1.2rem' }}>
-        Recent Orders
+        {t('orders')}
       </h3>
 
       <div style={{ overflowX: 'auto' }}>
@@ -83,16 +85,16 @@ export const RecentOrdersWidget: React.FC = () => {
           <thead>
             <tr>
               <th style={{ textAlign: 'left', padding: '0.75rem', color: colors.text, opacity: 0.8 }}>
-                Order #
+                {t('orderNumber')}
               </th>
               <th style={{ textAlign: 'left', padding: '0.75rem', color: colors.text, opacity: 0.8 }}>
-                Status
+                {t('status')}
               </th>
               <th style={{ textAlign: 'right', padding: '0.75rem', color: colors.text, opacity: 0.8 }}>
-                Total
+                {t('total')}
               </th>
               <th style={{ textAlign: 'right', padding: '0.75rem', color: colors.text, opacity: 0.8 }}>
-                Date
+                {t('date')}
               </th>
             </tr>
           </thead>

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://holiday-occurrence-grace-display.trycloudflare.com/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'https://mission-growing-complete-controls.trycloudflare.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,15 +11,20 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('vendorToken');
+    const language = localStorage.getItem('vendorLanguage') || 'en';
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // ✅ NEW: Don't set Content-Type for FormData - let browser set it with boundary
+
+    config.headers['Accept-Language'] = language;
+    config.headers['x-lang'] = language;
+
+    // Don't set Content-Type for FormData - let browser set it with boundary
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
-    
+
     return config;
   },
   (error) => {
@@ -35,7 +40,7 @@ api.interceptors.response.use(
       localStorage.removeItem('vendorToken');
       window.location.href = '/login';
     }
-    
+
     // Format error message
     const message = error.response?.data?.message || 'An error occurred';
     return Promise.reject({ ...error, message });

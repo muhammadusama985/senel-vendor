@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { TicketStatusBadge } from './components/TicketStatusBadge';
 import { TicketPriorityBadge } from './components/TicketPriorityBadge';
 import { MessageThread } from './components/MessageThread';
+import { useI18n } from '../../context/I18nContext';
 
 export const TicketDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,13 +24,14 @@ export const TicketDetail: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   useEffect(() => {
     if (id) {
       getTicket(id);
       getMessages(id);
     }
-  }, [id, getTicket, getMessages]);
+  }, [id, getTicket, getMessages, language]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !id) return;
@@ -65,7 +67,7 @@ export const TicketDetail: React.FC = () => {
               <TicketStatusBadge status={currentTicket.status} />
               <TicketPriorityBadge priority={currentTicket.priority} />
               <span style={{ color: colors.textMuted }}>
-                Created: {formatDate(currentTicket.createdAt)}
+                {t('created')}: {formatDate(currentTicket.createdAt)}
               </span>
             </div>
           </div>
@@ -80,7 +82,7 @@ export const TicketDetail: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Back to List
+            {t('backToList')}
           </button>
         </div>
       </div>
@@ -97,12 +99,12 @@ export const TicketDetail: React.FC = () => {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Ticket Details</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('ticketDetails')}</h3>
             <p style={{ color: colors.text, lineHeight: '1.6' }}>{currentTicket.description}</p>
 
             {currentTicket.attachments && currentTicket.attachments.length > 0 && (
               <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>Attachments</h4>
+                <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('attachments')}</h4>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {currentTicket.attachments.map((att, index) => (
                     <a
@@ -137,7 +139,7 @@ export const TicketDetail: React.FC = () => {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Conversation</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('conversation')}</h3>
 
             <MessageThread
               messages={messages}
@@ -149,7 +151,7 @@ export const TicketDetail: React.FC = () => {
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your reply..."
+                placeholder={t('typeReply')}
                 rows={4}
                 style={{
                   width: '100%',
@@ -177,7 +179,7 @@ export const TicketDetail: React.FC = () => {
                     opacity: sending || !newMessage.trim() ? 0.7 : 1,
                   }}
                 >
-                  {sending ? 'Sending...' : 'Send Reply'}
+                  {sending ? t('sendingLabel') : t('sendReply')}
                 </button>
               </div>
             </div>
@@ -195,7 +197,7 @@ export const TicketDetail: React.FC = () => {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Update Status</h4>
+            <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('updateStatus')}</h4>
             <select
               value={currentTicket.status}
               onChange={(e) => handleUpdateStatus(e.target.value)}
@@ -208,11 +210,11 @@ export const TicketDetail: React.FC = () => {
                 color: colors.text,
               }}
             >
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="waiting">Waiting</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="open">{t('open')}</option>
+              <option value="in_progress">{t('inProgress')}</option>
+              <option value="waiting">{t('waiting', 'Waiting')}</option>
+              <option value="resolved">{t('resolved')}</option>
+              <option value="closed">{t('closed')}</option>
             </select>
           </div>
 
@@ -225,33 +227,33 @@ export const TicketDetail: React.FC = () => {
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Ticket Information</h4>
+            <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('ticketInformation')}</h4>
 
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>Category</div>
+              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>{t('category')}</div>
               <div style={{ fontWeight: 'bold', color: colors.text }}>{currentTicket.category}</div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>Priority</div>
+              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>{t('priority')}</div>
               <div><TicketPriorityBadge priority={currentTicket.priority} /></div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>Created At</div>
+              <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>{t('createdAtLabel')}</div>
               <div style={{ color: colors.text }}>{formatDate(currentTicket.createdAt)}</div>
             </div>
 
             {currentTicket.resolvedAt && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>Resolved At</div>
+                <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>{t('resolvedAtLabel')}</div>
                 <div style={{ color: colors.text }}>{formatDate(currentTicket.resolvedAt)}</div>
               </div>
             )}
 
             {currentTicket.closedAt && (
               <div>
-                <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>Closed At</div>
+                <div style={{ fontSize: '0.9rem', color: colors.textMuted, marginBottom: '0.25rem' }}>{t('closedAtLabel')}</div>
                 <div style={{ color: colors.text }}>{formatDate(currentTicket.closedAt)}</div>
               </div>
             )}

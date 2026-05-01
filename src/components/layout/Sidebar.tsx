@@ -52,8 +52,8 @@ const navigation: NavItem[] = [
     path: '/support',
     icon: LifebuoyIcon,
     children: [
-      { label: 'Support Tickets', path: '/support', icon: TicketIcon },
-      { label: 'Disputes', path: '/support/disputes', icon: ExclamationTriangleIcon },
+      { label: 'supportTicketsLabel', path: '/support', icon: TicketIcon },
+      { label: 'customerDisputes', path: '/support/disputes', icon: ExclamationTriangleIcon },
     ],
   },
   { key: 'settings', path: '/settings', icon: Cog6ToothIcon },
@@ -75,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) =
   );
 
   const getItemLabel = (item: NavItem) => {
-    if (item.label) return item.label;
+    if (item.label) return t(item.label, item.label);
     return item.key ? t(item.key as any) : item.path;
   };
 

@@ -3,6 +3,7 @@ import api from '../api/client';
 import { VendorOrder, OrderFilters, OrdersResponse } from '../types/order';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 
 export const useOrders = () => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
@@ -16,6 +17,7 @@ export const useOrders = () => {
     limit: 20,
   });
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   const fetchOrders = useCallback(async (filters: OrderFilters) => {
     setLoading(true);
@@ -39,7 +41,7 @@ export const useOrders = () => {
       setPages(data.pages || 1);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      toast.error('Failed to load orders', {
+      toast.error(t('failedLoadOrders', 'Failed to load orders'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -53,7 +55,7 @@ export const useOrders = () => {
       return response.data.vendorOrder;
     } catch (error) {
       console.error('Error fetching order:', error);
-      toast.error('Failed to load order details', {
+      toast.error(t('failedLoadOrderDetails', 'Failed to load order details'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -63,13 +65,13 @@ export const useOrders = () => {
   const acceptOrder = async (id: string): Promise<boolean> => {
     try {
       await api.post(`/vendor-orders/me/${id}/accept`);
-      toast.success('Order accepted successfully', {
+      toast.success(t('orderAcceptedSuccess', 'Order accepted successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchOrders(filters);
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to accept order', {
+      toast.error(error.message || t('failedAcceptOrder', 'Failed to accept order'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -79,13 +81,13 @@ export const useOrders = () => {
   const markPacked = async (id: string): Promise<boolean> => {
     try {
       await api.post(`/vendor-orders/me/${id}/packed`);
-      toast.success('Order marked as packed', {
+      toast.success(t('orderPackedSuccess', 'Order marked as packed'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchOrders(filters);
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to mark as packed', {
+      toast.error(error.message || t('failedMarkPacked', 'Failed to mark as packed'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -117,13 +119,13 @@ export const useOrders = () => {
   ): Promise<boolean> => {
     try {
       await api.post(`/vendor-orders/me/${id}/ready-pickup`, data);
-      toast.success('Order ready for pickup', {
+      toast.success(t('orderReadyPickupSuccess', 'Order ready for pickup'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchOrders(filters);
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to mark ready for pickup', {
+      toast.error(error.message || t('failedReadyPickup', 'Failed to mark ready for pickup'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -147,7 +149,7 @@ export const useOrders = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error printing label:', error);
-      toast.error('Failed to generate label', {
+      toast.error(t('failedGenerateLabel', 'Failed to generate label'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     }
@@ -167,7 +169,7 @@ export const useOrders = () => {
 
   useEffect(() => {
     fetchOrders(filters);
-  }, [fetchOrders, filters]);
+  }, [fetchOrders, filters, language]);
 
   return {
     orders,

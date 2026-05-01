@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../hooks/useStaff';
 import { useTheme } from '../../context/ThemeContext';
 import { StaffRoleBadge } from './components/StaffRoleBadge';
+import { useI18n } from '../../context/I18nContext';
 
 export const StaffList: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { staff, loading, removeStaff, formatDate } = useStaff();
   const [removing, setRemoving] = useState<string | null>(null);
 
@@ -43,8 +45,8 @@ export const StaffList: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>Team Members</h1>
-          <p style={{ color: colors.textMuted }}>Manage your staff and their permissions</p>
+          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>{t('teamMembers')}</h1>
+          <p style={{ color: colors.textMuted }}>{t('manageStaffPermissions')}</p>
         </div>
         <button
           onClick={() => navigate('/staff/invite')}
@@ -59,7 +61,7 @@ export const StaffList: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          + Invite Team Member
+          + {t('inviteTeamMember')}
         </button>
       </div>
 
@@ -92,12 +94,12 @@ export const StaffList: React.FC = () => {
                   fontWeight: 'bold',
                 }}
               >
-                OWNER
+                {t('ownerLabel').toUpperCase()}
               </span>
             </div>
 
             <div style={{ color: colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>{owner.user?.email}</div>
-            {owner.lastActiveAt && <div style={{ fontSize: '0.85rem', color: colors.textMuted }}>Last active: {formatDate(owner.lastActiveAt)}</div>}
+            {owner.lastActiveAt && <div style={{ fontSize: '0.85rem', color: colors.textMuted }}>{t('lastActive')}: {formatDate(owner.lastActiveAt)}</div>}
           </div>
         ))}
 
@@ -135,10 +137,10 @@ export const StaffList: React.FC = () => {
 
             <div style={{ color: colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>{member.user?.email}</div>
             <div style={{ fontSize: '0.85rem', color: colors.textMuted, marginBottom: '1rem' }}>
-              Invited: {formatDate(member.invitedAt)}
-              {member.acceptedAt && ` - Accepted: ${formatDate(member.acceptedAt)}`}
+              {t('invitedLabel')}: {formatDate(member.invitedAt)}
+              {member.acceptedAt && ` - ${t('acceptedAtLabel')}: ${formatDate(member.acceptedAt)}`}
             </div>
-            {member.lastActiveAt && <div style={{ fontSize: '0.85rem', color: colors.textMuted, marginBottom: '1rem' }}>Last active: {formatDate(member.lastActiveAt)}</div>}
+            {member.lastActiveAt && <div style={{ fontSize: '0.85rem', color: colors.textMuted, marginBottom: '1rem' }}>{t('lastActive')}: {formatDate(member.lastActiveAt)}</div>}
 
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
               <button
@@ -153,7 +155,7 @@ export const StaffList: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                View
+                {t('view')}
               </button>
               <button
                 onClick={() => navigate(`/staff/${member._id}/edit`)}
@@ -167,7 +169,7 @@ export const StaffList: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Edit
+                {t('editLabel')}
               </button>
               <button
                 onClick={() => handleRemove(member._id)}
@@ -183,7 +185,7 @@ export const StaffList: React.FC = () => {
                   opacity: removing === member._id ? 0.7 : 1,
                 }}
               >
-                {removing === member._id ? '...' : 'Remove'}
+                {removing === member._id ? '...' : t('removeLabel')}
               </button>
             </div>
           </div>
@@ -191,7 +193,7 @@ export const StaffList: React.FC = () => {
 
         {staff.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: colors.textMuted }}>
-            No team members yet. Click "Invite Team Member" to get started.
+            {t('noTeamMembers')}
           </div>
         )}
       </div>

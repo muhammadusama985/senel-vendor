@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface HandoverStatusBadgeProps {
   status: string;
@@ -11,6 +12,7 @@ export const HandoverStatusBadge: React.FC<HandoverStatusBadgeProps> = ({
   size = 'medium'
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const getStatusColor = (status: string): string => {
     const statusMap: Record<string, string> = {
@@ -27,13 +29,13 @@ export const HandoverStatusBadge: React.FC<HandoverStatusBadgeProps> = ({
 
   const getStatusText = (status: string): string => {
     const statusMap: Record<string, string> = {
-      placed: 'Placed',
-      accepted: 'Accepted',
-      packed: 'Packed',
-      ready_pickup: 'Ready for Pickup',
-      shipped: 'Shipped',
-      delivered: 'Delivered',
-      cancelled: 'Cancelled',
+      placed: t('placed'),
+      accepted: t('acceptedLabel'),
+      packed: t('packedLabel'),
+      ready_pickup: t('readyForPickupLabel'),
+      shipped: t('shippedLabel'),
+      delivered: t('deliveredLabel'),
+      cancelled: t('cancelledLabel'),
     };
     return statusMap[status] || status;
   };

@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTickets } from '../../hooks/useTickets';
 import { useTheme } from '../../context/ThemeContext';
 import { CreateTicketData, TicketCategory } from '../../types/ticket';
+import { useI18n } from '../../context/I18nContext';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
   const { createTicket } = useTickets();
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const [formData, setFormData] = useState<CreateTicketData>({
     subject: '',
@@ -20,35 +22,35 @@ export const CreateTicket: React.FC = () => {
   const [errors, setErrors] = useState<{ subject?: string; description?: string }>({});
 
   const categories: { value: TicketCategory; label: string }[] = [
-    { value: 'technical', label: 'Technical Issue' },
-    { value: 'billing', label: 'Billing Question' },
-    { value: 'product', label: 'Product Question' },
-    { value: 'order', label: 'Order Issue' },
-    { value: 'shipping', label: 'Shipping Question' },
-    { value: 'account', label: 'Account Management' },
-    { value: 'other', label: 'Other' },
+    { value: 'technical', label: t('technicalIssue') },
+    { value: 'billing', label: t('billingQuestion') },
+    { value: 'product', label: t('productQuestion') },
+    { value: 'order', label: t('orderIssue') },
+    { value: 'shipping', label: t('shippingQuestion') },
+    { value: 'account', label: t('accountManagement') },
+    { value: 'other', label: t('other') },
   ];
 
   const priorities = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'urgent', label: 'Urgent' },
+    { value: 'low', label: t('low') },
+    { value: 'medium', label: t('medium') },
+    { value: 'high', label: t('high') },
+    { value: 'urgent', label: t('urgent') },
   ];
 
   const validate = (): boolean => {
     const newErrors: { subject?: string; description?: string } = {};
 
     if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
+      newErrors.subject = t('subjectRequired');
     } else if (formData.subject.length < 5) {
-      newErrors.subject = 'Subject must be at least 5 characters';
+      newErrors.subject = t('subjectMinLength');
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = t('descriptionRequired');
     } else if (formData.description.length < 10) {
-      newErrors.description = 'Description must be at least 10 characters';
+      newErrors.description = t('descriptionMinLength');
     }
 
     setErrors(newErrors);
@@ -79,10 +81,10 @@ export const CreateTicket: React.FC = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto', color: colors.text }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Create Support Ticket
+          {t('createSupportTicket')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Submit a new support request. Our team will respond shortly.
+          {t('createSupportTicketSubtitle')}
         </p>
       </div>
 
@@ -98,13 +100,13 @@ export const CreateTicket: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Subject *
+              {t('subject')} *
             </label>
             <input
               type="text"
               value={formData.subject}
               onChange={(e) => handleChange('subject', e.target.value)}
-              placeholder="Brief summary of your issue"
+              placeholder={t('issueSummaryPlaceholder')}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -124,7 +126,7 @@ export const CreateTicket: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-                Category *
+                {t('category')} *
               </label>
               <select
                 value={formData.category}
@@ -148,7 +150,7 @@ export const CreateTicket: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-                Priority
+                {t('priority')}
               </label>
               <select
                 value={formData.priority}
@@ -173,12 +175,12 @@ export const CreateTicket: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
-              Description *
+              {t('descriptionLabel')} *
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Please provide detailed information about your issue..."
+              placeholder={t('descriptionPlaceholder')}
               rows={6}
               style={{
                 width: '100%',
@@ -207,7 +209,7 @@ export const CreateTicket: React.FC = () => {
             }}
           >
             <p style={{ fontSize: '0.9rem', margin: 0 }}>
-              <strong style={{ color: colors.text }}>Note:</strong> Our support team typically responds within 24 hours on business days.
+              <strong style={{ color: colors.text }}>{t('noteLabel')}:</strong> {t('supportResponseNote')}
             </p>
           </div>
 
@@ -224,7 +226,7 @@ export const CreateTicket: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -240,7 +242,7 @@ export const CreateTicket: React.FC = () => {
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Submitting...' : 'Submit Ticket'}
+              {submitting ? t('submitting') : t('submitTicket')}
             </button>
           </div>
         </form>

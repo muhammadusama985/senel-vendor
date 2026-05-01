@@ -3,6 +3,7 @@ import api from '../api/client';
 import { Dispute, DisputeMessage, DisputeFilters } from '../types/dispute';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 
 export const useDisputes = () => {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -15,6 +16,7 @@ export const useDisputes = () => {
   const [pages, setPages] = useState(1);
   const [limit] = useState(20);
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const fetchDisputes = useCallback(async (filters: DisputeFilters) => {
     setLoading(true);
@@ -35,7 +37,7 @@ export const useDisputes = () => {
       setPages(response.data.pages || 1);
     } catch (error) {
       console.error('Error fetching disputes:', error);
-      toast.error('Failed to load disputes', {
+      toast.error(t('failedLoadDisputes', 'Failed to load disputes'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -51,7 +53,7 @@ export const useDisputes = () => {
       return response.data.dispute;
     } catch (error) {
       console.error('Error fetching dispute:', error);
-      toast.error('Failed to load dispute details', {
+      toast.error(t('failedLoadDisputeDetails', 'Failed to load dispute details'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -65,7 +67,7 @@ export const useDisputes = () => {
       setMessages(response.data.messages || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
-      toast.error('Failed to load messages', {
+      toast.error(t('failedLoadMessages', 'Failed to load messages'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -76,13 +78,13 @@ export const useDisputes = () => {
   const addMessage = useCallback(async (disputeId: string, message: string): Promise<boolean> => {
     try {
       await api.post(`/disputes/${disputeId}/messages`, { message });
-      toast.success('Reply sent', {
+      toast.success(t('replySent', 'Reply sent'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await getMessages(disputeId);
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send reply', {
+      toast.error(error.message || t('failedSendReply', 'Failed to send reply'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;

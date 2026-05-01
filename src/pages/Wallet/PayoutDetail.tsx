@@ -4,11 +4,13 @@ import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
 import { PayoutStatusBadge } from './components/PayoutStatusBadge';
 import { PayoutRequest } from '../../types/wallet';
+import { useI18n } from '../../context/I18nContext';
 
 export const PayoutDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { payouts, fetchPayouts, formatCurrency } = useWallet();
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +20,7 @@ export const PayoutDetail: React.FC = () => {
       setLoading(false);
     };
     loadPayouts();
-  }, [fetchPayouts]);
+  }, [fetchPayouts, language]);
 
   const payout: PayoutRequest | null = useMemo(() => {
     if (!id) return null;
@@ -45,7 +47,7 @@ export const PayoutDetail: React.FC = () => {
   }
 
   if (!payout) {
-    return <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>Payout request not found</div>;
+    return <div style={{ textAlign: 'center', padding: '3rem', color: colors.textMuted }}>{t('payoutRequestNotFound')}</div>;
   }
 
   return (

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
 import { PayoutBankDetails } from '../../types/wallet';
+import { useI18n } from '../../context/I18nContext';
 
 export const RequestPayout: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { wallet, requestPayout, formatCurrency } = useWallet();
 
   const [amount, setAmount] = useState<number>(0);
@@ -26,17 +28,17 @@ export const RequestPayout: React.FC = () => {
     const newErrors: { amount?: string; accountHolderName?: string; accountNumber?: string } = {};
 
     if (!amount || amount <= 0) {
-      newErrors.amount = 'Please enter a valid amount';
+      newErrors.amount = t('enterValidAmount');
     } else if (wallet && amount > wallet.balance) {
-      newErrors.amount = `Amount cannot exceed your balance of ${formatCurrency(wallet.balance)}`;
+      newErrors.amount = t('amountExceedsBalance').replace('{{amount}}', formatCurrency(wallet.balance));
     }
 
     if (!bankDetails.accountHolderName.trim()) {
-      newErrors.accountHolderName = 'Please enter the account holder name';
+      newErrors.accountHolderName = t('accountHolderRequired');
     }
 
     if (!bankDetails.accountNumber.trim()) {
-      newErrors.accountNumber = 'Please enter the account number';
+      newErrors.accountNumber = t('accountNumberRequired');
     }
 
     setErrors(newErrors);

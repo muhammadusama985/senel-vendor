@@ -5,10 +5,12 @@ import { useTheme } from '../../context/ThemeContext';
 import { TicketStatusBadge } from './components/TicketStatusBadge';
 import { TicketPriorityBadge } from './components/TicketPriorityBadge';
 import { TicketFilters } from '../../types/ticket';
+import { useI18n } from '../../context/I18nContext';
 
 export const TicketList: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const {
     tickets,
     loading,
@@ -31,7 +33,7 @@ export const TicketList: React.FC = () => {
 
   useEffect(() => {
     fetchTickets(filters);
-  }, [fetchTickets, filters]);
+  }, [fetchTickets, filters, language]);
 
   const handleFilter = () => {
     setFilters({
@@ -55,14 +57,14 @@ export const TicketList: React.FC = () => {
   };
 
   const categoryOptions = [
-    { value: '', label: 'All Categories' },
-    { value: 'technical', label: 'Technical' },
-    { value: 'billing', label: 'Billing' },
-    { value: 'product', label: 'Product' },
-    { value: 'order', label: 'Order' },
-    { value: 'shipping', label: 'Shipping' },
-    { value: 'account', label: 'Account' },
-    { value: 'other', label: 'Other' },
+    { value: '', label: t('allCategories') },
+    { value: 'technical', label: t('technicalIssue') },
+    { value: 'billing', label: t('billingQuestion') },
+    { value: 'product', label: t('productQuestion') },
+    { value: 'order', label: t('orderIssue') },
+    { value: 'shipping', label: t('shippingQuestion') },
+    { value: 'account', label: t('accountManagement') },
+    { value: 'other', label: t('other') },
   ];
 
   const getCategoryIcon = (category: string): string => {
@@ -91,10 +93,10 @@ export const TicketList: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-            Support Tickets
+            {t('supportTicketsTitle')}
           </h1>
           <p style={{ color: colors.textMuted }}>
-            Manage your support requests
+            {t('supportTicketsSubtitle')}
           </p>
         </div>
         <button
@@ -110,7 +112,7 @@ export const TicketList: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          + New Ticket
+          + {t('newTicket')}
         </button>
       </div>
 
@@ -127,7 +129,7 @@ export const TicketList: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Status
+              {t('status')}
             </label>
             <select
               value={statusFilter}
@@ -141,18 +143,18 @@ export const TicketList: React.FC = () => {
                 color: colors.text,
               }}
             >
-              <option value="">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="waiting">Waiting</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="">{t('allStatuses')}</option>
+              <option value="open">{t('open')}</option>
+              <option value="in_progress">{t('inProgress')}</option>
+              <option value="waiting">{t('waiting', 'Waiting')}</option>
+              <option value="resolved">{t('resolved')}</option>
+              <option value="closed">{t('closed')}</option>
             </select>
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Priority
+              {t('priority')}
             </label>
             <select
               value={priorityFilter}
@@ -166,17 +168,17 @@ export const TicketList: React.FC = () => {
                 color: colors.text,
               }}
             >
-              <option value="">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
+              <option value="">{t('allPriorities')}</option>
+              <option value="low">{t('low')}</option>
+              <option value="medium">{t('medium')}</option>
+              <option value="high">{t('high')}</option>
+              <option value="urgent">{t('urgent')}</option>
             </select>
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Category
+              {t('category')}
             </label>
             <select
               value={categoryFilter}
@@ -211,7 +213,7 @@ export const TicketList: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Clear Filters
+            {t('clearFilters')}
           </button>
           <button
             onClick={handleFilter}
@@ -225,7 +227,7 @@ export const TicketList: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            Apply Filters
+            {t('applyFilters')}
           </button>
         </div>
       </div>
@@ -243,20 +245,20 @@ export const TicketList: React.FC = () => {
           <thead>
             <tr style={{ backgroundColor: colors.inputBg, borderBottom: `1px solid ${colors.border}` }}>
               <th style={{ padding: '1rem', textAlign: 'left' }}>Ticket</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Category</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Subject</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Status</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Priority</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Created</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Messages</th>
-              <th style={{ padding: '1rem', textAlign: 'left' }}>Actions</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('category')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('subject')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('status')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('priority')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('created')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('messagesLabel')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {tickets.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted }}>
-                  No tickets found
+                    {t('noTicketsFound')}
                 </td>
               </tr>
             ) : (
@@ -294,7 +296,7 @@ export const TicketList: React.FC = () => {
                         cursor: 'pointer',
                       }}
                     >
-                      View
+                      {t('view')}
                     </button>
                   </td>
                 </tr>
@@ -318,7 +320,7 @@ export const TicketList: React.FC = () => {
               cursor: page === 1 ? 'not-allowed' : 'pointer',
             }}
           >
-            Previous
+            {t('previous')}
           </button>
 
           {Array.from({ length: Math.min(5, pages) }, (_, i) => {
@@ -359,14 +361,14 @@ export const TicketList: React.FC = () => {
               cursor: page === pages ? 'not-allowed' : 'pointer',
             }}
           >
-            Next
+            {t('next')}
           </button>
         </div>
       )}
 
       {!loading && tickets.length > 0 && (
         <div style={{ marginTop: '1rem', textAlign: 'right', color: colors.textMuted }}>
-          Showing {tickets.length} of {total} tickets
+          {t('showing')} {tickets.length} {t('of')} {total} {t('tickets')}
         </div>
       )}
     </div>

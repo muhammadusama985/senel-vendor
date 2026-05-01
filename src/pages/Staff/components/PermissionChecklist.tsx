@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { STAFF_PERMISSIONS } from '../../../types/staff';
+import { useI18n } from '../../../context/I18nContext';
 
 interface PermissionChecklistProps {
   selectedPermissions: string[];
@@ -14,6 +15,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
   disabled = false,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const handleToggle = (permissionValue: string) => {
     if (selectedPermissions.includes(permissionValue)) {
@@ -34,7 +36,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <label style={{ fontWeight: 'bold', color: colors.text }}>Permissions</label>
+        <label style={{ fontWeight: 'bold', color: colors.text }}>{t('permissions', 'Permissions')}</label>
         {!disabled && (
           <button
             type="button"
@@ -47,7 +49,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
               fontSize: '0.9rem',
             }}
           >
-            {selectedPermissions.length === STAFF_PERMISSIONS.length ? 'Deselect All' : 'Select All'}
+            {selectedPermissions.length === STAFF_PERMISSIONS.length ? t('deselectAll', 'Deselect All') : t('selectAll', 'Select All')}
           </button>
         )}
       </div>

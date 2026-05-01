@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { Package } from '../../../types/shipping';
+import { useI18n } from '../../../context/I18nContext';
 
 interface PackageCardProps {
   pkg: Package;
@@ -18,6 +19,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   canRemove,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   return (
     <div
@@ -31,7 +33,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
         <h4 style={{ color: colors.text, fontWeight: 'bold' }}>
-          Box {pkg.boxIndex}
+          {t('boxes').slice(0, -2) || 'Box'} {pkg.boxIndex}
         </h4>
         {canRemove && (
           <button
@@ -52,7 +54,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
         <div>
           <label style={{ fontSize: '0.8rem', color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>
-            Weight (kg)
+            {t('weight')} (kg)
           </label>
           <input
             type="number"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface PayoutStatusBadgeProps {
   status: string;
@@ -11,6 +12,7 @@ export const PayoutStatusBadge: React.FC<PayoutStatusBadgeProps> = ({
   size = 'medium'
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const getStatusColor = (currentStatus: string): string => {
     const statusMap: Record<string, string> = {
@@ -34,10 +36,10 @@ export const PayoutStatusBadge: React.FC<PayoutStatusBadgeProps> = ({
 
   const getStatusText = (currentStatus: string): string => {
     const statusMap: Record<string, string> = {
-      requested: 'Requested',
-      approved: 'Approved',
-      rejected: 'Rejected',
-      paid: 'Paid',
+      requested: t('requested'),
+      approved: t('approvedStatus'),
+      rejected: t('rejectedStatus'),
+      paid: t('paidStatus'),
     };
     return statusMap[currentStatus] || currentStatus;
   };

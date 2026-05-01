@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 import { OrderFilters } from '../../../types/order';
 
 interface OrderFiltersProps {
@@ -12,20 +13,21 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
   onFilterChange,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const [search, setSearch] = useState(filters.search || '');
   const [status, setStatus] = useState(filters.status || '');
   const [dateFrom, setDateFrom] = useState(filters.dateFrom || '');
   const [dateTo, setDateTo] = useState(filters.dateTo || '');
 
   const statusOptions = [
-    { value: '', label: 'All Status' },
-    { value: 'placed', label: 'Placed' },
-    { value: 'accepted', label: 'Accepted' },
-    { value: 'packed', label: 'Packed' },
-    { value: 'ready_pickup', label: 'Ready for Pickup' },
-    { value: 'shipped', label: 'Shipped' },
-    { value: 'delivered', label: 'Delivered' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: '', label: t('orderFilterAllStatus') },
+    { value: 'placed', label: t('placedLabel') },
+    { value: 'accepted', label: t('acceptedLabel') },
+    { value: 'packed', label: t('packedLabel') },
+    { value: 'ready_pickup', label: t('readyForPickupCount') },
+    { value: 'shipped', label: t('shippedLabel') },
+    { value: 'delivered', label: t('deliveredLabel') },
+    { value: 'cancelled', label: t('cancelledLabel') },
   ];
 
   const handleSearch = () => {
@@ -73,7 +75,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
         {/* Search */}
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-            Search Orders
+            {t('searchOrders')}
           </label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
@@ -81,7 +83,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Order # or customer..."
+              placeholder={t('orderOrIdPlaceholder')}
               style={{
                 flex: 1,
                 padding: '0.75rem',
@@ -104,7 +106,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
                 fontWeight: 'bold',
               }}
             >
-              Search
+              {t('search')}
             </button>
           </div>
         </div>
@@ -112,7 +114,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
         {/* Status Filter */}
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-            Status
+            {t('status')}
           </label>
           <select
             value={status}
@@ -139,7 +141,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              From
+              {t('fromLabel')}
             </label>
             <input
               type="date"
@@ -158,7 +160,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              To
+              {t('toShortLabel')}
             </label>
             <input
               type="date"
@@ -191,7 +193,7 @@ export const OrderFiltersComponent: React.FC<OrderFiltersProps> = ({
               fontSize: '0.9rem',
             }}
           >
-            Clear Filters
+            {t('clearFiltersLabel')}
           </button>
         </div>
       )}

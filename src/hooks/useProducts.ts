@@ -3,6 +3,7 @@ import api from '../api/client';
 import { Product, ProductFormData, Category } from '../types/product';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 
 const getApiOrigin = () => {
   const baseUrl = import.meta.env.VITE_API_URL || 'https://holiday-occurrence-grace-display.trycloudflare.com/api/v1';
@@ -91,6 +92,7 @@ export const useProducts = () => {
   const [limit] = useState(20);
   const [categories, setCategories] = useState<Category[]>([]);
   const { colors } = useTheme();
+  const { language, t } = useI18n();
 
   const fetchProducts = useCallback(async (pageNum = page, status?: string) => {
     setLoading(true);
@@ -104,7 +106,7 @@ export const useProducts = () => {
       setPage(response.data.page || 1);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products', {
+      toast.error(t('failedLoadProducts', 'Failed to load products'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -118,7 +120,7 @@ export const useProducts = () => {
       setCategories((response.data.categories || []).map(normalizeCategory));
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories', {
+      toast.error(t('failedLoadCategories', 'Failed to load categories'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     }
@@ -130,7 +132,7 @@ export const useProducts = () => {
       return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error) {
       console.error('Error fetching product:', error);
-      toast.error('Failed to load product', {
+      toast.error(t('failedLoadProduct', 'Failed to load product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -147,14 +149,14 @@ export const useProducts = () => {
 
       const response = await api.post('/products/me', payload);
 
-      toast.success('Product created successfully', {
+      toast.success(t('productCreatedSuccess', 'Product created successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
       await fetchProducts();
       return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to create product', {
+      toast.error(error.response?.data?.message || error.message || t('failedCreateProduct', 'Failed to create product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -173,14 +175,14 @@ export const useProducts = () => {
 
       const response = await api.patch(`/products/me/${id}`, payload);
 
-      toast.success('Product updated successfully', {
+      toast.success(t('productUpdatedSuccess', 'Product updated successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
       await fetchProducts();
       return response.data.product ? normalizeProduct(response.data.product) : null;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to update product', {
+      toast.error(error.response?.data?.message || error.message || t('failedUpdateProduct', 'Failed to update product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -190,19 +192,19 @@ export const useProducts = () => {
   };
 
   const deleteProduct = async (id: string): Promise<boolean> => {
-    if (!window.confirm('Are you sure you want to delete this product?')) {
+    if (!window.confirm(t('deleteConfirmProduct', 'Are you sure you want to delete this product?'))) {
       return false;
     }
 
     try {
       await api.delete(`/products/me/${id}`);
-      toast.success('Product deleted successfully', {
+      toast.success(t('productDeletedSuccess', 'Product deleted successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchProducts();
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete product', {
+      toast.error(error.message || t('failedDeleteProduct', 'Failed to delete product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -212,13 +214,13 @@ export const useProducts = () => {
   const submitProduct = async (id: string): Promise<boolean> => {
     try {
       await api.post(`/products/me/${id}/submit`);
-      toast.success('Product submitted for approval', {
+      toast.success(t('productSubmittedSuccess', 'Product submitted for approval'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchProducts();
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to submit product', {
+      toast.error(error.message || t('failedSubmitProduct', 'Failed to submit product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -228,13 +230,13 @@ export const useProducts = () => {
   const requestHotProduct = async (id: string): Promise<boolean> => {
     try {
       await api.post(`/products/me/${id}/hot-request`);
-      toast.success('Hot product request sent to admin', {
+      toast.success(t('hotProductRequestedSuccess', 'Hot product request sent to admin'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       await fetchProducts();
       return true;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to request hot product', {
+      toast.error(error.response?.data?.message || error.message || t('failedHotProductRequest', 'Failed to request hot product'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -248,14 +250,14 @@ export const useProducts = () => {
     try {
       const response = await api.post('/products/me/images', formData);
 
-      toast.success('Image uploaded successfully', {
+      toast.success(t('imageUploadedSuccess', 'Image uploaded successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
 
       const imageUrl = resolveMediaUrl(response.data.imageUrl);
       return imageUrl || null;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to upload image', {
+      toast.error(error.response?.data?.message || error.message || t('failedUploadImage', 'Failed to upload image'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return null;
@@ -265,7 +267,7 @@ export const useProducts = () => {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [fetchProducts, fetchCategories]);
+  }, [fetchProducts, fetchCategories, language]);
 
   return {
     products,

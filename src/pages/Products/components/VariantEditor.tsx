@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { Variant } from '../../../types/product';
+import { useI18n } from '../../../context/I18nContext';
 
 interface VariantEditorProps {
   variants: Variant[];
@@ -84,6 +85,7 @@ const getVariantAttributeTitle = (variant: Variant, fallbackIndex: number) => {
 
 export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange, uploadImage }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const [draftAttributeTitles, setDraftAttributeTitles] = useState<Record<string, string>>({});
 
   const attributeGroups = useMemo<AttributeGroup[]>(() => {
@@ -184,9 +186,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
     <div style={{ marginTop: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.text }}>Attributes & Options</label>
+          <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.text }}>{t('attributesOptions', 'Attributes & Options')}</label>
           <div style={{ color: colors.textMuted, fontSize: '0.9rem' }}>
-            Add one attribute title like Color or Size, then add many option names under it. Each option can have its own images.
+            {t('attributesOptionsHelp', 'Add one attribute title like Color or Size, then add many option names under it. Each option can have its own images.')}
           </div>
         </div>
         <button
@@ -203,7 +205,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
             whiteSpace: 'nowrap',
           }}
         >
-          + Add Attribute
+          + {t('addAttribute', 'Add Attribute')}
         </button>
       </div>
 
@@ -224,7 +226,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.9rem' }}>Attribute Title</label>
+                <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.9rem' }}>{t('attributeTitle', 'Attribute Title')}</label>
                 <input
                   type="text"
                   value={titleDraft}
@@ -272,7 +274,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  + Add Option
+                    + {t('addOption', 'Add Option')}
                 </button>
                 <button
                   type="button"
@@ -288,7 +290,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Remove Attribute
+                    {t('removeAttribute', 'Remove Attribute')}
                 </button>
               </div>
             </div>
@@ -309,7 +311,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <div style={{ color: colors.text, fontWeight: 600 }}>Option {optionOffset + 1}</div>
+                      <div style={{ color: colors.text, fontWeight: 600 }}>{t('option', 'Option')} {optionOffset + 1}</div>
                       <button
                         type="button"
                         onClick={() => removeOption(variantIndex)}
@@ -337,7 +339,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                       {colorMode ? (
                         <>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>Option Name</label>
+                            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('optionName', 'Option Name')}</label>
                             <input
                               type="text"
                               value={String(optionValue || '')}
@@ -354,7 +356,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                             />
                           </div>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>Palette</label>
+                            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('palette', 'Palette')}</label>
                             <input
                               type="color"
                               value={colorHexFromValue(String(optionValue || ''))}
@@ -388,7 +390,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                         </>
                       ) : (
                         <div>
-                          <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>Option Name</label>
+                          <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('optionName', 'Option Name')}</label>
                           <input
                             type="text"
                             value={String(optionValue || '')}
@@ -412,7 +414,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                       )}
 
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>SKU *</label>
+                        <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('skuLabel')} *</label>
                         <input
                           type="text"
                           value={option.sku}
@@ -440,7 +442,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        Upload Images
+                        {t('attachments', 'Upload Images')}
                         <input
                           type="file"
                           accept="image/*"
@@ -485,7 +487,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                         ))}
                       </div>
                     ) : (
-                      <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>No images added for this option</span>
+                      <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>{t('noImagesForOption', 'No images added for this option')}</span>
                     )}
                   </div>
                 );

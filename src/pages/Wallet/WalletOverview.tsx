@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../../hooks/useWallet';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { BalanceCard } from './components/BalanceCard';
 import { TransactionList } from './components/TransactionList';
 import { WalletSummary as WalletSummaryComponent } from './components/WalletSummary';
@@ -9,6 +10,7 @@ import { WalletSummary as WalletSummaryComponent } from './components/WalletSumm
 export const WalletOverview: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { wallet, transactions, summary, loading, transactionsLoading } = useWallet();
   const [showAllTransactions, setShowAllTransactions] = useState(false);
 
@@ -35,8 +37,8 @@ export const WalletOverview: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>Wallet Overview</h1>
-          <p style={{ color: colors.textMuted }}>Manage your earnings and payouts</p>
+          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>{t('walletOverviewTitle', 'Wallet Overview')}</h1>
+          <p style={{ color: colors.textMuted }}>{t('walletOverviewSubtitle', 'Manage your earnings and payouts')}</p>
         </div>
         <button
           onClick={() => navigate('/wallet/request-payout')}
@@ -51,7 +53,7 @@ export const WalletOverview: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Request Payout
+          {t('requestPayout', 'Request Payout')}
         </button>
       </div>
 
@@ -91,7 +93,7 @@ export const WalletOverview: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '2rem' }}>📊</span>
-          <span>All Transactions</span>
+          <span>{t('allTransactions', 'All Transactions')}</span>
         </button>
 
         <button
@@ -106,7 +108,7 @@ export const WalletOverview: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '2rem' }}>💰</span>
-          <span>Payout History</span>
+          <span>{t('payoutHistory', 'Payout History')}</span>
         </button>
 
         <button
@@ -122,7 +124,7 @@ export const WalletOverview: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '2rem' }}>💸</span>
-          <span>Withdraw Funds</span>
+          <span>{t('withdrawFunds', 'Withdraw Funds')}</span>
         </button>
       </div>
 
@@ -142,7 +144,7 @@ export const WalletOverview: React.FC = () => {
 
       <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: 'bold' }}>Recent Transactions</h3>
+          <h3 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: 'bold' }}>{t('recentTransactions', 'Recent Transactions')}</h3>
           <button
             onClick={() => setShowAllTransactions(!showAllTransactions)}
             style={{
@@ -152,7 +154,7 @@ export const WalletOverview: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            {showAllTransactions ? 'Show Less' : 'View All'}
+            {showAllTransactions ? t('showLess', 'Show Less') : t('viewAllLabel', 'View All')}
           </button>
         </div>
 

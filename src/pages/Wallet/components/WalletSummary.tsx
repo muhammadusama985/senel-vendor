@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { WalletSummary as SummaryType } from '../../../types/wallet';
+import { useI18n } from '../../../context/I18nContext';
 
 interface WalletSummaryProps {
   summary: SummaryType;
@@ -12,9 +13,10 @@ export const WalletSummary: React.FC<WalletSummaryProps> = ({
   formatCurrency,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return t('notAvailable', 'Never');
     return new Date(dateString).toLocaleDateString();
   };
 

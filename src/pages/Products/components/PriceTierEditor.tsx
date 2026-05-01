@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { PriceTier } from '../../../types/product';
+import { useI18n } from '../../../context/I18nContext';
 
 interface PriceTierEditorProps {
   tiers: PriceTier[];
@@ -10,6 +11,7 @@ interface PriceTierEditorProps {
 
 export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChange, moq }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const addTier = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,7 +40,7 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Price Tiers *</label>
+      <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('pricingTiersLabel')} *</label>
 
       <div
         style={{
@@ -49,8 +51,8 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
         }}
       >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 50px', gap: '1rem', marginBottom: '0.5rem' }}>
-          <div style={{ fontWeight: 'bold', color: colors.text }}>Min Quantity</div>
-          <div style={{ fontWeight: 'bold', color: colors.text }}>Unit Price (EUR)</div>
+          <div style={{ fontWeight: 'bold', color: colors.text }}>{t('minQuantity')}</div>
+          <div style={{ fontWeight: 'bold', color: colors.text }}>{t('unitPrice')} ({t('currencyLabel', 'Currency')})</div>
           <div></div>
         </div>
 
@@ -118,11 +120,11 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
             cursor: 'pointer',
           }}
         >
-          + Add Price Tier
+          + {t('addPriceTier')}
         </button>
 
         <p style={{ fontSize: '0.85rem', color: colors.textMuted, marginTop: '0.5rem' }}>
-          {moq && `First tier min quantity should be >= MOQ (${moq})`}
+          {moq ? t('firstTierMoqHint').replace('{{moq}}', String(moq)) : ''}
         </p>
       </div>
     </div>

@@ -19,11 +19,11 @@ export const ForgotPassword: React.FC = () => {
     try {
       await api.post('/auth/password/forgot', { email });
       setSent(true);
-      toast.success('Reset code sent to your email!', {
+      toast.success(t('authResetCodeSent'), {
         style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
       });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send reset code', {
+      toast.error(error.response?.data?.message || t('authSendResetFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
@@ -93,7 +93,7 @@ export const ForgotPassword: React.FC = () => {
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
-                placeholder="vendor@example.com"
+                placeholder={t('emailPlaceholderVendor')}
               />
             </div>
 
@@ -114,7 +114,7 @@ export const ForgotPassword: React.FC = () => {
                 marginBottom: '1rem',
               }}
             >
-              {loading ? 'Sending...' : t('authSendResetCode')}
+              {loading ? t('authSending') : t('authSendResetCode')}
             </button>
           </form>
         ) : (
@@ -135,14 +135,14 @@ export const ForgotPassword: React.FC = () => {
                 marginBottom: '1rem',
               }}
             >
-              Enter Reset Code
+              {t('authEnterResetCodeButton')}
             </Link>
           </div>
         )}
 
         <div style={{ textAlign: 'center', marginTop: '1rem' }}>
           <Link to="/login" style={{ color: colors.accentBlue, fontSize: '0.9rem', textDecoration: 'none' }}>
-            Back to Login
+            {t('authBackToLogin')}
           </Link>
         </div>
       </div>

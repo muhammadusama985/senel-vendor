@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { useOrders } from '../../hooks/useOrders';
 import { OrderStatusBadge } from './components/OrderStatusBadge';
 import { OrderFiltersComponent } from './components/OrderFilters';
@@ -9,6 +10,7 @@ import { formatCurrency } from '../../utils/formatters';
 export const OrderList: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { 
     orders, 
     loading, 
@@ -37,10 +39,10 @@ export const OrderList: React.FC = () => {
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Orders
+          {t('orders', 'Orders')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Manage and process customer orders
+          {t('ordersSubtitle', 'Manage and process customer orders')}
         </p>
       </div>
 
@@ -60,20 +62,20 @@ export const OrderList: React.FC = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: colors.inputBg, borderBottom: `1px solid ${colors.border}` }}>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Order #</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Date</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Items</th>
-              <th style={{ padding: '1rem', textAlign: 'right', color: colors.text }}>Total</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Status</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Payment</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Actions</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('orderNumber', 'Order #')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('date', 'Date')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('items', 'Items')}</th>
+              <th style={{ padding: '1rem', textAlign: 'right', color: colors.text }}>{t('total', 'Total')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('status', 'Status')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('payment', 'Payment')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
             {orders.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted }}>
-                  No orders found
+                  {t('noOrdersFound', 'No orders found')}
                 </td>
               </tr>
             ) : (
@@ -89,7 +91,7 @@ export const OrderList: React.FC = () => {
                     {formatDate(order.createdAt)}
                   </td>
                   <td style={{ padding: '1rem', color: colors.textMuted }}>
-                    {order.items?.length || 0} items
+                    {order.items?.length || 0} {t('items', 'items')}
                   </td>
                   <td style={{ padding: '1rem', color: colors.text, textAlign: 'right', fontWeight: 'bold' }}>
                     {formatCurrency(order.grandTotal, order.currency)}
@@ -118,7 +120,7 @@ export const OrderList: React.FC = () => {
                         fontSize: '0.9rem',
                       }}
                     >
-                      View
+                      {t('view', 'View')}
                     </button>
                   </td>
                 </tr>
@@ -143,7 +145,7 @@ export const OrderList: React.FC = () => {
               cursor: page === 1 ? 'not-allowed' : 'pointer',
             }}
           >
-            Previous
+            {t('previous', 'Previous')}
           </button>
           
           {Array.from({ length: Math.min(5, pages) }, (_, i) => {
@@ -189,14 +191,16 @@ export const OrderList: React.FC = () => {
               cursor: page === pages ? 'not-allowed' : 'pointer',
             }}
           >
-            Next
+            {t('next', 'Next')}
           </button>
         </div>
       )}
 
       {/* Summary */}
       <div style={{ marginTop: '1rem', textAlign: 'right', color: colors.textMuted }}>
-        Showing {orders.length} of {total} orders
+        {t('showingCountOfTotal', 'Showing {{count}} of {{total}} orders')
+          .replace('{{count}}', String(orders.length))
+          .replace('{{total}}', String(total))}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../../context/I18nContext';
 
 interface TicketStatusBadgeProps {
   status: string;
@@ -9,6 +10,7 @@ export const TicketStatusBadge: React.FC<TicketStatusBadgeProps> = ({
   status,
   size = 'medium',
 }) => {
+  const { t } = useI18n();
   const getStatusColor = (value: string): string => {
     const statusMap: Record<string, string> = {
       open: '#f59e0b',
@@ -33,13 +35,13 @@ export const TicketStatusBadge: React.FC<TicketStatusBadgeProps> = ({
 
   const getStatusText = (value: string): string => {
     const textMap: Record<string, string> = {
-      open: 'Open',
-      in_progress: 'In Progress',
-      waiting: 'Waiting',
-      resolved: 'Resolved',
-      closed: 'Closed',
+      open: t('open'),
+      in_progress: t('inProgress'),
+      waiting: t('waiting', 'Waiting'),
+      resolved: t('resolved'),
+      closed: t('closed'),
     };
-    return textMap[value] || value;
+    return textMap[value] || t(value, value);
   };
 
   const padding = size === 'small' ? '0.25rem 0.5rem' : '0.5rem 1rem';

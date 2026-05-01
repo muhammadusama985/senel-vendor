@@ -9,6 +9,7 @@ import {
   StaffMember,
   UpdateStaffPayload,
 } from '../types/staff';
+import { useI18n } from '../context/I18nContext';
 
 function normalizeOwner(owner: StaffListResponse['owner']): StaffMember | null {
   if (!owner) return null;
@@ -38,6 +39,7 @@ function normalizeStaffResponse(data: StaffListResponse): StaffMember[] {
 }
 
 export function useStaff() {
+  const { t } = useI18n();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -70,7 +72,7 @@ export function useStaff() {
     console.error('Invite staff failed', error);
     return {
       success: false,
-      message: error?.response?.data?.message || error?.message || 'Failed to send invitation',
+      message: error?.response?.data?.message || error?.message || t('failedSendInvitation', 'Failed to send invitation'),
     };
   }
 }, [fetchStaff]);

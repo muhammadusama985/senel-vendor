@@ -3,9 +3,11 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { useI18n } from '../../context/I18nContext';
 
 export const Settings: React.FC = () => {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { vendor, setVendor } = useAuthStore();
   const panelStyle: React.CSSProperties = {
     backgroundColor: colors.surface,
@@ -91,11 +93,11 @@ export const Settings: React.FC = () => {
 
       setVendor(response.data.vendor);
 
-      toast.success('Settings updated successfully', {
+      toast.success(t('settingsUpdatedSuccess'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
     } catch (error) {
-      toast.error('Failed to update settings', {
+      toast.error(t('failedUpdateSettings'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -118,11 +120,11 @@ export const Settings: React.FC = () => {
         });
       }
 
-      toast.success('Notification preferences updated', {
+      toast.success(t('notificationPreferencesUpdated'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
     } catch (error) {
-      toast.error('Failed to update preferences', {
+      toast.error(t('failedUpdatePreferences'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -145,11 +147,11 @@ export const Settings: React.FC = () => {
         });
       }
 
-      toast.success('Security settings updated', {
+      toast.success(t('securitySettingsUpdated'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
     } catch (error) {
-      toast.error('Failed to update security settings', {
+      toast.error(t('failedUpdateSecurity'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
@@ -161,10 +163,10 @@ export const Settings: React.FC = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Settings
+          {t('settings')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Manage your account preferences and configurations
+          {t('accountPreferencesSubtitle')}
         </p>
       </div>
 
@@ -191,19 +193,19 @@ export const Settings: React.FC = () => {
               fontWeight: activeTab === tab ? 'bold' : 'normal',
             }}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'general' ? t('generalTab') : tab === 'notifications' ? t('notificationsTab') : t('securityTab')}
           </button>
         ))}
       </div>
 
       {activeTab === 'general' && (
         <div style={panelStyle}>
-          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>General Settings</h3>
+          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('generalSettings')}</h3>
 
           <div style={{ display: 'grid', gap: '1.5rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Store Name
+                {t('storeNameLabel')}
               </label>
               <input
                 type="text"
@@ -215,7 +217,7 @@ export const Settings: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Email Address
+                {t('authEmailAddress')}
               </label>
               <input
                 type="email"
@@ -227,7 +229,7 @@ export const Settings: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Phone Number
+                {t('phoneNumber')}
               </label>
               <input
                 type="tel"
@@ -240,7 +242,7 @@ export const Settings: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Timezone
+                  {t('timezoneLabel')}
                 </label>
                 <select
                   value={generalSettings.timezone}
@@ -255,7 +257,7 @@ export const Settings: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Currency
+                  {t('currencyLabel')}
                 </label>
                 <select
                   value={generalSettings.currency}
@@ -271,7 +273,7 @@ export const Settings: React.FC = () => {
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Language
+                {t('languageLabel')}
               </label>
               <select
                 value={generalSettings.language}
@@ -300,7 +302,7 @@ export const Settings: React.FC = () => {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? t('savingLabel', 'Saving...') : t('saveChanges')}
             </button>
           </div>
         </div>
@@ -308,11 +310,11 @@ export const Settings: React.FC = () => {
 
       {activeTab === 'notifications' && (
         <div style={panelStyle}>
-          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Notification Preferences</h3>
+          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('notificationPreferences')}</h3>
 
           <div style={{ display: 'grid', gap: '1.5rem' }}>
             <div>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Email Notifications</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('emailNotifications')}</h4>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                 <input
@@ -323,7 +325,7 @@ export const Settings: React.FC = () => {
                     emailOrders: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>New Orders</span>
+                <span style={{ color: colors.text }}>{t('newOrders')}</span>
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -335,7 +337,7 @@ export const Settings: React.FC = () => {
                     emailPayouts: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Payout Updates</span>
+                <span style={{ color: colors.text }}>{t('payoutUpdates')}</span>
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -347,12 +349,12 @@ export const Settings: React.FC = () => {
                     emailMarketing: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Marketing & Promotions</span>
+                <span style={{ color: colors.text }}>{t('marketingPromotions')}</span>
               </label>
             </div>
 
             <div>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Push Notifications</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('pushNotifications')}</h4>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                 <input
@@ -363,7 +365,7 @@ export const Settings: React.FC = () => {
                     pushOrders: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Order Updates</span>
+                <span style={{ color: colors.text }}>{t('orderUpdates')}</span>
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -375,7 +377,7 @@ export const Settings: React.FC = () => {
                     pushPayouts: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Payout Updates</span>
+                <span style={{ color: colors.text }}>{t('payoutUpdates')}</span>
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -387,7 +389,7 @@ export const Settings: React.FC = () => {
                     pushLowStock: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Low Stock Alerts</span>
+                <span style={{ color: colors.text }}>{t('lowStockAlerts')}</span>
               </label>
             </div>
           </div>
@@ -407,7 +409,7 @@ export const Settings: React.FC = () => {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? 'Saving...' : 'Save Preferences'}
+              {loading ? t('savingLabel', 'Saving...') : t('savePreferences')}
             </button>
           </div>
         </div>
@@ -415,11 +417,11 @@ export const Settings: React.FC = () => {
 
       {activeTab === 'security' && (
         <div style={panelStyle}>
-          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Security Settings</h3>
+          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('securitySettingsTitle')}</h3>
 
           <div style={{ display: 'grid', gap: '1.5rem' }}>
             <div>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Two-Factor Authentication</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('twoFactorAuthentication')}</h4>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                 <input
@@ -430,16 +432,16 @@ export const Settings: React.FC = () => {
                     twoFactorAuth: e.target.checked
                   })}
                 />
-                <span style={{ color: colors.text }}>Enable 2FA for additional security</span>
+                <span style={{ color: colors.text }}>{t('enable2fa')}</span>
               </label>
             </div>
 
             <div>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Session Settings</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('sessionSettings')}</h4>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Session Timeout (minutes)
+                  {t('sessionTimeout')}
                 </label>
                 <select
                   value={securitySettings.sessionTimeout}
@@ -458,7 +460,7 @@ export const Settings: React.FC = () => {
             </div>
 
             <div style={{ marginTop: '1rem' }}>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Change Password</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('changePassword')}</h4>
 
               <button
                 onClick={() => window.location.href = '/reset-password'}
@@ -471,7 +473,7 @@ export const Settings: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Change Password
+                {t('changePassword')}
               </button>
             </div>
           </div>
@@ -491,7 +493,7 @@ export const Settings: React.FC = () => {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? 'Saving...' : 'Save Security Settings'}
+              {loading ? t('savingLabel', 'Saving...') : t('saveSecuritySettings')}
             </button>
           </div>
         </div>

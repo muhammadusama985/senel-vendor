@@ -6,11 +6,13 @@ import { OrderStatusBadge } from './components/OrderStatusBadge';
 import { OrderTimeline } from './components/OrderTimeline';
 import { VendorOrder } from '../../types/order';
 import { formatCurrency } from '../../utils/formatters';
+import { useI18n } from '../../context/I18nContext';
 
 export const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { getOrder, acceptOrder, markPacked, markReadyForPickup, printLabel } = useOrders();
   
   const [order, setOrder] = useState<VendorOrder | null>(null);
@@ -28,7 +30,7 @@ export const OrderDetail: React.FC = () => {
       setLoading(false);
     };
     loadOrder();
-  }, [id, getOrder]);
+  }, [id, getOrder, language]);
 
   const handleAccept = async () => {
     if (!id) return;
@@ -119,7 +121,7 @@ export const OrderDetail: React.FC = () => {
   if (!order) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: textMuted }}>
-        Order not found
+        {t('orderNotFound')}
       </div>
     );
   }
@@ -165,7 +167,7 @@ export const OrderDetail: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              {actionLoading === 'accept' ? 'Accepting...' : 'Accept Order'}
+              {actionLoading === 'accept' ? t('accepting') : t('acceptOrder')}
             </button>
           )}
           {canPack && (
@@ -183,7 +185,7 @@ export const OrderDetail: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              {actionLoading === 'pack' ? 'Packing...' : 'Mark Packed'}
+              {actionLoading === 'pack' ? t('packing') : t('markPacked')}
             </button>
           )}
           {canReady && (
@@ -201,7 +203,7 @@ export const OrderDetail: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              Ready for Pickup
+              {t('readyForPickup')}
             </button>
           )}
           {canPrint && (
@@ -217,7 +219,7 @@ export const OrderDetail: React.FC = () => {
                 fontWeight: 'bold',
               }}
             >
-              Print Label
+              {t('printLabelShort')}
             </button>
           )}
           <button
@@ -231,7 +233,7 @@ export const OrderDetail: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Back
+            {t('back')}
           </button>
         </div>
       </div>
@@ -272,15 +274,15 @@ export const OrderDetail: React.FC = () => {
             `
           }}
         >
-          <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Items</h3>
+          <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>{t('items')}</h3>
           
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: panelBorder }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left', color: textMuted }}>Product</th>
-                <th style={{ padding: '0.75rem', textAlign: 'center', color: textMuted }}>Qty</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>Unit Price</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>Total</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', color: textMuted }}>{t('product')}</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', color: textMuted }}>{t('qty')}</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>{t('unitPrice')}</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>{t('total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -299,7 +301,7 @@ export const OrderDetail: React.FC = () => {
                         <div style={{ fontWeight: 'bold', color: textPrimary }}>{item.title}</div>
                         {item.variantSku && (
                           <div style={{ fontSize: '0.85rem', color: textMuted }}>
-                            SKU: {item.variantSku}
+                            {t('skuLabel')}: {item.variantSku}
                           </div>
                         )}
                         {item.variantAttributes && Object.keys(item.variantAttributes).length > 0 && (
@@ -327,7 +329,7 @@ export const OrderDetail: React.FC = () => {
             <tfoot>
               <tr>
                 <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
-                  Subtotal:
+                  {t('subtotal')}:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                   {formatCurrency(order.subtotal, order.currency)}
@@ -336,7 +338,7 @@ export const OrderDetail: React.FC = () => {
               {order.discountTotal > 0 && (
                 <tr>
                   <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
-                    Discount:
+                    {t('discount')}:
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: colors.accentRed, fontWeight: 'bold' }}>
                     -{formatCurrency(order.discountTotal, order.currency)}
@@ -346,7 +348,7 @@ export const OrderDetail: React.FC = () => {
               {order.shippingTotal > 0 && (
                 <tr>
                   <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textMuted }}>
-                    Shipping:
+                    {t('shipping')}:
                   </td>
                   <td style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
                     {formatCurrency(order.shippingTotal, order.currency)}
@@ -355,7 +357,7 @@ export const OrderDetail: React.FC = () => {
               )}
               <tr>
                 <td colSpan={3} style={{ padding: '0.75rem', textAlign: 'right', color: textPrimary, fontWeight: 'bold' }}>
-                  Total:
+                  {t('total')}:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ffd43b', fontWeight: 'bold', fontSize: '1.2rem' }}>
                   {formatCurrency(order.grandTotal, order.currency)}
@@ -378,11 +380,11 @@ export const OrderDetail: React.FC = () => {
               marginBottom: '1rem'
             }}
           >
-            <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Order Information</h3>
+            <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>{t('orderInformation')}</h3>
             
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
-                Order Number
+                {t('orderNumber')}
               </div>
               <div style={{ fontWeight: 'bold', color: textPrimary }}>
                 {order.vendorOrderNumber}
@@ -391,7 +393,7 @@ export const OrderDetail: React.FC = () => {
 
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
-                Payment Status
+                {t('paymentStatus')}
               </div>
               <div>
                 <span style={{
@@ -410,10 +412,10 @@ export const OrderDetail: React.FC = () => {
             {order.boxCount && (
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
-                  Box Count
+                  {t('boxCount')}
                 </div>
                 <div style={{ fontWeight: 'bold', color: textPrimary }}>
-                  {order.boxCount} boxes
+                  {order.boxCount} {t('boxes').toLowerCase()}
                 </div>
               </div>
             )}
@@ -421,7 +423,7 @@ export const OrderDetail: React.FC = () => {
             {order.handoverNote && (
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
-                  Handover Note
+                  {t('handoverNoteLabel')}
                 </div>
                 <div style={{ color: textPrimary, fontStyle: 'italic' }}>
                   {order.handoverNote}
@@ -432,7 +434,7 @@ export const OrderDetail: React.FC = () => {
             {order.tracking?.trackingNumber && (
               <div>
                 <div style={{ fontSize: '0.9rem', color: textMuted, marginBottom: '0.25rem' }}>
-                  Tracking
+                  {t('tracking')}
                 </div>
                 <div style={{ color: textPrimary }}>
                   {order.tracking.carrier}: {order.tracking.trackingNumber}
@@ -443,7 +445,7 @@ export const OrderDetail: React.FC = () => {
                       rel="noopener noreferrer"
                       style={{ marginLeft: '0.5rem', color: '#91c9ff' }}
                     >
-                      Track
+                      {t('track')}
                     </a>
                   )}
                 </div>
@@ -462,18 +464,18 @@ export const OrderDetail: React.FC = () => {
                 border: panelBorder,
               }}
             >
-              <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>Shipping Details</h3>
+              <h3 style={{ color: textPrimary, marginBottom: '1rem' }}>{t('shippingDetails')}</h3>
               
               {order.shippingPrep.weightKg && (
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: textMuted }}>Weight: </span>
+                  <span style={{ color: textMuted }}>{t('weight')}: </span>
                   <span style={{ fontWeight: 'bold', color: textPrimary }}>{order.shippingPrep.weightKg} kg</span>
                 </div>
               )}
               
               {order.shippingPrep.lengthCm && order.shippingPrep.widthCm && order.shippingPrep.heightCm && (
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: textMuted }}>Dimensions: </span>
+                  <span style={{ color: textMuted }}>{t('dimensions')}: </span>
                   <span style={{ fontWeight: 'bold', color: textPrimary }}>
                     {order.shippingPrep.lengthCm} x {order.shippingPrep.widthCm} x {order.shippingPrep.heightCm} cm
                   </span>
@@ -482,7 +484,7 @@ export const OrderDetail: React.FC = () => {
               
               {order.shippingPrep.boxCount && (
                 <div>
-                  <span style={{ color: textMuted }}>Boxes: </span>
+                  <span style={{ color: textMuted }}>{t('boxes')}: </span>
                   <span style={{ fontWeight: 'bold', color: textPrimary }}>{order.shippingPrep.boxCount}</span>
                 </div>
               )}
@@ -518,13 +520,13 @@ export const OrderDetail: React.FC = () => {
             }}
           >
             <h2 style={{ color: textPrimary, marginBottom: '1.5rem' }}>
-              Mark Ready for Pickup
+              {t('markReadyForPickup')}
             </h2>
 
             {/* Packages */}
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: textPrimary, fontWeight: 'bold' }}>
-                Package Details
+                {t('packageDetails')}
               </label>
               
               {packages.map((pkg, index) => (
@@ -623,7 +625,7 @@ export const OrderDetail: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                + Add Another Box
+                + {t('addAnotherBox')}
               </button>
             </div>
 
@@ -640,7 +642,7 @@ export const OrderDetail: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleReadyForPickup}
@@ -656,7 +658,7 @@ export const OrderDetail: React.FC = () => {
                   fontWeight: 'bold',
                 }}
               >
-                {actionLoading === 'ready' ? 'Processing...' : 'Confirm Ready for Pickup'}
+                {actionLoading === 'ready' ? t('processing') : t('confirmReadyForPickup')}
               </button>
             </div>
           </div>

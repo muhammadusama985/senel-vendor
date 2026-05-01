@@ -4,10 +4,12 @@ import { useStaff } from '../../hooks/useStaff';
 import { useTheme } from '../../context/ThemeContext';
 import { ActivityTimeline } from './components/ActivityTimeline';
 import { ActivityFilters } from '../../types/staff';
+import { useI18n } from '../../context/I18nContext';
 
 export const ActivityLog: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { 
     activities, 
     activitiesLoading,
@@ -54,20 +56,20 @@ export const ActivityLog: React.FC = () => {
   };
 
   const actionOptions = [
-    { value: '', label: 'All Actions' },
-    { value: 'product_created', label: 'Product Created' },
-    { value: 'product_updated', label: 'Product Updated' },
-    { value: 'product_deleted', label: 'Product Deleted' },
-    { value: 'order_accepted', label: 'Order Accepted' },
-    { value: 'order_packed', label: 'Order Packed' },
-    { value: 'order_shipped', label: 'Order Shipped' },
-    { value: 'inventory_updated', label: 'Inventory Updated' },
-    { value: 'staff_invited', label: 'Staff Invited' },
-    { value: 'staff_updated', label: 'Staff Updated' },
-      { value: 'staff_removed', label: 'Staff Removed' },
-    { value: 'dispute_replied', label: 'Dispute Replied' },
-    { value: 'login', label: 'Login' },
-    { value: 'logout', label: 'Logout' },
+    { value: '', label: t('allActions', 'All Actions') },
+    { value: 'product_created', label: t('productCreated', 'Product Created') },
+    { value: 'product_updated', label: t('productUpdated', 'Product Updated') },
+    { value: 'product_deleted', label: t('productDeleted', 'Product Deleted') },
+    { value: 'order_accepted', label: t('orderAccepted', 'Order Accepted') },
+    { value: 'order_packed', label: t('orderPacked', 'Order Packed') },
+    { value: 'order_shipped', label: t('orderShipped', 'Order Shipped') },
+    { value: 'inventory_updated', label: t('inventoryUpdated', 'Inventory Updated') },
+    { value: 'staff_invited', label: t('staffInvited', 'Staff Invited') },
+    { value: 'staff_updated', label: t('staffUpdated', 'Staff Updated') },
+      { value: 'staff_removed', label: t('staffRemoved', 'Staff Removed') },
+    { value: 'dispute_replied', label: t('disputeReplied', 'Dispute Replied') },
+    { value: 'login', label: t('loginLabel', 'Login') },
+    { value: 'logout', label: t('logoutLabel', 'Logout') },
   ];
 
   return (
@@ -76,10 +78,10 @@ export const ActivityLog: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-            Activity Log
+            {t('activityLog', 'Activity Log')}
           </h1>
           <p style={{ color: colors.textMuted }}>
-            Track all actions performed by your team
+            {t('activityLogSubtitle', 'Track all actions performed by your team')}
           </p>
         </div>
         <button
@@ -93,7 +95,7 @@ export const ActivityLog: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Back to Staff
+          {t('backToStaff', 'Back to Staff')}
         </button>
       </div>
 
@@ -109,7 +111,7 @@ export const ActivityLog: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Action Type
+              {t('actionType', 'Action Type')}
             </label>
             <select
               value={actionFilter}
@@ -133,7 +135,7 @@ export const ActivityLog: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              From Date
+              {t('fromDate')}
             </label>
             <input
               type="date"
@@ -152,7 +154,7 @@ export const ActivityLog: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              To Date
+              {t('toDate')}
             </label>
             <input
               type="date"
@@ -182,7 +184,7 @@ export const ActivityLog: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Clear
+            {t('clear')}
           </button>
           <button
             onClick={handleFilter}
@@ -196,7 +198,7 @@ export const ActivityLog: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            Apply Filters
+            {t('applyFilters')}
           </button>
         </div>
       </div>
@@ -232,7 +234,7 @@ export const ActivityLog: React.FC = () => {
                 cursor: activityPage === 1 ? 'not-allowed' : 'pointer',
               }}
             >
-              Previous
+              {t('previous')}
             </button>
             
             {Array.from({ length: Math.min(5, activityPages) }, (_, i) => {
@@ -278,14 +280,14 @@ export const ActivityLog: React.FC = () => {
                 cursor: activityPage === activityPages ? 'not-allowed' : 'pointer',
               }}
             >
-              Next
+              {t('next')}
             </button>
           </div>
         )}
 
         {!activitiesLoading && activities.length > 0 && (
           <div style={{ marginTop: '1rem', textAlign: 'right', color: colors.textMuted }}>
-            Showing {activities.length} of {activityTotal} activities
+            {t('showing')} {activities.length} {t('of')} {activityTotal} {t('activities', 'activities')}
           </div>
         )}
       </div>

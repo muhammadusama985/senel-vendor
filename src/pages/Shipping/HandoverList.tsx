@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useShipping } from '../../hooks/useShipping';
 import { useTheme } from '../../context/ThemeContext';
 import { HandoverStatusBadge } from './components/HandoverStatusBadge';
+import { useI18n } from '../../context/I18nContext';
 
 export const HandoverList: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const {
     orders,
     loading,
@@ -87,10 +89,10 @@ export const HandoverList: React.FC = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Shipping Handover
+          {t('shippingHandover')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Prepare packages for pickup and track handover status
+          {t('shippingHandoverSubtitle')}
         </p>
       </div>
 
@@ -105,7 +107,7 @@ export const HandoverList: React.FC = () => {
           padding: '1.5rem',
           borderLeft: `4px solid ${colors.accentOrange}`,
         }}>
-          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>Not Ready</div>
+          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>{t('notReady')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 'bold', color: colors.accentOrange }}>
             {orders.filter(o => ['placed', 'accepted', 'packed'].includes(o.status)).length}
           </div>
@@ -116,7 +118,7 @@ export const HandoverList: React.FC = () => {
           padding: '1.5rem',
           borderLeft: `4px solid ${colors.accentGold}`,
         }}>
-          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>Ready for Pickup</div>
+          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>{t('readyForPickupCount')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 'bold', color: colors.accentGold }}>
             {orders.filter(o => o.status === 'ready_pickup').length}
           </div>
@@ -127,7 +129,7 @@ export const HandoverList: React.FC = () => {
           padding: '1.5rem',
           borderLeft: `4px solid ${colors.accentBlue}`,
         }}>
-          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>In Transit</div>
+          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>{t('inTransit')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 'bold', color: colors.accentBlue }}>
             {orders.filter(o => o.status === 'shipped').length}
           </div>
@@ -138,7 +140,7 @@ export const HandoverList: React.FC = () => {
           padding: '1.5rem',
           borderLeft: `4px solid ${colors.accentGreen}`,
         }}>
-          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>Delivered</div>
+          <div style={{ fontSize: '0.9rem', color: colors.textMuted }}>{t('deliveredLabel')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 'bold', color: colors.accentGreen }}>
             {orders.filter(o => o.status === 'delivered').length}
           </div>
@@ -153,7 +155,7 @@ export const HandoverList: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Search Orders
+              {t('searchOrders')}
             </label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
@@ -161,7 +163,7 @@ export const HandoverList: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Order # or ID..."
+                placeholder={t('orderOrIdPlaceholder')}
                 style={{ ...inputStyle, flex: 1 }}
               />
               <button
@@ -176,28 +178,28 @@ export const HandoverList: React.FC = () => {
                   fontWeight: 'bold',
                 }}
               >
-                Search
+                {t('search')}
               </button>
             </div>
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-              Filter by Status
+              {t('filterByStatus')}
             </label>
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilter(e.target.value)}
               style={inputStyle}
             >
-              <option value="" style={{ color: '#000' }}>All Statuses</option>
-              <option value="placed" style={{ color: '#000' }}>Placed</option>
-              <option value="accepted" style={{ color: '#000' }}>Accepted</option>
-              <option value="packed" style={{ color: '#000' }}>Packed</option>
-              <option value="ready_pickup" style={{ color: '#000' }}>Ready for Pickup</option>
-              <option value="shipped" style={{ color: '#000' }}>Shipped</option>
-              <option value="delivered" style={{ color: '#000' }}>Delivered</option>
-              <option value="cancelled" style={{ color: '#000' }}>Cancelled</option>
+              <option value="" style={{ color: '#000' }}>{t('orderFilterAllStatus')}</option>
+              <option value="placed" style={{ color: '#000' }}>{t('placedLabel')}</option>
+              <option value="accepted" style={{ color: '#000' }}>{t('acceptedLabel')}</option>
+              <option value="packed" style={{ color: '#000' }}>{t('packedLabel')}</option>
+              <option value="ready_pickup" style={{ color: '#000' }}>{t('readyForPickupCount')}</option>
+              <option value="shipped" style={{ color: '#000' }}>{t('shippedLabel')}</option>
+              <option value="delivered" style={{ color: '#000' }}>{t('deliveredLabel')}</option>
+              <option value="cancelled" style={{ color: '#000' }}>{t('cancelledLabel')}</option>
             </select>
           </div>
         </div>
@@ -214,7 +216,7 @@ export const HandoverList: React.FC = () => {
                 fontSize: '0.9rem',
               }}
             >
-              Clear Filters
+              {t('clearFilters')}
             </button>
           </div>
         )}
@@ -224,20 +226,20 @@ export const HandoverList: React.FC = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: colors.inputBg, borderBottom: `1px solid ${colors.border}` }}>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Order #</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Status</th>
-              <th style={{ padding: '1rem', textAlign: 'center', color: colors.text }}>Boxes</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Ready Date</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Pickup Date</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Tracking</th>
-              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>Actions</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('orderNumber')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('status')}</th>
+              <th style={{ padding: '1rem', textAlign: 'center', color: colors.text }}>{t('boxes')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('readyDate')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('pickupDate')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('tracking')}</th>
+              <th style={{ padding: '1rem', textAlign: 'left', color: colors.text }}>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted }}>
-                  No handover orders found
+                  {t('noHandoverOrdersFound')}
                 </td>
               </tr>
             ) : (
@@ -290,7 +292,7 @@ export const HandoverList: React.FC = () => {
                         fontSize: '0.9rem',
                       }}
                     >
-                      View Details
+                      {t('viewDetails')}
                     </button>
                   </td>
                 </tr>
@@ -314,7 +316,7 @@ export const HandoverList: React.FC = () => {
               cursor: page === 1 ? 'not-allowed' : 'pointer',
             }}
           >
-            Previous
+            {t('previous')}
           </button>
 
           {Array.from({ length: Math.min(5, pages) }, (_, i) => {
@@ -360,7 +362,7 @@ export const HandoverList: React.FC = () => {
               cursor: page === pages ? 'not-allowed' : 'pointer',
             }}
           >
-            Next
+            {t('next')}
           </button>
         </div>
       )}

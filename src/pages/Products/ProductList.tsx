@@ -40,10 +40,10 @@ export const ProductList: React.FC = () => {
   };
 
   const getHotStatusLabel = (product: any) => {
-    if (product.isFeatured) return 'Hot Product';
-    if (product.hotRequestStatus === 'pending') return 'Requested';
-    if (product.hotRequestStatus === 'rejected') return 'Rejected';
-    return 'Not Requested';
+    if (product.isFeatured) return t('hotProductLabel');
+    if (product.hotRequestStatus === 'pending') return t('requestedLabel');
+    if (product.hotRequestStatus === 'rejected') return t('rejected');
+    return t('notRequestedLabel');
   };
 
   const getHotStatusStyles = (product: any) => {
@@ -143,7 +143,7 @@ export const ProductList: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>{t('products')}</h1>
-          <p style={{ color: colors.textMuted }}>Manage your product catalog</p>
+          <p style={{ color: colors.textMuted }}>{t('manageProductCatalog')}</p>
         </div>
         <button
           onClick={() => navigate('/products/create')}
@@ -156,22 +156,22 @@ export const ProductList: React.FC = () => {
             fontWeight: 700,
           }}
         >
-          + Add Product
+          + {t('addProductLabel')}
         </button>
       </div>
 
       <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <button onClick={() => handleFilterChange('')} style={filterButton(!statusFilter)}>
-          All
+          {t('allLabel')}
         </button>
         <button onClick={() => handleFilterChange('draft')} style={filterButton(statusFilter === 'draft')}>
-          Draft
+          {t('draft')}
         </button>
         <button onClick={() => handleFilterChange('submitted')} style={filterButton(statusFilter === 'submitted')}>
-          Submitted
+          {t('submitted')}
         </button>
         <button onClick={() => handleFilterChange('approved')} style={filterButton(statusFilter === 'approved')}>
-          Approved
+          {t('approved')}
         </button>
       </div>
 
@@ -187,21 +187,21 @@ export const ProductList: React.FC = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'transparent' }}>
           <thead>
             <tr style={{ backgroundColor: colors.sidebarHover, borderBottom: `1px solid ${colors.border}` }}>
-              <th style={headerCell(colors.text)}>Image</th>
-              <th style={headerCell(colors.text)}>Title</th>
+              <th style={headerCell(colors.text)}>{t('imageLabel')}</th>
+              <th style={headerCell(colors.text)}>{t('titleLabel')}</th>
               <th style={headerCell(colors.text)}>SKU</th>
-              <th style={headerCell(colors.text)}>Price</th>
-              <th style={headerCell(colors.text)}>Stock</th>
-              <th style={headerCell(colors.text)}>Status</th>
-              <th style={headerCell(colors.text)}>Hot Products</th>
-              <th style={headerCell(colors.text)}>Actions</th>
+              <th style={headerCell(colors.text)}>{t('priceLabel')}</th>
+              <th style={headerCell(colors.text)}>{t('stockLabel')}</th>
+              <th style={headerCell(colors.text)}>{t('status')}</th>
+              <th style={headerCell(colors.text)}>{t('hotProductsLabel')}</th>
+              <th style={headerCell(colors.text)}>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {products.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: colors.textMuted, backgroundColor: colors.cardBg }}>
-                  No products found
+                  {t('noProductsFound')}
                 </td>
               </tr>
             ) : (
@@ -259,7 +259,7 @@ export const ProductList: React.FC = () => {
                   <td style={{ ...bodyCell(colors.text), minWidth: '230px' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                       <button onClick={() => navigate(`/products/${product._id}`)} style={actionButton}>
-                        View
+                        {t('view')}
                       </button>
                       {product.status === 'approved' && !product.isFeatured && product.hotRequestStatus !== 'pending' && (
                         <button
@@ -272,23 +272,23 @@ export const ProductList: React.FC = () => {
                             paddingInline: '0.7rem',
                           }}
                         >
-                          {requestingHot === product._id ? '...' : 'Request Hot Product'}
+                          {requestingHot === product._id ? '...' : t('requestHotProduct')}
                         </button>
                       )}
                       {product.status === 'draft' && (
                         <>
-                          <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
-                            Edit
+                        <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
+                            {t('editLabel')}
                           </button>
                           <button
                             onClick={() => handleSubmit(product._id)}
                             disabled={submitting === product._id}
                             style={{ ...actionButton, opacity: submitting === product._id ? 0.55 : 1, cursor: submitting === product._id ? 'not-allowed' : 'pointer' }}
                           >
-                            {submitting === product._id ? '...' : 'Submit'}
+                            {submitting === product._id ? '...' : t('submitLabel')}
                           </button>
                           <button onClick={() => handleDelete(product._id)} style={actionButton}>
-                            Delete
+                            {t('deleteLabel')}
                           </button>
                         </>
                       )}

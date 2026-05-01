@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface BalanceCardProps {
   balance: number;
@@ -16,6 +17,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   formatCurrency,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   return (
     <div
@@ -30,7 +32,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Available Balance</div>
+          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>{t('availableBalance')}</div>
           <div style={{ fontSize: '3rem', fontWeight: 'bold' }}>{formatCurrency(balance)}</div>
         </div>
         <div

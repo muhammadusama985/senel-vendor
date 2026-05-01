@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface HandoverTimelineProps {
   status: string;
@@ -15,46 +16,47 @@ export const HandoverTimeline: React.FC<HandoverTimelineProps> = ({
   deliveredAt,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const steps = [
     {
       key: 'placed',
-      label: 'Placed',
+      label: t('placed'),
       icon: '📝',
       date: null,
       description: 'Order received'
     },
     {
       key: 'accepted',
-      label: 'Accepted',
+      label: t('acceptedLabel'),
       icon: '✅',
       date: null,
       description: 'Order accepted'
     },
     {
       key: 'packed',
-      label: 'Packed',
+      label: t('packedLabel'),
       icon: '📦',
       date: null,
       description: 'Packaging complete'
     },
     {
       key: 'ready_pickup',
-      label: 'Ready for Pickup',
+      label: t('readyForPickupLabel'),
       icon: '🚚',
       date: readyForPickupAt,
       description: 'Awaiting courier'
     },
     {
       key: 'shipped',
-      label: 'Shipped',
+      label: t('shippedLabel'),
       icon: '✈️',
       date: pickedUpAt,
       description: 'In transit'
     },
     {
       key: 'delivered',
-      label: 'Delivered',
+      label: t('deliveredLabel'),
       icon: '✅',
       date: deliveredAt,
       description: 'Completed'

@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     >
       {toggleSidebar && (
         <button
-          aria-label="open drawer"
+          aria-label={t('menuOpen', 'Open drawer')}
           onClick={toggleSidebar}
           style={{
             marginRight: '16px',
@@ -189,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
           {!isMobile && (
             <div style={{ color: colors.text }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{vendor?.storeName || 'Vendor'}</div>
+              <div style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{vendor?.storeName || t('store', 'Store')}</div>
               <div style={{ fontSize: '0.75rem', opacity: 0.85 }}>{getVendorStatus()}</div>
             </div>
           )}
@@ -212,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           >
             <div style={{ padding: '1rem', borderBottom: `1px solid ${colors.border}` }}>
               <div style={{ fontWeight: 'bold', color: colors.text, marginBottom: '0.25rem' }}>
-                {vendor?.storeName || 'Vendor Store'}
+                {vendor?.storeName || t('storeProfileTitle', 'Vendor Store')}
               </div>
               <div style={{ fontSize: '0.85rem', color: colors.textMuted, opacity: 0.85 }}>{vendor?.email}</div>
               <div

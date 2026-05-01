@@ -6,10 +6,12 @@ import { ImageUpload } from '../../components/common/ImageUpload';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useLocationOptions } from '../../hooks/useLocationOptions';
+import { useI18n } from '../../context/I18nContext';
 
 export const StoreSetup: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { checkAuth } = useAuthStore();
 
   const [step, setStep] = useState(1);
@@ -149,15 +151,15 @@ export const StoreSetup: React.FC = () => {
       </div>
 
       <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-        {step === 1 && 'Complete Your Store Profile'}
-        {step === 2 && 'Upload Verification Documents'}
-        {step === 3 && 'Review & Submit for Approval'}
+        {step === 1 && t('completeStoreProfile')}
+        {step === 2 && t('uploadVerificationDocuments')}
+        {step === 3 && t('reviewSubmit')}
       </h1>
 
       {step === 1 && (
         <form onSubmit={handleProfileSubmit} style={cardStyle}>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Store Name *</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('storeNameLabel')} *</label>
             <input
               type="text"
               value={profileData.storeName}
@@ -168,7 +170,7 @@ export const StoreSetup: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Store Description</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('descriptionLabel')}</label>
             <textarea
               value={profileData.description}
               onChange={(e) => setProfileData({ ...profileData, description: e.target.value })}
@@ -178,7 +180,7 @@ export const StoreSetup: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Company Name *</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('companyNameLabel')} *</label>
             <input
               type="text"
               value={profileData.companyName}
@@ -189,7 +191,7 @@ export const StoreSetup: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Phone Number</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('phoneNumber')}</label>
             <input
               type="tel"
               value={profileData.phone}
@@ -201,7 +203,7 @@ export const StoreSetup: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Address Line 1</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('addressLine1')}</label>
             <input
               type="text"
               value={profileData.address.line1}
@@ -217,7 +219,7 @@ export const StoreSetup: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>City</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('cityLabel')}</label>
               <select
                 value={profileData.address.city}
                 onChange={(e) =>
@@ -229,7 +231,7 @@ export const StoreSetup: React.FC = () => {
                 style={inputStyle}
                 disabled={!profileData.address.country}
               >
-                <option value="">{profileData.address.country ? 'Select city' : 'Select country first'}</option>
+                <option value="">{profileData.address.country ? t('selectCity') : t('selectCountryFirst')}</option>
                 {cities.map((city) => (
                   <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
                     {city.name}
@@ -238,13 +240,13 @@ export const StoreSetup: React.FC = () => {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Country</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('countryLabel')}</label>
               <select
                 value={profileData.address.country}
                 onChange={(e) => handleCountryChange(e.target.value)}
                 style={inputStyle}
               >
-                <option value="">Select country</option>
+                <option value="">{t('selectCountry')}</option>
                 {countries.map((country) => (
                   <option key={country.isoCode} value={country.name}>
                     {country.name}
@@ -269,7 +271,7 @@ export const StoreSetup: React.FC = () => {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Saving...' : 'Continue to Documents'}
+            {loading ? t('savingLabel') : t('continueToDocuments')}
           </button>
         </form>
       )}

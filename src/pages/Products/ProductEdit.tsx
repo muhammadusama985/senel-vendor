@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { ProductForm } from './components/ProductForm';
 
 export const ProductEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { categories, getProduct, updateProduct, saving, uploadProductImage } = useProducts();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export const ProductEdit: React.FC = () => {
           minHeight: '100vh',
         }}
       >
-        Product not found
+        {t('productNotFound')}
       </div>
     );
   }
@@ -79,10 +81,10 @@ export const ProductEdit: React.FC = () => {
     >
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Edit Product
+          {t('editProductTitle')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Update product information
+          {t('updateProductInformation')}
         </p>
       </div>
 

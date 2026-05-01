@@ -22,12 +22,12 @@ export const Login: React.FC = () => {
       setEmail(location.state.email);
     }
     if (location.state?.fromRegistration) {
-      toast.success('Registration successful! Please login to continue.', {
+      toast.success(t('registrationSuccessfulLogin'), {
         style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
         duration: 4000,
       });
     }
-  }, [location.state, colors.accentGreen]);
+  }, [location.state, colors.accentGreen, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,29 +39,29 @@ export const Login: React.FC = () => {
       const { vendor } = useAuthStore.getState();
 
       if (!vendor) {
-        toast.success('Please complete your vendor profile.', {
+        toast.success(t('completeVendorProfile'), {
           style: { backgroundColor: colors.accentBlue, color: '#ffffff' },
           duration: 4000,
         });
         navigate('/store/complete-profile');
       } else if (vendor.status === 'submitted' || vendor.status === 'under_review') {
-        toast('Your account is pending admin approval.', {
+        toast(t('accountPendingApproval'), {
           style: { backgroundColor: colors.accentOrange, color: '#ffffff' },
           duration: 4000,
         });
         navigate('/pending-approval');
       } else if (vendor.status === 'approved') {
-        toast.success('Login successful!', {
+        toast.success(t('loginSuccessful'), {
           style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
         });
         navigate('/dashboard');
       } else if (vendor.status === 'rejected') {
-        toast.error('Your vendor application was rejected. Please contact support.', {
+        toast.error(t('vendorRejected'), {
           style: { backgroundColor: colors.accentRed, color: '#ffffff' },
           duration: 5000,
         });
       } else if (vendor.status === 'draft') {
-        toast('Please complete your vendor profile.', {
+        toast(t('completeVendorProfile'), {
           style: { backgroundColor: colors.accentBlue, color: '#ffffff' },
         });
         navigate('/store/complete-profile');
@@ -69,7 +69,7 @@ export const Login: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Login failed', {
+      toast.error(err.message || t('loginFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
@@ -119,7 +119,7 @@ export const Login: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Email
+              {t('authEmailLabel')}
             </label>
             <input
               type="email"
@@ -137,13 +137,13 @@ export const Login: React.FC = () => {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              placeholder="vendor@example.com"
+              placeholder={t('emailPlaceholderVendor')}
             />
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              Password
+              {t('passwordLabel')}
             </label>
             <input
               type="password"
@@ -161,7 +161,7 @@ export const Login: React.FC = () => {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              placeholder="********"
+              placeholder={t('passwordPlaceholder')}
             />
           </div>
 
@@ -197,20 +197,20 @@ export const Login: React.FC = () => {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Logging in...' : t('authVendorLogin')}
+            {loading ? t('loggingIn') : t('authVendorLogin')}
           </button>
         </form>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-          <span style={{ color: colors.textMuted }}>Don't have an account? </span>
+          <span style={{ color: colors.textMuted }}>{t('authDontHaveAccount')} </span>
           <Link to="/register" style={{ color: colors.accentBlue, textDecoration: 'none', fontWeight: 'bold' }}>
-            Register
+            {t('registerLabel')}
           </Link>
         </div>
 
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           <Link to="/forgot-password" style={{ color: colors.accentGold, fontSize: '0.9rem', textDecoration: 'none' }}>
-            Forgot Password?
+            {t('forgotPasswordLabel')}
           </Link>
         </div>
       </div>

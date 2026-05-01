@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { VendorOrder } from '../../types/order';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -9,6 +10,7 @@ export const OrderAccept: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const { getOrder, acceptOrder } = useOrders();
   
   const [order, setOrder] = useState<VendorOrder | null>(null);
@@ -47,7 +49,7 @@ export const OrderAccept: React.FC = () => {
   if (!order) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.75)' }}>
-        Order not found
+        {t('orderNotFound', 'Order not found')}
       </div>
     );
   }
@@ -56,10 +58,10 @@ export const OrderAccept: React.FC = () => {
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: '#ffffff', fontSize: '2rem', fontWeight: 'bold' }}>
-          Accept Order
+          {t('acceptOrderTitle', 'Accept Order')}
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.75)' }}>
-          Review and accept this order to begin processing
+          {t('acceptOrderSubtitle', 'Review and accept this order to begin processing')}
         </p>
       </div>
 
@@ -83,23 +85,23 @@ export const OrderAccept: React.FC = () => {
       >
         {/* Order Summary */}
         <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Order Summary</h3>
+          <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>{t('orderSummary', 'Order Summary')}</h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Order Number</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('orderNumber', 'Order Number')}</div>
               <div style={{ fontWeight: 'bold', color: '#ffffff' }}>{order.vendorOrderNumber}</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Date</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('date', 'Date')}</div>
               <div style={{ color: '#ffffff' }}>{new Date(order.createdAt).toLocaleDateString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Total Items</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('totalItems', 'Total Items')}</div>
               <div style={{ color: '#ffffff' }}>{order.items?.length || 0}</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Total Amount</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('totalAmount', 'Total Amount')}</div>
               <div style={{ fontWeight: 'bold', color: '#ffd43b' }}>
                 {formatCurrency(order.grandTotal, order.currency)}
               </div>
@@ -109,7 +111,7 @@ export const OrderAccept: React.FC = () => {
 
         {/* Items */}
         <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Items</h3>
+          <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>{t('items', 'Items')}</h3>
           
           <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
             {order.items?.map((item) => (
@@ -125,7 +127,7 @@ export const OrderAccept: React.FC = () => {
                 <div>
                   <div style={{ fontWeight: 'bold', color: '#ffffff' }}>{item.title}</div>
                   <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
-                    Qty: {item.qty} x {formatCurrency(item.unitPrice, item.currency || order.currency)}
+                    {t('qty', 'Qty')}: {item.qty} x {formatCurrency(item.unitPrice, item.currency || order.currency)}
                   </div>
                 </div>
                 <div style={{ fontWeight: 'bold', color: '#ffffff' }}>
@@ -147,7 +149,7 @@ export const OrderAccept: React.FC = () => {
           }}
         >
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>
-            By accepting this order, you confirm that you have reviewed the items and agree to fulfill them according to the terms.
+            {t('termsAcceptOrder', 'By accepting this order, you confirm that you have reviewed the items and agree to fulfill them according to the terms.')}
           </p>
         </div>
 
@@ -164,7 +166,7 @@ export const OrderAccept: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Cancel
+            {t('cancel', 'Cancel')}
           </button>
           <button
             onClick={handleAccept}
@@ -181,7 +183,7 @@ export const OrderAccept: React.FC = () => {
               boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
             }}
           >
-            {accepting ? 'Accepting...' : 'Accept Order'}
+            {accepting ? t('accepting', 'Accepting...') : t('acceptOrder', 'Accept Order')}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../../hooks/useStore';
 import { useTheme } from '../../context/ThemeContext';
 import { ImageUpload } from '../../components/common/ImageUpload';
+import { useI18n } from '../../context/I18nContext';
 
 type DocumentType = 'business_license' | 'tax_certificate' | 'bank_proof' | 'id_proof' | 'other';
 
@@ -21,6 +22,7 @@ const documentTypes: DocumentTypeOption[] = [
 export const StoreDocuments: React.FC = () => {
   const { vendor, loading, uploadDocument, removeDocument, submitForVerification } = useStore();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const [selectedType, setSelectedType] = useState<DocumentType>('business_license');
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -76,18 +78,18 @@ export const StoreDocuments: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>Verification Documents</h1>
-        <p style={{ color: colors.textMuted }}>Upload business documents for verification</p>
+        <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>{t('verificationDocumentsTitle')}</h1>
+        <p style={{ color: colors.textMuted }}>{t('verificationDocumentsSubtitle')}</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
         <div style={cardStyle}>
           {!isSubmitted && (
             <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>Upload New Document</h2>
+              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>{t('uploadNewDocument')}</h2>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>Document Type</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>{t('documentType')}</label>
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value as DocumentType)}
@@ -109,14 +111,14 @@ export const StoreDocuments: React.FC = () => {
                 </select>
               </div>
 
-              <ImageUpload onImageUpload={handleFileUpload} label="Select File" />
+              <ImageUpload onImageUpload={handleFileUpload} label={t('selectFile')} />
 
-              {uploading && <div style={{ marginTop: '1rem', color: colors.accentBlue }}>Uploading...</div>}
+              {uploading && <div style={{ marginTop: '1rem', color: colors.accentBlue }}>{t('uploadingLabel')}</div>}
             </div>
           )}
 
           <div>
-            <h2 style={{ color: colors.text, marginBottom: '1rem' }}>Uploaded Documents</h2>
+            <h2 style={{ color: colors.text, marginBottom: '1rem' }}>{t('uploadedDocuments')}</h2>
 
             {vendor?.documents && vendor.documents.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -172,21 +174,21 @@ export const StoreDocuments: React.FC = () => {
                           cursor: 'pointer',
                         }}
                       >
-                        Remove
+                        {t('removeLabel')}
                       </button>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ color: colors.textMuted, fontStyle: 'italic' }}>No documents uploaded yet</p>
+              <p style={{ color: colors.textMuted, fontStyle: 'italic' }}>{t('noDocumentsUploaded')}</p>
             )}
           </div>
         </div>
 
         <div>
           <div style={{ ...cardStyle, padding: '1.5rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Submit for Verification</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('submitForVerificationTitle')}</h3>
 
             <p style={{ color: colors.textMuted, marginBottom: '1rem', fontSize: '0.9rem' }}>
               Once you have uploaded required documents, submit your store for admin verification.
@@ -203,7 +205,7 @@ export const StoreDocuments: React.FC = () => {
                   textAlign: 'center',
                 }}
               >
-                Verified
+                {t('verified')}
               </div>
             ) : vendor?.verification?.status === 'submitted' ? (
               <div
@@ -216,7 +218,7 @@ export const StoreDocuments: React.FC = () => {
                   textAlign: 'center',
                 }}
               >
-                Pending Review
+                {t('submitted')}
               </div>
             ) : (
               <button
@@ -234,7 +236,7 @@ export const StoreDocuments: React.FC = () => {
                   cursor: canSubmit && !submitting ? 'pointer' : 'not-allowed',
                 }}
               >
-                {submitting ? 'Submitting...' : 'Submit for Verification'}
+                {submitting ? t('submitting') : t('submitForVerification')}
               </button>
             )}
 

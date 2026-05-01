@@ -4,11 +4,13 @@ import { useStaff } from '../../hooks/useStaff';
 import { useTheme } from '../../context/ThemeContext';
 import { StaffRoleBadge } from './components/StaffRoleBadge';
 import { StaffMember } from '../../types/staff';
+import { useI18n } from '../../context/I18nContext';
 
 export const StaffDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const { getStaffMember, formatDate, removeStaff } = useStaff();
   
   const [member, setMember] = useState<StaffMember | null>(null);
@@ -52,10 +54,10 @@ useEffect(() => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-            Staff Details
+            {t('staffDetails', 'Staff Details')}
           </h1>
           <p style={{ color: colors.textMuted }}>
-            View team member information
+            {t('viewTeamMemberInformation', 'View team member information')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
@@ -70,7 +72,7 @@ useEffect(() => {
               cursor: 'pointer',
             }}
           >
-            Edit
+            {t('editLabel')}
           </button>
           {member.role !== 'owner' && (
             <button
@@ -86,7 +88,7 @@ useEffect(() => {
                 opacity: removing ? 0.7 : 1,
               }}
             >
-              {removing ? 'Removing...' : 'Remove'}
+              {removing ? t('removing', 'Removing...') : t('removeLabel')}
             </button>
           )}
           <button
@@ -100,7 +102,7 @@ useEffect(() => {
               cursor: 'pointer',
             }}
           >
-            Back
+            {t('back')}
           </button>
         </div>
       </div>
@@ -151,7 +153,7 @@ useEffect(() => {
 
           {member.lastActiveAt && (
             <div style={{ marginTop: '1rem', color: colors.textMuted, fontSize: '0.9rem' }}>
-              Last active: {formatDate(member.lastActiveAt)}
+              {t('lastActive')}: {formatDate(member.lastActiveAt)}
             </div>
           )}
         </div>
@@ -164,29 +166,29 @@ useEffect(() => {
           padding: '2rem',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
         }}>
-          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>Information</h3>
+          <h3 style={{ color: colors.text, marginBottom: '1.5rem' }}>{t('orderInformation', 'Information')}</h3>
 
           <table style={{ width: '100%' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '0.75rem 0', color: colors.textMuted, width: '150px' }}>Email:</td>
+                <td style={{ padding: '0.75rem 0', color: colors.textMuted, width: '150px' }}>{t('authEmailAddress')}:</td>
                 <td style={{ padding: '0.75rem 0', color: colors.text, fontWeight: 'bold' }}>
                   {member.user?.email}
                 </td>
               </tr>
               <tr>
-                <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>Role:</td>
+                <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>{t('role', 'Role')}:</td>
                 <td style={{ padding: '0.75rem 0', color: colors.text }}>{member.role}</td>
               </tr>
               <tr>
-                <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>Invited:</td>
+                <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>{t('invitedLabel')}:</td>
                 <td style={{ padding: '0.75rem 0', color: colors.text }}>
                   {formatDate(member.invitedAt)}
                 </td>
               </tr>
               {member.acceptedAt && (
                 <tr>
-                  <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>Accepted:</td>
+                  <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>{t('acceptedAtLabel')}:</td>
                   <td style={{ padding: '0.75rem 0', color: colors.text }}>
                     {formatDate(member.acceptedAt)}
                   </td>
@@ -194,7 +196,7 @@ useEffect(() => {
               )}
               {member.notes && (
                 <tr>
-                  <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>Notes:</td>
+                  <td style={{ padding: '0.75rem 0', color: colors.textMuted }}>{t('notes')}:</td>
                   <td style={{ padding: '0.75rem 0', color: colors.text, fontStyle: 'italic' }}>
                     {member.notes}
                   </td>
@@ -206,7 +208,7 @@ useEffect(() => {
           {/* Permissions */}
           {member.permissions && member.permissions.length > 0 && (
             <div style={{ marginTop: '2rem' }}>
-              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>Permissions</h4>
+              <h4 style={{ color: colors.text, marginBottom: '1rem' }}>{t('permissions', 'Permissions')}</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {member.permissions.map(permission => (
                   <span

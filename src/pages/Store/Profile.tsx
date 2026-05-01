@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../hooks/useStore';
 import { useTheme } from '../../context/ThemeContext';
+import { useI18n } from '../../context/I18nContext';
 import { ImageUpload } from '../../components/common/ImageUpload';
 import { useLocationOptions } from '../../hooks/useLocationOptions';
 
 export const StoreProfile: React.FC = () => {
   const { vendor, loading, saving, updateVendor } = useStore();
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   
   const [formData, setFormData] = useState({
     storeName: '',
@@ -141,10 +143,10 @@ export const StoreProfile: React.FC = () => {
     >
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          Store Profile
+          {t('storeProfileTitle', 'Store Profile')}
         </h1>
         <p style={{ color: colors.textMuted }}>
-          Manage your store information and business details
+          {t('storeProfileSubtitle', 'Manage your store information and business details')}
         </p>
       </div>
 
@@ -153,11 +155,11 @@ export const StoreProfile: React.FC = () => {
         <div style={cardStyle}>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>Basic Information</h2>
+              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>{t('basicInformation', 'Basic Information')}</h2>
               
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Store Name *
+                  {t('storeNameLabel', 'Store Name')} *
                 </label>
                 <input
                   type="text"
@@ -172,7 +174,7 @@ export const StoreProfile: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Email *
+                    {t('emailLabel', 'Email')} *
                   </label>
                   <input
                     type="email"
@@ -185,7 +187,7 @@ export const StoreProfile: React.FC = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Phone
+                    {t('phoneLabel', 'Phone')}
                   </label>
                   <input
                     type="tel"
@@ -201,11 +203,11 @@ export const StoreProfile: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>Business Details</h2>
+              <h2 style={{ color: colors.text, marginBottom: '1rem' }}>{t('businessDetails', 'Business Details')}</h2>
               
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Company Name *
+                  {t('companyNameLabel', 'Company Name')} *
                 </label>
                 <input
                   type="text"
@@ -220,7 +222,7 @@ export const StoreProfile: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Contact Person
+                    {t('contactPerson', 'Contact Person')}
                   </label>
                   <input
                     type="text"
@@ -232,7 +234,7 @@ export const StoreProfile: React.FC = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Contact Number
+                    {t('contactNumber', 'Contact Number')}
                   </label>
                   <input
                     type="tel"
@@ -249,7 +251,7 @@ export const StoreProfile: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Tax ID
+                    {t('taxIdLabel', 'Tax ID')}
                   </label>
                   <input
                     type="text"
@@ -261,7 +263,7 @@ export const StoreProfile: React.FC = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    City
+                    {t('cityLabel', 'City')}
                   </label>
                   <select
                     name="address.city"
@@ -270,7 +272,7 @@ export const StoreProfile: React.FC = () => {
                     style={inputStyle}
                     disabled={!formData.address.country}
                   >
-                    <option value="">{formData.address.country ? 'Select city' : 'Select country first'}</option>
+                    <option value="">{formData.address.country ? t('selectCity', 'Select city') : t('selectCountryFirst', 'Select country first')}</option>
                     {cities.map((city) => (
                       <option key={`${city.countryCode}-${city.stateCode}-${city.name}`} value={city.name}>
                         {city.name}
@@ -283,7 +285,7 @@ export const StoreProfile: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Address
+                    {t('addressLabel', 'Address')}
                   </label>
                   <input
                     type="text"
@@ -295,7 +297,7 @@ export const StoreProfile: React.FC = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                    Country
+                    {t('countryLabel', 'Country')}
                   </label>
                   <select
                     name="address.country"
@@ -303,7 +305,7 @@ export const StoreProfile: React.FC = () => {
                     onChange={(e) => handleCountryChange(e.target.value)}
                     style={inputStyle}
                   >
-                    <option value="">Select country</option>
+                    <option value="">{t('selectCountry', 'Select country')}</option>
                     {countries.map((country) => (
                       <option key={country.isoCode} value={country.name}>
                         {country.name}
@@ -329,7 +331,7 @@ export const StoreProfile: React.FC = () => {
                 opacity: saving ? 0.7 : 1,
               }}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? t('savingLabel', 'Saving...') : t('saveChanges', 'Save Changes')}
             </button>
           </form>
         </div>
@@ -350,11 +352,11 @@ export const StoreProfile: React.FC = () => {
               marginBottom: '1.5rem',
             }}
           >
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Store Logo</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('storeProfile', 'Store Logo')}</h3>
             <ImageUpload
               onImageUpload={handleLogoUpload}
               currentImage={vendor?.logoUrl}
-              label="Upload Logo"
+              label={t('uploadLogo', 'Upload Logo')}
             />
           </div>
 
@@ -370,26 +372,26 @@ export const StoreProfile: React.FC = () => {
               `,
             }}
           >
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Verification Status</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('verificationStatus', 'Verification Status')}</h3>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <div>
-                <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Current Status</div>
+                <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{t('currentStatus', 'Current Status')}</div>
                 <div style={{ color: colors.text, fontWeight: 700, textTransform: 'capitalize' }}>
-                  {vendor?.status?.replace(/_/g, ' ') || 'Not available'}
-                  {vendor?.isVerifiedBadge ? ' - Verified' : ''}
+                  {vendor?.status?.replace(/_/g, ' ') || t('notAvailable', 'Not available')}
+                  {vendor?.isVerifiedBadge ? ` - ${t('verified', 'Verified')}` : ''}
                 </div>
               </div>
 
               {vendor?.reviewedAt && (
                 <div>
-                  <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Reviewed At</div>
+                  <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{t('reviewedAt', 'Reviewed At')}</div>
                   <div style={{ color: colors.text }}>{new Date(vendor.reviewedAt).toLocaleString()}</div>
                 </div>
               )}
 
               {vendor?.reviewNote && (
                 <div>
-                  <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Admin Note</div>
+                  <div style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{t('adminNote', 'Admin Note')}</div>
                   <div style={{ color: colors.text }}>{vendor.reviewNote}</div>
                 </div>
               )}

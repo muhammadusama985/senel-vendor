@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useI18n } from '../../../context/I18nContext';
 
 interface OrderTimelineProps {
   status: string;
@@ -21,20 +22,18 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
   deliveredAt,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const steps = [
-    { key: 'placed', label: 'Order Placed', date: createdAt, icon: '📝' },
-    { key: 'accepted', label: 'Accepted', date: acceptedAt, icon: '✅' },
-    { key: 'packed', label: 'Packed', date: packedAt, icon: '📦' },
-    { key: 'ready_pickup', label: 'Ready for Pickup', date: readyAt, icon: '🚚' },
-    { key: 'shipped', label: 'Shipped', date: shippedAt, icon: '✈️' },
-    { key: 'delivered', label: 'Delivered', date: deliveredAt, icon: '🏁' },
+    { key: 'placed', label: t('orderPlaced'), date: createdAt, icon: '📝' },
+    { key: 'accepted', label: t('acceptedLabel'), date: acceptedAt, icon: '✅' },
+    { key: 'packed', label: t('packedLabel'), date: packedAt, icon: '📦' },
+    { key: 'ready_pickup', label: t('readyForPickupLabel'), date: readyAt, icon: '🚚' },
+    { key: 'shipped', label: t('shippedLabel'), date: shippedAt, icon: '✈️' },
+    { key: 'delivered', label: t('deliveredLabel'), date: deliveredAt, icon: '🏁' },
   ];
 
-  const statusOrder = [
-    'placed', 'accepted', 'packed', 'ready_pickup', 'shipped', 'delivered', 'cancelled'
-  ];
-  
+  const statusOrder = ['placed', 'accepted', 'packed', 'ready_pickup', 'shipped', 'delivered', 'cancelled'];
   const currentIndex = statusOrder.indexOf(status);
 
   const formatDate = (dateString?: string) => {
@@ -45,23 +44,24 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
 
   if (status === 'cancelled') {
     return (
-      <div style={{ 
-        backgroundColor: colors.accentRed + '10', 
-        padding: '1rem',
-        borderRadius: '8px',
-        textAlign: 'center',
-        color: colors.accentRed,
-        fontWeight: 'bold',
-        border: `1px solid ${colors.accentRed}40`
-      }}>
-        Order Cancelled
+      <div
+        style={{
+          backgroundColor: colors.accentRed + '10',
+          padding: '1rem',
+          borderRadius: '8px',
+          textAlign: 'center',
+          color: colors.accentRed,
+          fontWeight: 'bold',
+          border: `1px solid ${colors.accentRed}40`,
+        }}
+      >
+        {t('orderCancelled')}
       </div>
     );
   }
 
   return (
     <div style={{ position: 'relative', padding: '1rem 0' }}>
-      {/* Progress Line */}
       <div
         style={{
           position: 'absolute',
@@ -83,7 +83,6 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
         />
       </div>
 
-      {/* Steps */}
       <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
         {steps.map((step, index) => {
           const isCompleted = index <= currentIndex;
@@ -109,9 +108,7 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
               >
                 {step.icon}
               </div>
-              <div style={{ fontWeight: isCurrent ? 'bold' : 'normal', color: colors.text }}>
-                {step.label}
-              </div>
+              <div style={{ fontWeight: isCurrent ? 'bold' : 'normal', color: colors.text }}>{step.label}</div>
               {step.date && (
                 <div style={{ fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.25rem' }}>
                   {formatDate(step.date)}

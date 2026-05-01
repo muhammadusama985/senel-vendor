@@ -1,5 +1,6 @@
 import React from 'react';
 import { STAFF_ROLES, StaffRole } from '../../../types/staff';
+import { useI18n } from '../../../context/I18nContext';
 
 interface StaffRoleBadgeProps {
   role: StaffRole;
@@ -10,6 +11,7 @@ export const StaffRoleBadge: React.FC<StaffRoleBadgeProps> = ({
   role,
   size = 'medium',
 }) => {
+  const { t } = useI18n();
   const roleInfo = STAFF_ROLES[role] ?? STAFF_ROLES.viewer;
 
   const padding = size === 'small' ? '0.25rem 0.5rem' : '0.5rem 1rem';
@@ -27,7 +29,7 @@ export const StaffRoleBadge: React.FC<StaffRoleBadgeProps> = ({
         display: 'inline-block',
       }}
     >
-      {roleInfo.name}
+      {t(role, roleInfo.name)}
     </span>
   );
 };

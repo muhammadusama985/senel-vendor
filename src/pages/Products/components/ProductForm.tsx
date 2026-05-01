@@ -4,6 +4,7 @@ import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
 import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
+import { useI18n } from '../../../context/I18nContext';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -21,6 +22,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   uploadProductImage,
 }) => {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   const [formData, setFormData] = useState<ProductFormData>({
     title: '',
@@ -92,7 +94,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const handleImageUpload = async (file: File) => {
     if (!uploadProductImage) {
       console.error('uploadProductImage function not provided');
-      alert('Image upload is not configured. Please contact support.');
+      alert(t('failedUploadImage'));
       return;
     }
 
@@ -108,7 +110,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Failed to upload image. Please try again.');
+      alert(t('failedUploadImage'));
     } finally {
       setUploading(false);
     }
@@ -126,35 +128,35 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     const sortedTiers = [...formData.priceTiers].sort((a, b) => a.minQty - b.minQty);
     if (sortedTiers.some((tier) => tier.minQty < 1 || tier.unitPrice < 0)) {
-      alert('Each price tier must have a valid minimum quantity and unit price.');
+      alert(t('failedUpdateProduct', 'Each price tier must have a valid minimum quantity and unit price.'));
       return;
     }
 
     const duplicateTierQty = sortedTiers.find((tier, index) => index > 0 && tier.minQty === sortedTiers[index - 1].minQty);
     if (duplicateTierQty) {
-      alert(`Duplicate price tier quantity found: ${duplicateTierQty.minQty}`);
+      alert(`${t('pricingTiersLabel')}: ${duplicateTierQty.minQty}`);
       return;
     }
 
     if (sortedTiers[0].minQty > formData.moq) {
-      alert('First price tier min quantity cannot be greater than MOQ');
+      alert(t('firstTierMoqHint').replace('{{moq}}', String(formData.moq)));
       return;
     }
 
     if (formData.hasVariants) {
       if (!formData.variants?.length) {
-        alert('Please add at least one variant.');
+        alert(t('attributesOptionsHelp'));
         return;
       }
 
       const normalizedSkus = formData.variants.map((variant) => variant.sku.trim().toUpperCase());
       if (normalizedSkus.some((sku) => !sku)) {
-        alert('Each variant must include a SKU.');
+        alert(`SKU ${t('descriptionLabel').toLowerCase()}`);
         return;
       }
 
       if (new Set(normalizedSkus).size !== normalizedSkus.length) {
-        alert('Variant SKUs must be unique.');
+        alert('SKU must be unique.');
         return;
       }
 
@@ -162,13 +164,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         Object.entries(variant.attributes || {}).some(([key, value]) => !String(key || '').trim() || !String(value || '').trim())
       );
       if (hasInvalidAttributes) {
-        alert('Each variant attribute must include both a name and a value.');
+        alert(t('attributesOptionsHelp'));
         return;
       }
     }
 
     if ([formData.lengthCm, formData.widthCm, formData.heightCm].some((value) => Number(value || 0) < 0)) {
-      alert('Product dimensions cannot be negative.');
+      alert(t('failedUpdateProduct', 'Product dimensions cannot be negative.'));
       return;
     }
 
@@ -199,11 +201,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
         <div>
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Basic Information</h3>
+          <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('basicInformation')}</h3>
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Product Title *
+                {t('product')} {t('titleLabel')} *
               </label>
               <input
                 type="text"
@@ -217,7 +219,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Description
+                {t('descriptionLabel')}
               </label>
               <textarea
                 name="description"
@@ -234,7 +236,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Category *
+                  {t('category')} *
                 </label>
                 <select
                   name="categoryId"
@@ -243,7 +245,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   required
                   style={inputStyle}
                 >
-                  <option value="" style={{ color: colors.text }}>Select Category</option>
+                  <option value="" style={{ color: colors.text }}>{t('category')} *</option>
                   {categories.map(cat => (
                     <option key={cat._id} value={cat._id} style={{ color: colors.text }}>
                       {cat.name}
@@ -254,7 +256,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Country of Origin
+                  {t('countryLabel')}
                 </label>
                 <input
                   type="text"
@@ -268,7 +270,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             <div style={{ marginTop: '1rem', width: '260px' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Currency
+                {t('currencyLabel')}
               </label>
               <select
                 name="currency"
@@ -284,11 +286,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Pricing & MOQ</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('pricingTiersLabel')} & {t('moqLabel')}</h3>
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Minimum Order Quantity (MOQ) *
+                {t('minimumOrderQuantity')} ({t('moqLabel')}) *
               </label>
               <input
                 type="number"
@@ -312,7 +314,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Inventory</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('trackInventory')}</h3>
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: colors.text }}>
@@ -322,7 +324,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   checked={formData.hasVariants}
                   onChange={handleChange}
                 />
-                This product has attributes and options (color, size, etc.)
+                {t('attributesOptions')}
               </label>
             </div>
 
@@ -334,13 +336,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   checked={Boolean(formData.trackInventory)}
                   onChange={handleChange}
                 />
-                Track inventory for this product
+                {t('trackInventoryForProduct')}
               </label>
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                Stock Quantity
+                {t('stockLabel')} {t('qtyShort')}
               </label>
               <input
                 type="number"
@@ -366,7 +368,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             {formData.trackInventory && (
               <div style={{ marginTop: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Low Stock Threshold
+                  {t('lowStock')}
                 </label>
                 <input
                   type="number"
@@ -380,19 +382,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   }}
                 />
                 <div style={{ marginTop: '0.35rem', color: colors.textMuted, fontSize: '0.85rem' }}>
-                  The warning becomes active when stock is at or below this number. Use 0 to disable it.
+                  {t('lowStock')} threshold
                 </div>
               </div>
             )}
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Shipping</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('shipping')}</h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Length (cm)
+                  {t('dimensions')} - Length (cm)
                 </label>
                 <input
                   type="number"
@@ -406,7 +408,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                  Width (cm)
+                  {t('dimensions')} - Width (cm)
                 </label>
                 <input
                   type="number"
@@ -441,7 +443,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 checked={formData.requiresManualShipping}
                 onChange={handleChange}
               />
-              This product requires manual shipping quote
+              {t('manualQuoteRequired')}
             </label>
           </div>
         </div>
@@ -457,7 +459,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               border: `1px solid ${colors.border}`,
             }}
           >
-            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>Product Images</h3>
+            <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('product')} {t('attachments', 'Images')}</h3>
 
             <div
   style={{
@@ -469,7 +471,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 >
   <ImageUpload
     onImageUpload={handleImageUpload}
-    label={uploading ? "Uploading..." : "Upload Images"}
+    label={uploading ? t('uploadingLabel') : 'Upload Images'}
     uploading={uploading}
     multiple
   />
@@ -485,7 +487,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 color: colors.text,
               }}
             >
-              <strong>Images: {formData.imageUrls.length}</strong>
+            <strong>{t('attachments', 'Images')}: {formData.imageUrls.length}</strong>
             </div>
 
             {formData.imageUrls.length > 0 && (
@@ -551,7 +553,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             opacity: (isSubmitting || uploading) ? 0.7 : 1,
           }}
         >
-          {isSubmitting ? 'Saving...' : uploading ? 'Uploading...' : 'Save Product'}
+          {isSubmitting ? t('savingLabel') : uploading ? t('uploadingLabel') : `${t('saveChanges')} ${t('product')}`}
         </button>
       </div>
     </form>

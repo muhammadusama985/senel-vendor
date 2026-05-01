@@ -2,8 +2,10 @@ import { useState, useCallback } from 'react';
 import api from '../api/client';
 import { Ticket, TicketMessage, CreateTicketData, AddMessageData, TicketFilters } from '../types/ticket';
 import toast from 'react-hot-toast';
+import { useI18n } from '../context/I18nContext';
 
 export const useTickets = () => {
+  const { t } = useI18n();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
@@ -34,7 +36,7 @@ export const useTickets = () => {
       setPages(response.data.pages || 1);
     } catch (error: any) {
       console.error('Error fetching tickets:', error);
-      toast.error(error?.message || 'Failed to load tickets');
+      toast.error(error?.message || t('failedLoadTickets', 'Failed to load tickets'));
     } finally {
       setLoading(false);
     }
@@ -48,7 +50,7 @@ export const useTickets = () => {
       return response.data.ticket || null;
     } catch (error: any) {
       console.error('Error fetching ticket:', error);
-      toast.error(error?.message || 'Failed to load ticket details');
+      toast.error(error?.message || t('failedLoadTicketDetails', 'Failed to load ticket details'));
       return null;
     }
   }, []);
@@ -60,7 +62,7 @@ export const useTickets = () => {
       setMessages(response.data.messages || []);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
-      toast.error(error?.message || 'Failed to load messages');
+      toast.error(error?.message || t('failedLoadMessages', 'Failed to load messages'));
     } finally {
       setMessagesLoading(false);
     }
@@ -69,10 +71,10 @@ export const useTickets = () => {
   const createTicket = async (data: CreateTicketData): Promise<Ticket | null> => {
     try {
       const response = await api.post('/vendor/tickets', data);
-      toast.success('Ticket created successfully');
+      toast.success(t('ticketCreatedSuccess', 'Ticket created successfully'));
       return response.data.ticket || null;
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to create ticket');
+      toast.error(error?.message || t('failedCreateTicket', 'Failed to create ticket'));
       return null;
     }
   };
@@ -81,10 +83,10 @@ export const useTickets = () => {
     try {
       await api.post(`/vendor/tickets/${ticketId}/messages`, data);
       await getMessages(ticketId);
-      toast.success('Message sent');
+      toast.success(t('messageSent', 'Message sent'));
       return true;
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send message');
+      toast.error(error?.message || t('failedSendReply', 'Failed to send reply'));
       return false;
     }
   };
@@ -93,10 +95,10 @@ export const useTickets = () => {
     try {
       await api.patch(`/vendor/tickets/${ticketId}/status`, { status });
       await getTicket(ticketId);
-      toast.success('Ticket status updated');
+      toast.success(t('ticketStatusUpdated', 'Ticket status updated'));
       return true;
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to update status');
+      toast.error(error?.message || t('failedUpdateStatus', 'Failed to update status'));
       return false;
     }
   };

@@ -4,12 +4,14 @@ import { Vendor, VendorUpdateData } from '../types/store';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useAuthStore } from '../store/authStore';
+import { useI18n } from '../context/I18nContext';
 
 export const useStore = () => {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { colors } = useTheme();
+  const { language, t } = useI18n();
   const setAuthVendor = useAuthStore((state) => state.setVendor);
 
   const fetchVendor = useCallback(async () => {
@@ -19,13 +21,13 @@ export const useStore = () => {
       setAuthVendor(response.data.vendor);
     } catch (error) {
       console.error('Error fetching vendor:', error);
-      toast.error('Failed to load store data', {
+      toast.error(t('failedLoadStoreData', 'Failed to load store data'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
     } finally {
       setLoading(false);
     }
-  }, [colors.accentRed]);
+  }, [colors.accentRed, t]);
 
   const updateVendor = async (data: VendorUpdateData) => {
     setSaving(true);
@@ -33,12 +35,12 @@ export const useStore = () => {
       const response = await api.patch('/vendors/me', data);
       setVendor(response.data.vendor);
       setAuthVendor(response.data.vendor);
-      toast.success('Store updated successfully', {
+      toast.success(t('storeUpdatedSuccess', 'Store updated successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update store', {
+      toast.error(error.message || t('failedUpdateStore', 'Failed to update store'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -58,12 +60,12 @@ export const useStore = () => {
       });
       setVendor(response.data.vendor);
       setAuthVendor(response.data.vendor);
-      toast.success('Document uploaded successfully', {
+      toast.success(t('documentUploadedSuccess', 'Document uploaded successfully'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to upload document', {
+      toast.error(error.message || t('failedUploadDocument', 'Failed to upload document'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -75,12 +77,12 @@ export const useStore = () => {
       const response = await api.delete(`/vendors/me/docs/${docId}`);
       setVendor(response.data.vendor);
       setAuthVendor(response.data.vendor);
-      toast.success('Document removed', {
+      toast.success(t('documentRemoved', 'Document removed'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove document', {
+      toast.error(error.message || t('failedRemoveDocument', 'Failed to remove document'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -92,12 +94,12 @@ export const useStore = () => {
       const response = await api.post('/vendors/me/submit');
       setVendor(response.data.vendor);
       setAuthVendor(response.data.vendor);
-      toast.success('Submitted for verification', {
+      toast.success(t('submittedForVerification', 'Submitted for verification'), {
         style: { backgroundColor: colors.accentGreen, color: 'white' }
       });
       return true;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to submit', {
+      toast.error(error.message || t('failedSubmit', 'Failed to submit'), {
         style: { backgroundColor: colors.accentRed, color: 'white' }
       });
       return false;
@@ -106,7 +108,7 @@ export const useStore = () => {
 
   useEffect(() => {
     fetchVendor();
-  }, [fetchVendor]);
+  }, [fetchVendor, language]);
 
   return {
     vendor,
