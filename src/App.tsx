@@ -68,6 +68,10 @@ import { Settings } from './pages/Settings/Settings';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
 import { Promotions } from './pages/Promotions';
+import { BulkOfferList } from './pages/Negotiations/BulkOfferList';
+import { BulkOfferDetail } from './pages/Negotiations/BulkOfferDetail';
+import { CustomProductionList } from './pages/Negotiations/CustomProductionList';
+import { CustomProductionDetail } from './pages/Negotiations/CustomProductionDetail';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { vendor, isLoading } = useAuthStore();
@@ -205,6 +209,12 @@ function App() {
             <Route path="promotions" element={<Promotions />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="notifications" element={<Notifications />} />
+
+            {/* Negotiations: Bulk Offers & Custom Production */}
+            <Route path="negotiations/offers" element={<BulkOfferList />} />
+            <Route path="negotiations/offers/:id" element={<BulkOfferDetail />} />
+            <Route path="negotiations/custom-production" element={<CustomProductionList />} />
+            <Route path="negotiations/custom-production/:id" element={<CustomProductionDetail />} />
 
             {/* Staff */}
             <Route path="staff">

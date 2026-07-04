@@ -19,6 +19,8 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
+  HandRaisedIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -48,6 +50,15 @@ const navigation: NavItem[] = [
   { key: 'analytics', path: '/analytics', icon: PresentationChartLineIcon },
   { key: 'staff', path: '/staff', icon: UsersIcon },
   {
+    key: 'negotiations',
+    path: '/negotiations/offers',
+    icon: HandRaisedIcon,
+    children: [
+      { label: 'Bulk Offers', path: '/negotiations/offers', icon: ClipboardDocumentListIcon },
+      { label: 'Custom Production', path: '/negotiations/custom-production', icon: CubeIcon },
+    ],
+  },
+  {
     key: 'support',
     path: '/support',
     icon: LifebuoyIcon,
@@ -67,10 +78,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) =
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     support: true,
+    negotiations: true,
   });
 
   const supportOpen = useMemo(
     () => location.pathname.startsWith('/support'),
+    [location.pathname]
+  );
+
+  const negotiationsOpen = useMemo(
+    () => location.pathname.startsWith('/negotiations'),
     [location.pathname]
   );
 
@@ -148,8 +165,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) =
               );
             }
 
-            const isGroupOpen = (openGroups[item.key || item.path] ?? false) || supportOpen;
-            const isGroupActive = supportOpen;
+            const groupOpenByPath: Record<string, boolean> = {
+              support: supportOpen,
+              negotiations: negotiationsOpen,
+            };
+            const isGroupOpen =
+              (openGroups[item.key || item.path] ?? false) ||
+              Boolean(groupOpenByPath[item.key || '']);
+            const isGroupActive = Boolean(groupOpenByPath[item.key || '']);
 
             return (
               <div key={item.path} style={{ paddingLeft: 0 }}>
