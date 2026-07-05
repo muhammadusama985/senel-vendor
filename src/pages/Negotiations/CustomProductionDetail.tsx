@@ -118,6 +118,26 @@ export const CustomProductionDetail: React.FC = () => {
     }
   };
 
+  const deleteRfq = async () => {
+    if (!rfq) return;
+    if (
+      !window.confirm(
+        'Delete this custom production request permanently? This is only allowed for accepted, rejected, expired, cancelled, or completed requests.'
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await api.delete(`/custom-production/vendor/${rfq._id}`);
+      toast.success('Request deleted');
+      navigate('/negotiations/custom-production');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete request');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const complete = async () => {
     setBusy(true);
     try {
@@ -134,7 +154,8 @@ export const CustomProductionDetail: React.FC = () => {
   if (loading) return <p style={{ color: colors.textMuted }}>Loading...</p>;
   if (!rfq) return <p>Request not found</p>;
 
-  const terminal = ['rejected', 'expired', 'cancelled', 'completed'].includes(rfq.status);
+  const terminalStates = ['rejected', 'expired', 'cancelled', 'completed', 'accepted'];
+  const terminal = terminalStates.includes(rfq.status);
 
   return (
     <div>
@@ -441,6 +462,31 @@ export const CustomProductionDetail: React.FC = () => {
         >
           <button type="button" className="btn btn-primary" disabled={busy} onClick={startProduction}>
             Start Production
+          </button>
+        </div>
+      )}
+
+      {terminal && (
+        <div
+          style={{
+            background: colors.cardBg,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 12,
+            padding: '1rem',
+            marginTop: '1rem',
+          }}
+        >
+          <p className="muted" style={{ marginBottom: '0.5rem' }}>
+            This request is in a terminal state. You can permanently delete it from your records.
+          </p>
+          <button
+            type="button"
+            className="btn btn-outline"
+            disabled={busy}
+            onClick={deleteRfq}
+            style={{ color: '#c0392b', borderColor: '#c0392b' }}
+          >
+            Delete Request Permanently
           </button>
         </div>
       )}
