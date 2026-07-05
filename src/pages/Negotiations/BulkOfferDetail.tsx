@@ -59,6 +59,31 @@ export const BulkOfferDetail: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const deleteOffer = async () => {
+    if (!offer) return;
+    if (
+      !window.confirm(
+        'Delete this offer permanently? This is only allowed for accepted, rejected, expired, or cancelled offers.'
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await api.delete(`/bulk-offers/vendor/${offer._id}`);
+      toast.success('Offer deleted');
+      navigate('/negotiations/offers');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete offer');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const variantAttrs = (offer as any)?.variantAttributes as Record<string, string> | undefined;
+  const variantSku = (offer as any)?.variantSku as string | undefined;
+  const TERMINAL_STATUSES = ['accepted', 'rejected', 'expired', 'cancelled'];
+  const canDelete = offer && TERMINAL_STATUSES.includes(offer.status);
+
   const counter = async () => {
     setBusy(true);
     try {
@@ -122,6 +147,17 @@ export const BulkOfferDetail: React.FC = () => {
         <p>
           <strong>Buyer:</strong> {offer.buyerSnapshot?.companyName || offer.buyerSnapshot?.email}
         </p>
+        {variantSku || (variantAttrs && Object.keys(variantAttrs).length > 0) ? (
+          <p>
+            <strong>Selected option:</strong>{' '}
+            {variantAttrs && Object.keys(variantAttrs).length > 0
+              ? Object.entries(variantAttrs)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join(' / ')
+              : ''}
+            {variantSku ? ` (SKU: ${variantSku})` : ''}
+          </p>
+        ) : null}
         <p>
           <strong>Current terms:</strong> {offer.currentQty} units @ {offer.currentUnitPrice}{' '}
           {offer.currency} ={' '}
@@ -266,6 +302,31 @@ export const BulkOfferDetail: React.FC = () => {
       {!canSellerAct && !['accepted', 'rejected', 'expired', 'cancelled'].includes(offer.status) && (
         <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '1rem' }}>
           <p>Waiting for the buyer's response.</p>
+        </div>
+      )}
+
+      {canDelete && (
+        <div
+          style={{
+            background: colors.cardBg,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 12,
+            padding: '1rem',
+            marginTop: '1rem',
+          }}
+        >
+          <p className="muted" style={{ marginBottom: '0.5rem' }}>
+            This offer is in a terminal state. You can permanently delete it from your records.
+          </p>
+          <button
+            type="button"
+            className="btn btn-outline"
+            disabled={busy}
+            onClick={deleteOffer}
+            style={{ color: '#c0392b', borderColor: '#c0392b' }}
+          >
+            Delete Offer Permanently
+          </button>
         </div>
       )}
     </div>
