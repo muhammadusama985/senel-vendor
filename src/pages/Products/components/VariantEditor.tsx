@@ -524,17 +524,18 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
 
                       <div>
                         <label
+                          htmlFor={`adjust-price-${group.title}-${variantIndex}`}
                           title="Adjust Price (e.g. -10 to discount this option by 10, blank = no change)"
                           style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}
                         >
                           Adjust Price
                         </label>
                         <input
+                          id={`adjust-price-${group.title}-${variantIndex}`}
                           type="number"
                           step="0.01"
                           value={adjValue}
                           placeholder="0"
-                          disabled={!optionValue}
                           onChange={(e) => updateAdjustmentForOption(group.title, optionValue, e.target.value)}
                           style={{
                             width: '100%',
@@ -543,6 +544,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                             borderRadius: '6px',
                             backgroundColor: colors.cardBg,
                             color: colors.text,
+                            cursor: 'pointer',
                           }}
                         />
                       </div>
