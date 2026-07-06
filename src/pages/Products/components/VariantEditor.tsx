@@ -7,6 +7,8 @@ interface VariantEditorProps {
   variants: Variant[];
   onChange: (variants: Variant[]) => void;
   uploadImage?: (file: File) => Promise<string | null>;
+  attributeAdjustments?: Record<string, Record<string, number>>;
+  onAttributeAdjustmentsChange?: (next: Record<string, Record<string, number>>) => void;
 }
 
 type AttributeGroup = {
@@ -83,7 +85,13 @@ const getVariantAttributeTitle = (variant: Variant, fallbackIndex: number) => {
   return keys[0] || `Attribute ${fallbackIndex + 1}`;
 };
 
-export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange, uploadImage }) => {
+export const VariantEditor: React.FC<VariantEditorProps> = ({
+  variants,
+  onChange,
+  uploadImage,
+  attributeAdjustments = {},
+  onAttributeAdjustmentsChange,
+}) => {
   const { colors } = useTheme();
   const { t } = useI18n();
   const [draftAttributeTitles, setDraftAttributeTitles] = useState<Record<string, string>>({});
@@ -102,6 +110,12 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
 
   const updateVariants = (updater: (current: Variant[]) => Variant[]) => {
     onChange(updater(variants));
+  };
+
+  const updateAdjustments = (
+    updater: (current: Record<string, Record<string, number>>) => Record<string, Record<string, number>>
+  ) => {
+    onAttributeAdjustmentsChange?.(updater(attributeAdjustments));
   };
 
   const createOption = (attributeTitle: string, optionValue = ''): Variant => ({
@@ -137,6 +151,15 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
         return { ...variant, attributes: nextAttributes };
       }),
     );
+    // Also rename the adjustments key
+    if (attributeAdjustments[oldTitle]) {
+      updateAdjustments((current) => {
+        const next = { ...current };
+        next[cleanTitle] = next[oldTitle] || {};
+        delete next[oldTitle];
+        return next;
+      });
+    }
   };
 
   const removeAttributeGroup = (title: string) => {
@@ -146,6 +169,14 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
       delete next[title];
       return next;
     });
+    // Also remove from adjustments
+    if (attributeAdjustments[title]) {
+      updateAdjustments((current) => {
+        const next = { ...current };
+        delete next[title];
+        return next;
+      });
+    }
   };
 
   const addOptionToGroup = (title: string) => {
@@ -153,11 +184,46 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
   };
 
   const removeOption = (variantIndex: number) => {
+    const removedVariant = variants[variantIndex];
+    const removedAttrTitle = Object.keys(removedVariant.attributes || {})[0];
+    const removedAttrValue = removedVariant.attributes?.[removedAttrTitle];
     updateVariants((current) => current.filter((_, index) => index !== variantIndex));
+    // Also remove the adjustment for that specific value if no other variant uses it
+    if (removedAttrTitle && removedAttrValue != null && removedAttrValue !== '') {
+      const stillUsed = variants.some(
+        (v, idx) => idx !== variantIndex && v.attributes?.[removedAttrTitle] === removedAttrValue
+      );
+      if (!stillUsed) {
+        updateAdjustments((current) => {
+          const next = { ...current };
+          if (next[removedAttrTitle]) {
+            const attrMap = { ...next[removedAttrTitle] };
+            delete attrMap[removedAttrValue];
+            next[removedAttrTitle] = attrMap;
+          }
+          return next;
+        });
+      }
+    }
   };
 
   const updateOption = (variantIndex: number, updater: (variant: Variant) => Variant) => {
     updateVariants((current) => current.map((variant, index) => (index === variantIndex ? updater(variant) : variant)));
+  };
+
+  const updateAdjustmentForOption = (attrTitle: string, attrValue: string, raw: string) => {
+    const num = parseFloat(raw);
+    updateAdjustments((current) => {
+      const next = { ...current };
+      const attrMap = { ...(next[attrTitle] || {}) };
+      if (raw === '' || isNaN(num)) {
+        delete attrMap[attrValue];
+      } else {
+        attrMap[attrValue] = num;
+      }
+      next[attrTitle] = attrMap;
+      return next;
+    });
   };
 
   const handleOptionImages = async (variantIndex: number, files: FileList | null) => {
@@ -180,6 +246,37 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
       ...variant,
       imageUrls: (variant.imageUrls || []).filter((url) => url !== imageUrl),
     }));
+  };
+
+  // When option name changes, also move adjustment entry
+  const updateOptionName = (variantIndex: number, attrTitle: string, newValue: string) => {
+    const oldValue = variants[variantIndex].attributes?.[attrTitle];
+    updateOption(variantIndex, (variant) => ({
+      ...variant,
+      attributes: { [attrTitle]: newValue },
+    }));
+    // Move adjustment from old value to new value (if no other variant uses old)
+    if (oldValue != null && oldValue !== '' && oldValue !== newValue) {
+      const stillUsedOld = variants.some(
+        (v, idx) => idx !== variantIndex && v.attributes?.[attrTitle] === oldValue
+      );
+      updateAdjustments((current) => {
+        const next = { ...current };
+        const attrMap = { ...(next[attrTitle] || {}) };
+        if (!stillUsedOld) {
+          delete attrMap[oldValue];
+        }
+        if (newValue !== '' && attrMap[newValue] == null) {
+          // carry over adjustment to the new name if it doesn't exist
+          const existing = attrMap[oldValue];
+          if (existing != null) {
+            attrMap[newValue] = existing;
+          }
+        }
+        next[attrTitle] = attrMap;
+        return next;
+      });
+    }
   };
 
   return (
@@ -298,7 +395,10 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               {group.indexes.map((variantIndex, optionOffset) => {
                 const option = variants[variantIndex];
-                const optionValue = option.attributes?.[group.title] ?? '';
+                const optionValue = String(option.attributes?.[group.title] ?? '');
+                const currentAdj = attributeAdjustments?.[group.title]?.[optionValue];
+                const adjValue =
+                  currentAdj === undefined || currentAdj === null ? '' : String(currentAdj);
 
                 return (
                   <div
@@ -330,7 +430,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr auto' : '1.6fr 1fr auto',
+                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr 130px auto' : '1.6fr 1fr 130px auto',
                         gap: '0.75rem',
                         alignItems: 'end',
                         marginBottom: '0.9rem',
@@ -342,7 +442,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                             <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('optionName', 'Option Name')}</label>
                             <input
                               type="text"
-                              value={String(optionValue || '')}
+                              value={optionValue}
                               readOnly
                               placeholder="Color name"
                               style={{
@@ -359,12 +459,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                             <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('palette', 'Palette')}</label>
                             <input
                               type="color"
-                              value={colorHexFromValue(String(optionValue || ''))}
+                              value={colorHexFromValue(optionValue)}
                               onChange={(e) =>
-                                updateOption(variantIndex, (variant) => ({
-                                  ...variant,
-                                  attributes: { [group.title]: colorNameFromHex(e.target.value) },
-                                }))
+                                updateOptionName(variantIndex, group.title, colorNameFromHex(e.target.value))
                               }
                               style={{
                                 width: '100%',
@@ -376,13 +473,13 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                             />
                           </div>
                           <div
-                            title={String(optionValue || '')}
+                            title={optionValue}
                             style={{
                               width: '42px',
                               height: '42px',
                               borderRadius: '50%',
                               border: `1px solid ${colors.border}`,
-                              backgroundColor: colorHexFromValue(String(optionValue || '')),
+                              backgroundColor: colorHexFromValue(optionValue),
                               boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.35)',
                               justifySelf: 'center',
                             }}
@@ -393,14 +490,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>{t('optionName', 'Option Name')}</label>
                           <input
                             type="text"
-                            value={String(optionValue || '')}
+                            value={optionValue}
                             placeholder={group.title.trim().toLowerCase() === 'size' ? 'e.g. Small, Medium, Large' : 'e.g. Yellow, Blue'}
-                            onChange={(e) =>
-                              updateOption(variantIndex, (variant) => ({
-                                ...variant,
-                                attributes: { [group.title]: e.target.value },
-                              }))
-                            }
+                            onChange={(e) => updateOptionName(variantIndex, group.title, e.target.value)}
                             style={{
                               width: '100%',
                               padding: '0.55rem',
@@ -419,6 +511,31 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({ variants, onChange
                           type="text"
                           value={option.sku}
                           onChange={(e) => updateOption(variantIndex, (variant) => ({ ...variant, sku: e.target.value }))}
+                          style={{
+                            width: '100%',
+                            padding: '0.55rem',
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: '6px',
+                            backgroundColor: colors.cardBg,
+                            color: colors.text,
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          title="Adjust Price (e.g. -10 to discount this option by 10, blank = no change)"
+                          style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}
+                        >
+                          Adjust Price
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={adjValue}
+                          placeholder="0"
+                          disabled={!optionValue}
+                          onChange={(e) => updateAdjustmentForOption(group.title, optionValue, e.target.value)}
                           style={{
                             width: '100%',
                             padding: '0.55rem',

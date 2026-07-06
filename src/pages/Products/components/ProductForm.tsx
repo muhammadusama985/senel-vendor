@@ -33,6 +33,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     currency: 'EUR',
     moq: 1,
     priceTiers: [{ minQty: 1, unitPrice: 0 }],
+    attributeAdjustments: {},
     hasVariants: false,
     stockQty: 0,
     variants: [],
@@ -362,6 +363,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 variants={formData.variants || []}
                 onChange={(variants) => setFormData(prev => ({ ...prev, variants }))}
                 uploadImage={uploadProductImage}
+                attributeAdjustments={formData.attributeAdjustments}
+                onAttributeAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, attributeAdjustments: v }))}
               />
             ) : null}
 

@@ -20,6 +20,7 @@ export interface Product {
   attributeSetId?: string | null;
   moq: number;
   priceTiers: PriceTier[];
+  attributeAdjustments?: Record<string, Record<string, number>>;
   stockQty: number;
   hasVariants: boolean;
   variants: Variant[];
@@ -52,6 +53,7 @@ export interface ProductFormData {
   currency?: 'EUR' | 'TRY' | 'USD';
   moq: number;
   priceTiers: PriceTier[];
+  attributeAdjustments?: Record<string, Record<string, number>>;
   hasVariants: boolean;
   stockQty?: number;
   variants?: Variant[];
