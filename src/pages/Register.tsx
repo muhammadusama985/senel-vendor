@@ -58,6 +58,23 @@ export const Register: React.FC = () => {
         state: { email: formData.email, fromRegistration: true },
       });
     } catch (error: any) {
+      // Map API field-level issues (e.g. "email already exists") to the matching
+      // input. Only the offending field gets a red border; data in the other
+      // fields is preserved so the user can correct just the affected input.
+      const issues = error?.response?.data?.issues;
+      if (Array.isArray(issues) && issues.length > 0) {
+        const apiFieldErrors: typeof errors = {};
+        issues.forEach((issue: any) => {
+          const path = Array.isArray(issue?.path) ? issue.path[0] : issue?.path;
+          if (path && issue?.message && !apiFieldErrors[path as keyof typeof errors]) {
+            (apiFieldErrors as any)[path] = String(issue.message);
+          }
+        });
+        if (Object.keys(apiFieldErrors).length > 0) {
+          setErrors((prev) => ({ ...prev, ...apiFieldErrors }));
+        }
+      }
+
       toast.error(error.response?.data?.message || t('registerFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });

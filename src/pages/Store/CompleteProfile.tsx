@@ -33,6 +33,11 @@ export const CompleteProfile: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  // Per-step per-field errors: only the offending field shows a red border;
+  // data in the other fields is NOT cleared.
+  const [stepOneErrors, setStepOneErrors] = useState<Record<string, string>>({});
+  const [stepTwoErrors, setStepTwoErrors] = useState<Record<string, string>>({});
 
   const [storeData, setStoreData] = useState({
     storeName: '',
@@ -110,7 +115,9 @@ export const CompleteProfile: React.FC = () => {
 
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStepOneErrors({});
     if (!storeData.storeName.trim()) {
+      setStepOneErrors({ storeName: t('descriptionRequired', 'is required') });
       toast.error(t('storeNameLabel') + ' ' + t('descriptionRequired', 'is required'), { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
       return;
     }
@@ -119,7 +126,9 @@ export const CompleteProfile: React.FC = () => {
 
   const handleBusinessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStepTwoErrors({});
     if (!businessData.companyName.trim()) {
+      setStepTwoErrors({ companyName: t('descriptionRequired', 'is required') });
       toast.error(t('companyNameLabel') + ' ' + t('descriptionRequired', 'is required'), { style: { backgroundColor: colors.accentRed, color: '#ffffff' } });
       return;
     }
@@ -128,6 +137,7 @@ export const CompleteProfile: React.FC = () => {
 
   const handleSubmitForReview = async () => {
     setLoading(true);
+    setSubmitError('');
     try {
       await api.post('/vendors/me', {
         storeName: storeData.storeName,
@@ -170,7 +180,11 @@ export const CompleteProfile: React.FC = () => {
       await checkAuth();
       navigate('/pending-approval');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Submission failed', {
+      const msg = error.response?.data?.message || 'Submission failed';
+      // Show a persistent banner so the user sees the failure context, in
+      // addition to the toast. Form data is NOT cleared.
+      setSubmitError(msg);
+      toast.error(msg, {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
@@ -282,7 +296,23 @@ export const CompleteProfile: React.FC = () => {
       </h1>
 
       {step === 1 && (
-        <form onSubmit={handleStoreSubmit} style={cardStyle}>
+        <form onSubmit={handleStoreSubmit} style={cardStyle} noValidate>
+          {submitError && (
+            <div
+              role="alert"
+              style={{
+                backgroundColor: `${colors.accentRed}20`,
+                border: `1px solid ${colors.accentRed}`,
+                color: colors.text,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                fontSize: '0.9rem',
+              }}
+            >
+              {submitError}
+            </div>
+          )}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
               {t('storeNameLabel')} *
@@ -290,11 +320,23 @@ export const CompleteProfile: React.FC = () => {
             <input
               type="text"
               value={storeData.storeName}
-              onChange={(e) => setStoreData({ ...storeData, storeName: e.target.value })}
-              required
-              style={inputStyle}
+              onChange={(e) => {
+                setStoreData({ ...storeData, storeName: e.target.value });
+                if (stepOneErrors.storeName) setStepOneErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.storeName;
+                  return next;
+                });
+              }}
+              style={{
+                ...inputStyle,
+                border: `1px solid ${stepOneErrors.storeName ? colors.accentRed : inputStyle.border}`,
+              }}
               placeholder={t('storeNameLabel')}
             />
+            {stepOneErrors.storeName && (
+              <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{stepOneErrors.storeName}</p>
+            )}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -333,7 +375,23 @@ export const CompleteProfile: React.FC = () => {
       )}
 
       {step === 2 && (
-        <form onSubmit={handleBusinessSubmit} style={cardStyle}>
+        <form onSubmit={handleBusinessSubmit} style={cardStyle} noValidate>
+          {submitError && (
+            <div
+              role="alert"
+              style={{
+                backgroundColor: `${colors.accentRed}20`,
+                border: `1px solid ${colors.accentRed}`,
+                color: colors.text,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                fontSize: '0.9rem',
+              }}
+            >
+              {submitError}
+            </div>
+          )}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text, fontWeight: 'bold' }}>
               {t('companyNameLabel')} *
@@ -341,11 +399,23 @@ export const CompleteProfile: React.FC = () => {
             <input
               type="text"
               value={businessData.companyName}
-              onChange={(e) => setBusinessData({ ...businessData, companyName: e.target.value })}
-              required
-              style={inputStyle}
+              onChange={(e) => {
+                setBusinessData({ ...businessData, companyName: e.target.value });
+                if (stepTwoErrors.companyName) setStepTwoErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.companyName;
+                  return next;
+                });
+              }}
+              style={{
+                ...inputStyle,
+                border: `1px solid ${stepTwoErrors.companyName ? colors.accentRed : inputStyle.border}`,
+              }}
               placeholder="Your Company GmbH"
             />
+            {stepTwoErrors.companyName && (
+              <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{stepTwoErrors.companyName}</p>
+            )}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -483,6 +553,22 @@ export const CompleteProfile: React.FC = () => {
 
       {step === 4 && (
         <div>
+          {submitError && (
+            <div
+              role="alert"
+              style={{
+                backgroundColor: `${colors.accentRed}20`,
+                border: `1px solid ${colors.accentRed}`,
+                color: colors.text,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                fontSize: '0.9rem',
+              }}
+            >
+              {submitError}
+            </div>
+          )}
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '1rem' }}>{t('storeInformation')}</h3>
             <p style={{ color: colors.text }}>

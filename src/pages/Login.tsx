@@ -6,16 +6,44 @@ import { useI18n } from '../context/I18nContext';
 import { Logo } from '../components/common/Logo';
 import toast from 'react-hot-toast';
 
+// Parse Zod-style issues from API error responses; only returns per-field errors.
+// (Empty object means "no field-specific issue" → fall back to general toast/banner.)
+const extractFieldErrors = (error: any): Record<string, string> => {
+  const issues = error?.response?.data?.issues;
+  if (!Array.isArray(issues) || issues.length === 0) {
+    return {};
+  }
+  const fieldErrors: Record<string, string> = {};
+  issues.forEach((issue: any) => {
+    const path = Array.isArray(issue?.path) ? issue.path[0] : issue?.path;
+    if (path && issue?.message && !fieldErrors[path]) {
+      fieldErrors[String(path)] = String(issue.message);
+    }
+  });
+  return fieldErrors;
+};
+
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
   const location = useLocation();
   const { login, error, clearError } = useAuthStore();
   const { colors } = useTheme();
   const { t } = useI18n();
+
+  // Only clear the error for the field the user is editing — the others keep their data.
+  const clearFieldError = (name: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (location.state?.email) {
@@ -31,9 +59,26 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFieldErrors({});
     clearError();
 
+    // Per-field client validation: only the offending field gets a red border.
+    // Form data is NOT cleared; we only set inline messages.
+    const localErrors: Record<string, string> = {};
+    if (!email.trim()) {
+      localErrors.email = t('authEmailRequired') || 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      localErrors.email = t('authEmailInvalid') || 'Please enter a valid email';
+    }
+    if (!password) {
+      localErrors.password = t('authPasswordRequired') || 'Password is required';
+    }
+    if (Object.keys(localErrors).length > 0) {
+      setFieldErrors(localErrors);
+      return;
+    }
+
+    setLoading(true);
     try {
       await login(email, password);
       const { vendor } = useAuthStore.getState();
@@ -69,12 +114,35 @@ export const Login: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
+      // Map API field-level issues (e.g. "email already exists") to specific fields.
+      const apiFieldErrors = extractFieldErrors(err);
+      if (Object.keys(apiFieldErrors).length > 0) {
+        setFieldErrors(apiFieldErrors);
+      }
       toast.error(err.message || t('loginFailed'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '0.75rem',
+    backgroundColor: colors.inputBg,
+    border: `1px solid ${hasError ? colors.accentRed : colors.border}`,
+    borderRadius: '8px',
+    color: colors.text,
+    fontSize: '1rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+  });
+
+  const errorTextStyle: React.CSSProperties = {
+    color: colors.accentRed,
+    fontSize: '0.8rem',
+    marginTop: '0.3rem',
   };
 
   return (
@@ -116,7 +184,7 @@ export const Login: React.FC = () => {
           <p style={{ color: colors.textMuted }}>{t('authAccessDashboard')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
               {t('authEmailLabel')}
@@ -124,21 +192,17 @@ export const Login: React.FC = () => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: colors.inputBg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                color: colors.text,
-                fontSize: '1rem',
-                outline: 'none',
-                boxSizing: 'border-box',
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) clearFieldError('email');
               }}
+              style={inputStyle(Boolean(fieldErrors.email))}
               placeholder={t('emailPlaceholderVendor')}
+              aria-invalid={Boolean(fieldErrors.email)}
             />
+            {fieldErrors.email && (
+              <p style={errorTextStyle} role="alert">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
@@ -148,21 +212,17 @@ export const Login: React.FC = () => {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: colors.inputBg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                color: colors.text,
-                fontSize: '1rem',
-                outline: 'none',
-                boxSizing: 'border-box',
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) clearFieldError('password');
               }}
+              style={inputStyle(Boolean(fieldErrors.password))}
               placeholder={t('passwordPlaceholder')}
+              aria-invalid={Boolean(fieldErrors.password)}
             />
+            {fieldErrors.password && (
+              <p style={errorTextStyle} role="alert">{fieldErrors.password}</p>
+            )}
           </div>
 
           {error && (
@@ -176,6 +236,7 @@ export const Login: React.FC = () => {
                 marginBottom: '1rem',
                 fontSize: '0.9rem',
               }}
+              role="alert"
             >
               {error}
             </div>

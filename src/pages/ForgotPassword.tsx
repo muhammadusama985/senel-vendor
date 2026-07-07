@@ -5,6 +5,7 @@ import { useI18n } from '../context/I18nContext';
 import { Logo } from '../components/common/Logo';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import { extractFieldErrors, extractErrorMessage } from '../utils/formErrors';
 
 export const ForgotPassword: React.FC = () => {
   const { colors } = useTheme();
@@ -12,9 +13,23 @@ export const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [emailError, setEmailError] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailError('');
+
+    // Per-field client validation. Only the offending placeholder will get
+    // a red border; data in other inputs is NOT cleared.
+    if (!email.trim()) {
+      setEmailError(t('authEmailRequired') || 'Email is required');
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError(t('authEmailInvalid') || 'Please enter a valid email');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post('/auth/password/forgot', { email });
@@ -23,12 +38,38 @@ export const ForgotPassword: React.FC = () => {
         style: { backgroundColor: colors.accentGreen, color: '#ffffff' },
       });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || t('authSendResetFailed'), {
+      // Map API-reported field issues back to the email input only.
+      const apiFieldErrors = extractFieldErrors(error);
+      if (apiFieldErrors.email) {
+        setEmailError(apiFieldErrors.email);
+      } else {
+        const msg = extractErrorMessage(error, t('authSendResetFailed') || 'Failed to send reset code');
+        setEmailError(msg);
+      }
+      toast.error(extractErrorMessage(error, t('authSendResetFailed') || 'Failed to send reset code'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const inputStyle = (hasError: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '0.75rem',
+    backgroundColor: colors.inputBg,
+    border: `1px solid ${hasError ? colors.accentRed : colors.border}`,
+    borderRadius: '8px',
+    color: colors.text,
+    fontSize: '1rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+  });
+
+  const errorTextStyle: React.CSSProperties = {
+    color: colors.accentRed,
+    fontSize: '0.8rem',
+    marginTop: '0.3rem',
   };
 
   return (
@@ -72,7 +113,7 @@ export const ForgotPassword: React.FC = () => {
         </div>
 
         {!sent ? (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div style={{ marginBottom: '2rem' }}>
               <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
                 {t('authEmailAddress')}
@@ -80,21 +121,18 @@ export const ForgotPassword: React.FC = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: colors.inputBg,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  color: colors.text,
-                  fontSize: '1rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  // Clear only this field's error; data stays.
+                  if (emailError) setEmailError('');
                 }}
+                style={inputStyle(Boolean(emailError))}
+                aria-invalid={Boolean(emailError)}
                 placeholder={t('emailPlaceholderVendor')}
               />
+              {emailError && (
+                <p style={errorTextStyle} role="alert">{emailError}</p>
+              )}
             </div>
 
             <button

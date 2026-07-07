@@ -5,6 +5,7 @@ import { useI18n } from '../context/I18nContext';
 import { Logo } from '../components/common/Logo';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import { extractFieldErrors, extractErrorMessage } from '../utils/formErrors';
 
 export const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
@@ -17,14 +18,38 @@ export const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Only clear the per-field error the user is editing; data in the other inputs
+  // (email, otp, newPassword) is NOT cleared on a single-field error.
+  const clearFieldError = (name: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
 
-    if (newPassword !== confirmPassword) {
-      toast.error(t('authPasswordsMismatch'), {
-        style: { backgroundColor: colors.accentRed, color: '#ffffff' },
-      });
+    // Per-field client validation. Only the offending placeholder gets a red border.
+    const localErrors: Record<string, string> = {};
+    if (!otp.trim()) localErrors.otp = t('authResetCodeRequired') || 'Verification code is required';
+    if (!newPassword) {
+      localErrors.newPassword = t('authPasswordRequired') || 'New password is required';
+    } else if (newPassword.length < 8) {
+      localErrors.newPassword = t('authPasswordMinLength') || 'Password must be at least 8 characters';
+    }
+    if (!confirmPassword) {
+      localErrors.confirmPassword = t('authConfirmPasswordRequired') || 'Please confirm your new password';
+    } else if (newPassword && newPassword !== confirmPassword) {
+      localErrors.confirmPassword = t('authPasswordsMismatch') || 'Passwords do not match';
+    }
+    if (Object.keys(localErrors).length > 0) {
+      setFieldErrors(localErrors);
       return;
     }
 
@@ -36,12 +61,35 @@ export const ResetPassword: React.FC = () => {
       });
       navigate('/login');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || t('authResetFailed'), {
+      // Map API-reported field issues back to the matching input only.
+      const apiFieldErrors = extractFieldErrors(error);
+      if (Object.keys(apiFieldErrors).length > 0) {
+        setFieldErrors(apiFieldErrors);
+      }
+      toast.error(extractErrorMessage(error, t('authResetFailed') || 'Failed to reset password'), {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '0.75rem',
+    backgroundColor: colors.inputBg,
+    border: `1px solid ${hasError ? colors.accentRed : colors.border}`,
+    borderRadius: '8px',
+    color: colors.text,
+    fontSize: '1rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+  });
+
+  const errorTextStyle: React.CSSProperties = {
+    color: colors.accentRed,
+    fontSize: '0.8rem',
+    marginTop: '0.3rem',
   };
 
   return (
@@ -82,7 +130,7 @@ export const ResetPassword: React.FC = () => {
           <p style={{ color: colors.textMuted }}>{t('authEnterResetCode')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', color: colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
               {t('authResetCode')}
@@ -90,21 +138,15 @@ export const ResetPassword: React.FC = () => {
             <input
               type="text"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: colors.inputBg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                color: colors.text,
-                fontSize: '1rem',
-                outline: 'none',
-                boxSizing: 'border-box',
+              onChange={(e) => {
+                setOtp(e.target.value);
+                if (fieldErrors.otp) clearFieldError('otp');
               }}
+              style={inputStyle(Boolean(fieldErrors.otp))}
+              aria-invalid={Boolean(fieldErrors.otp)}
               placeholder="123456"
             />
+            {fieldErrors.otp && <p style={errorTextStyle} role="alert">{fieldErrors.otp}</p>}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -114,22 +156,15 @@ export const ResetPassword: React.FC = () => {
             <input
               type="password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              minLength={8}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: colors.inputBg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                color: colors.text,
-                fontSize: '1rem',
-                outline: 'none',
-                boxSizing: 'border-box',
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                if (fieldErrors.newPassword) clearFieldError('newPassword');
               }}
+              style={inputStyle(Boolean(fieldErrors.newPassword))}
+              aria-invalid={Boolean(fieldErrors.newPassword)}
               placeholder="********"
             />
+            {fieldErrors.newPassword && <p style={errorTextStyle} role="alert">{fieldErrors.newPassword}</p>}
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
@@ -139,21 +174,15 @@ export const ResetPassword: React.FC = () => {
             <input
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: colors.inputBg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                color: colors.text,
-                fontSize: '1rem',
-                outline: 'none',
-                boxSizing: 'border-box',
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (fieldErrors.confirmPassword) clearFieldError('confirmPassword');
               }}
+              style={inputStyle(Boolean(fieldErrors.confirmPassword))}
+              aria-invalid={Boolean(fieldErrors.confirmPassword)}
               placeholder="********"
             />
+            {fieldErrors.confirmPassword && <p style={errorTextStyle} role="alert">{fieldErrors.confirmPassword}</p>}
           </div>
 
           <button
