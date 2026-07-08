@@ -68,6 +68,7 @@ import { Settings } from './pages/Settings/Settings';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
 import { Promotions } from './pages/Promotions';
+import { CategoryRequests } from './pages/CategoryRequests';
 import { BulkOfferList } from './pages/Negotiations/BulkOfferList';
 import { BulkOfferDetail } from './pages/Negotiations/BulkOfferDetail';
 import { CustomProductionList } from './pages/Negotiations/CustomProductionList';
@@ -207,6 +208,7 @@ function App() {
             </Route>
 
             <Route path="promotions" element={<Promotions />} />
+            <Route path="category-requests" element={<CategoryRequests />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="notifications" element={<Notifications />} />
 

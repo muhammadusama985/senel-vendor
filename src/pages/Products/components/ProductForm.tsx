@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
 import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
 import { useI18n } from '../../../context/I18nContext';
+import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -48,6 +49,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   });
 
   const [uploading, setUploading] = useState(false);
+  const [showRequestCategoryModal, setShowRequestCategoryModal] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -253,6 +255,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </option>
                   ))}
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setShowRequestCategoryModal(true)}
+                  style={{
+                    marginTop: '0.4rem',
+                    padding: 0,
+                    background: 'none',
+                    border: 'none',
+                    color: colors.accentGold,
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline',
+                    textAlign: 'left',
+                  }}
+                >
+                  Don't see your category? Request a new one.
+                </button>
               </div>
 
               <div>
@@ -559,6 +578,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           {isSubmitting ? t('savingLabel') : uploading ? t('uploadingLabel') : `${t('saveChanges')} ${t('product')}`}
         </button>
       </div>
-    </form>
+    
+
+        <RequestCategoryModal
+          open={showRequestCategoryModal}
+          onClose={() => setShowRequestCategoryModal(false)}
+        />
+</form>
   );
 };
