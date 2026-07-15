@@ -286,13 +286,13 @@ export const BulkOfferDetail: React.FC = () => {
             />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={counter}>
+            <button type="button" disabled={busy} onClick={counter} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
               Send Counter
             </button>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={accept}>
+            <button type="button" disabled={busy} onClick={accept} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
               Accept
             </button>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={reject}>
+            <button type="button" disabled={busy} onClick={reject} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
               Reject
             </button>
           </div>
@@ -320,9 +320,9 @@ export const BulkOfferDetail: React.FC = () => {
           </p>
           <button
             type="button"
-            className="btn btn-primary"
             disabled={busy}
             onClick={deleteOffer}
+            style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}
           >
             Delete Offer Permanently
           </button>

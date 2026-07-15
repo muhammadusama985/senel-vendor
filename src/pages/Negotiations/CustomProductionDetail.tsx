@@ -426,10 +426,10 @@ export const CustomProductionDetail: React.FC = () => {
             />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={sendQuotation}>
+            <button type="button" disabled={busy} onClick={sendQuotation} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
               Send Quotation
             </button>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={reject}>
+            <button type="button" disabled={busy} onClick={reject} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
               Reject
             </button>
           </div>
@@ -445,7 +445,7 @@ export const CustomProductionDetail: React.FC = () => {
             padding: '1rem',
           }}
         >
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={complete}>
+          <button type="button" disabled={busy} onClick={complete} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
             Mark Production Completed
           </button>
         </div>
@@ -460,7 +460,7 @@ export const CustomProductionDetail: React.FC = () => {
             padding: '1rem',
           }}
         >
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={startProduction}>
+          <button type="button" disabled={busy} onClick={startProduction} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>
             Start Production
           </button>
         </div>
@@ -481,9 +481,9 @@ export const CustomProductionDetail: React.FC = () => {
           </p>
           <button
             type="button"
-            className="btn btn-primary"
             disabled={busy}
             onClick={deleteRfq}
+            style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}
           >
             Delete Request Permanently
           </button>
