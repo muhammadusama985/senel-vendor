@@ -125,8 +125,8 @@ export const CustomProductionList: React.FC = () => {
               <div style={{ marginTop: '0.75rem' }}>
                 <button
                   type="button"
-                  className="btn btn-primary"
                   onClick={() => navigate(`/negotiations/custom-production/${r._id}`)}
+                style={{"background":"var(--button-gradient)","color":"#ffffff","border":"none","boxShadow":"0 10px 24px rgba(91, 46, 255, 0.22)","padding":"0.55rem 1rem","borderRadius":"8px","cursor":"pointer","fontWeight":600}}
                 >
                   Open
                 </button>
