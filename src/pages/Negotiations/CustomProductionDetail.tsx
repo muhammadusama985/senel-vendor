@@ -429,7 +429,7 @@ export const CustomProductionDetail: React.FC = () => {
             <button type="button" className="btn btn-primary" disabled={busy} onClick={sendQuotation}>
               Send Quotation
             </button>
-            <button type="button" className="btn btn-outline" disabled={busy} onClick={reject}>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={reject}>
               Reject
             </button>
           </div>
@@ -481,10 +481,9 @@ export const CustomProductionDetail: React.FC = () => {
           </p>
           <button
             type="button"
-            className="btn btn-outline"
+            className="btn btn-primary"
             disabled={busy}
             onClick={deleteRfq}
-            style={{ color: colors.accentRed, borderColor: colors.accentRed }}
           >
             Delete Request Permanently
           </button>

@@ -292,7 +292,7 @@ export const BulkOfferDetail: React.FC = () => {
             <button type="button" className="btn btn-primary" disabled={busy} onClick={accept}>
               Accept
             </button>
-            <button type="button" className="btn btn-outline" disabled={busy} onClick={reject}>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={reject}>
               Reject
             </button>
           </div>
@@ -320,10 +320,9 @@ export const BulkOfferDetail: React.FC = () => {
           </p>
           <button
             type="button"
-            className="btn btn-outline"
+            className="btn btn-primary"
             disabled={busy}
             onClick={deleteOffer}
-            style={{ color: colors.accentRed, borderColor: colors.accentRed }}
           >
             Delete Offer Permanently
           </button>
