@@ -323,7 +323,7 @@ export const BulkOfferDetail: React.FC = () => {
             className="btn btn-outline"
             disabled={busy}
             onClick={deleteOffer}
-            style={{ color: '#c0392b', borderColor: '#c0392b' }}
+            style={{ color: colors.accentRed, borderColor: colors.accentRed }}
           >
             Delete Offer Permanently
           </button>

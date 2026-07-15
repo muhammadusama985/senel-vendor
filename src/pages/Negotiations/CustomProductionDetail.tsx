@@ -484,7 +484,7 @@ export const CustomProductionDetail: React.FC = () => {
             className="btn btn-outline"
             disabled={busy}
             onClick={deleteRfq}
-            style={{ color: '#c0392b', borderColor: '#c0392b' }}
+            style={{ color: colors.accentRed, borderColor: colors.accentRed }}
           >
             Delete Request Permanently
           </button>

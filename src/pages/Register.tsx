@@ -6,6 +6,21 @@ import { Logo } from '../components/common/Logo';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 
+// Returns one of: "weak" | "medium" | "strong" | "" (empty when no password).
+function getPasswordStrength(pwd: string): "weak" | "medium" | "strong" | "" {
+  if (!pwd) return "";
+  let score = 0;
+  if (pwd.length >= 8) score += 1;
+  if (pwd.length >= 12) score += 1;
+  if (/[a-z]/.test(pwd)) score += 1;
+  if (/[A-Z]/.test(pwd)) score += 1;
+  if (/\d/.test(pwd)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+  if (score <= 2) return "weak";
+  if (score <= 4) return "medium";
+  return "strong";
+}
+
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { colors } = useTheme();
@@ -180,6 +195,17 @@ export const Register: React.FC = () => {
               }}
               placeholder={t('passwordPlaceholder')}
             />
+            {(() => {
+              const strength = getPasswordStrength(formData.password);
+              if (!strength) return null;
+              const colors2 = { weak: colors.accentRed, medium: '#f59e0b', strong: colors.accentGreen };
+              const labels = { weak: 'Weak', medium: 'Medium', strong: 'Strong' };
+              return (
+                <p style={{ color: colors2[strength], fontSize: '0.85rem', marginTop: '0.25rem', fontWeight: 600 }}>
+                  Password strength: {labels[strength]}
+                </p>
+              );
+            })()}
             {errors.password && (
               <p style={{ color: colors.accentRed, fontSize: '0.85rem', marginTop: '0.25rem' }}>{errors.password}</p>
             )}
