@@ -35,6 +35,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     moq: 1,
     priceTiers: [{ minQty: 1, unitPrice: 0 }],
     attributeAdjustments: {},
+    variantAdjustments: {},
+    variantPercentAdjustments: {},
+    minEffectiveUnitPrice: 0.01,
     hasVariants: false,
     stockQty: 0,
     variants: [],
@@ -384,6 +387,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 uploadImage={uploadProductImage}
                 attributeAdjustments={formData.attributeAdjustments}
                 onAttributeAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, attributeAdjustments: v }))}
+                variantAdjustments={(formData as any).variantAdjustments}
+                onVariantAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, variantAdjustments: v }))}
+                variantPercentAdjustments={(formData as any).variantPercentAdjustments}
+                onVariantPercentAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, variantPercentAdjustments: v }))}
+                minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}
+                priceTiers={formData.priceTiers}
               />
             ) : null}
 

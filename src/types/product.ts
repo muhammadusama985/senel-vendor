@@ -54,6 +54,9 @@ export interface ProductFormData {
   moq: number;
   priceTiers: PriceTier[];
   attributeAdjustments?: Record<string, Record<string, number>>;
+  variantAdjustments?: Record<string, number>;
+  variantPercentAdjustments?: Record<string, number>;
+  minEffectiveUnitPrice?: number;
   hasVariants: boolean;
   stockQty?: number;
   variants?: Variant[];

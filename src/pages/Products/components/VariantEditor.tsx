@@ -9,6 +9,20 @@ interface VariantEditorProps {
   uploadImage?: (file: File) => Promise<string | null>;
   attributeAdjustments?: Record<string, Record<string, number>>;
   onAttributeAdjustmentsChange?: (next: Record<string, Record<string, number>>) => void;
+  /** Per-combination (per-variant) flat adjustments. Key is the joined
+   *  selected values of all attributes (e.g. "Red|Medium"). */
+  variantAdjustments?: Record<string, number>;
+  onVariantAdjustmentsChange?: (next: Record<string, number>) => void;
+  /** Per-combination percentage adjustments (e.g. -20 = -20%). */
+  variantPercentAdjustments?: Record<string, number>;
+  onVariantPercentAdjustmentsChange?: (next: Record<string, number>) => void;
+  /** Minimum effective unit price (in product currency). Defaults to 0.01
+   *  when not provided — used to bound the per-combination adjustment so it
+   *  cannot zero out any tier. */
+  minEffectiveUnitPrice?: number;
+  /** Price tiers — used to compute the max-negative adjustment that won't
+   *  zero out the cheapest tier. */
+  priceTiers?: Array<{ minQty: number; unitPrice: number }>;
 }
 
 type AttributeGroup = {
@@ -91,6 +105,12 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
   uploadImage,
   attributeAdjustments = {},
   onAttributeAdjustmentsChange,
+  variantAdjustments = {},
+  onVariantAdjustmentsChange,
+  variantPercentAdjustments = {},
+  onVariantPercentAdjustmentsChange,
+  minEffectiveUnitPrice = 0.01,
+  priceTiers = [],
 }) => {
   const { colors } = useTheme();
   const { t } = useI18n();
@@ -209,6 +229,169 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
 
   const updateOption = (variantIndex: number, updater: (variant: Variant) => Variant) => {
     updateVariants((current) => current.map((variant, index) => (index === variantIndex ? updater(variant) : variant)));
+  };
+
+  // ------------------------------------------------------------------
+  // Helpers for per-combination adjustments & per-variant stock (Phase 3).
+  // ------------------------------------------------------------------
+
+  /** Build the per-combination key from a variant's attribute values. */
+  const buildVariantKey = (variant: Variant): string => {
+    const titles = Object.keys(variant.attributes || {}).sort();
+    return titles
+      .map((t) => {
+        const v = (variant.attributes as Record<string, unknown>)[t];
+        return v == null || v === '' ? '' : String(v);
+      })
+      .filter((p) => p !== '')
+      .join('|');
+  };
+
+  /** Max negative adjustment allowed without zeroing out the cheapest tier. */
+  const cheapestTierUnitPrice = (() => {
+    let cheapest = Number.POSITIVE_INFINITY;
+    for (const t of priceTiers || []) {
+      const up = Number((t as any)?.unitPrice);
+      if (Number.isFinite(up) && up < cheapest) cheapest = up;
+    }
+    return Number.isFinite(cheapest) ? cheapest : 0;
+  })();
+  const maxAllowedFlatAdjustment =
+    cheapestTierUnitPrice > 0 ? cheapestTierUnitPrice - Math.max(0, Number(minEffectiveUnitPrice) || 0) : 0;
+
+  /** Sanitize: keep only one leading +/-, digits, one decimal point. */
+  const sanitizeNumberInput = (raw: string): string => {
+    let cleaned = '';
+    let sign = '';
+    let hasDot = false;
+    for (const ch of raw) {
+      if ((ch === '+' || ch === '-') && sign === '' && cleaned === '') {
+        sign = ch;
+      } else if (ch >= '0' && ch <= '9') {
+        cleaned += ch;
+      } else if (ch === '.' && !hasDot) {
+        cleaned += ch;
+        hasDot = true;
+      }
+    }
+    return sign + cleaned;
+  };
+
+  /** Validation for a flat per-combination adjustment. Empty / lone sign /
+   *  lone dot are treated as in-progress; otherwise must parse to a finite
+   *  non-zero number that is not lower than the tier-flooring limit. */
+  const validateFlatAdjustment = (value: string): { valid: boolean; reason?: string } => {
+    if (value === '' || value === '-' || value === '+' || value === '.' || value === '-.') {
+      return { valid: true };
+    }
+    const num = parseFloat(value);
+    if (!Number.isFinite(num)) return { valid: false, reason: 'Not a number' };
+    if (num === 0) return { valid: false, reason: 'Zero is not allowed' };
+    if (
+      cheapestTierUnitPrice > 0 &&
+      num < maxAllowedFlatAdjustment
+    ) {
+      return {
+        valid: false,
+        reason: `Too low — would zero out cheapest tier (${cheapestTierUnitPrice}). Minimum is ${maxAllowedFlatAdjustment.toFixed(2)}.`,
+      };
+    }
+    return { valid: true };
+  };
+
+  const validatePercentAdjustment = (value: string): { valid: boolean; reason?: string } => {
+    if (value === '' || value === '-' || value === '+' || value === '.' || value === '-.') {
+      return { valid: true };
+    }
+    const num = parseFloat(value);
+    if (!Number.isFinite(num)) return { valid: false, reason: 'Not a number' };
+    if (num === 0) return { valid: false, reason: 'Zero is not allowed' };
+    if (Math.abs(num) > 1000) return { valid: false, reason: 'Out of range (-1000, 1000)' };
+    return { valid: true };
+  };
+
+  /** Persist a per-combination flat adjustment. Empty / invalid → delete entry. */
+  const updateVariantAdjustment = (key: string, raw: string) => {
+    const cleaned = sanitizeNumberInput(raw);
+    const validation = validateFlatAdjustment(cleaned);
+    if (!onVariantAdjustmentsChange) return;
+    onVariantAdjustmentsChange((current) => {
+      const next = { ...(current || {}) };
+      if (cleaned === '' || !validation.valid) {
+        delete next[key];
+      } else {
+        next[key] = parseFloat(cleaned);
+      }
+      return next;
+    });
+  };
+
+  /** Persist a per-combination percentage adjustment. */
+  const updateVariantPercentAdjustment = (key: string, raw: string) => {
+    const cleaned = sanitizeNumberInput(raw);
+    const validation = validatePercentAdjustment(cleaned);
+    if (!onVariantPercentAdjustmentsChange) return;
+    onVariantPercentAdjustmentsChange((current) => {
+      const next = { ...(current || {}) };
+      if (cleaned === '' || !validation.valid) {
+        delete next[key];
+      } else {
+        next[key] = parseFloat(cleaned);
+      }
+      return next;
+    });
+  };
+
+  /** Update a variant's stockQty directly via the variants onChange. */
+  const updateVariantStock = (variantIndex: number, raw: string) => {
+    const num = parseInt(raw, 10);
+    if (!Number.isFinite(num) || num < 0) return;
+    onChange(variants.map((v, i) => (i === variantIndex ? { ...v, stockQty: num } : v)));
+  };
+
+  /** Bulk-apply: set every per-combination flat adjustment to a single value. */
+  const bulkApplyFlat = (raw: string) => {
+    const cleaned = sanitizeNumberInput(raw);
+    const validation = validateFlatAdjustment(cleaned);
+    if (!validation.valid || !onVariantAdjustmentsChange) return;
+    onVariantAdjustmentsChange(() => {
+      const next: Record<string, number> = {};
+      for (const v of variants) {
+        const key = buildVariantKey(v);
+        if (!key) continue;
+        next[key] = parseFloat(cleaned);
+      }
+      return next;
+    });
+  };
+
+  /** Bulk-apply: set every per-combination percentage adjustment. */
+  const bulkApplyPercent = (raw: string) => {
+    const cleaned = sanitizeNumberInput(raw);
+    const validation = validatePercentAdjustment(cleaned);
+    if (!validation.valid || !onVariantPercentAdjustmentsChange) return;
+    onVariantPercentAdjustmentsChange(() => {
+      const next: Record<string, number> = {};
+      for (const v of variants) {
+        const key = buildVariantKey(v);
+        if (!key) continue;
+        next[key] = parseFloat(cleaned);
+      }
+      return next;
+    });
+  };
+
+  /** Bulk-apply: set every variant's stockQty. */
+  const bulkApplyStock = (raw: string) => {
+    const num = parseInt(raw, 10);
+    if (!Number.isFinite(num) || num < 0) return;
+    onChange(variants.map((v) => ({ ...v, stockQty: num })));
+  };
+
+  /** Reset: clear every per-combination adjustment (flat + percent). */
+  const resetAllAdjustments = () => {
+    onVariantAdjustmentsChange?.(() => ({}));
+    onVariantPercentAdjustmentsChange?.(() => ({}));
   };
 
   const updateAdjustmentForOption = (attrTitle: string, attrValue: string, raw: string) => {
@@ -615,6 +798,279 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
           </div>
         );
       })}
+
+      {/* ============================================================
+          Per-combination adjustments + per-variant stock (Phase 3)
+          ============================================================ */}
+      <div
+        style={{
+          marginTop: '1.5rem',
+          borderTop: `1px solid ${colors.border}`,
+          paddingTop: '1rem',
+        }}
+      >
+        <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>
+          Per-Combination Adjustments & Stock
+        </h4>
+        <div style={{ color: colors.textMuted, fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+          One row per variant. Adjust Price (flat) and Percent (%) are both optional and stack
+          together. Leave a cell blank for &quot;no change&quot;.
+        </div>
+
+        {/* Bulk actions */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+            padding: '0.75rem',
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            background: colors.inputBg,
+          }}
+        >
+          <BulkInput
+            label="Apply flat to all"
+            placeholder="e.g. -10 or +5"
+            onApply={bulkApplyFlat}
+            sanitize={sanitizeNumberInput}
+            validate={(v) => validateFlatAdjustment(v)}
+          />
+          <BulkInput
+            label="Apply % to all"
+            placeholder="e.g. -20 or +15"
+            onApply={bulkApplyPercent}
+            sanitize={sanitizeNumberInput}
+            validate={(v) => validatePercentAdjustment(v)}
+          />
+          <BulkInput
+            label="Set stock on all"
+            placeholder="e.g. 100"
+            onApply={(v) => bulkApplyStock(v.replace(/\D/g, ''))}
+            sanitize={(v) => v.replace(/\D/g, '')}
+            validate={(v) => ({ valid: v !== '' && Number.isFinite(parseInt(v, 10)) && parseInt(v, 10) >= 0 })}
+          />
+          <button
+            type="button"
+            onClick={resetAllAdjustments}
+            style={{
+              alignSelf: 'end',
+              background: 'transparent',
+              color: colors.accentRed,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '4px',
+              padding: '0.55rem 0.85rem',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Reset all adjustments
+          </button>
+        </div>
+
+        {cheapestTierUnitPrice > 0 && (
+          <div style={{ marginBottom: '0.75rem', color: colors.textMuted, fontSize: '0.8rem' }}>
+            Cheapest tier: {currencySymbol}
+            {cheapestTierUnitPrice.toFixed(2)} → minimum allowed flat adjustment:{' '}
+            <strong style={{ color: colors.text }}>
+              {currencySymbol}
+              {maxAllowedFlatAdjustment.toFixed(2)}
+            </strong>
+          </div>
+        )}
+
+        {/* Per-combination table */}
+        <div
+          style={{
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            overflowX: 'auto',
+          }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
+            <thead>
+              <tr style={{ background: colors.cardBg }}>
+                <th style={th}>Combination</th>
+                <th style={th}>SKU</th>
+                <th style={th}>Adjust Price</th>
+                <th style={th}>Percent %</th>
+                <th style={th}>Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {variants.map((variant, idx) => {
+                const key = buildVariantKey(variant);
+                const flatVal = variantAdjustments?.[key];
+                const pctVal = variantPercentAdjustments?.[key];
+                const flatStr = flatVal == null ? '' : String(flatVal);
+                const pctStr = pctVal == null ? '' : String(pctVal);
+                const flatValidation = validateFlatAdjustment(flatStr);
+                const pctValidation = validatePercentAdjustment(pctStr);
+                const combinationLabel = Object.entries(variant.attributes || {})
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join(' / ') || '(empty)';
+                return (
+                  <tr key={idx} style={{ borderTop: `1px solid ${colors.border}` }}>
+                    <td style={td}>
+                      <div style={{ color: colors.text, fontWeight: 500 }}>{combinationLabel}</div>
+                      <div style={{ color: colors.textMuted, fontSize: '0.75rem' }}>key: {key || '—'}</div>
+                    </td>
+                    <td style={td}>
+                      <code style={{ color: colors.textMuted, fontSize: '0.8rem' }}>{variant.sku}</code>
+                    </td>
+                    <td style={td}>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={flatStr}
+                        placeholder="-10 or +5"
+                        onChange={(e) => updateVariantAdjustment(key, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem',
+                          border: `1px solid ${flatStr && !flatValidation.valid ? colors.accentRed : colors.border}`,
+                          borderRadius: '4px',
+                          background: colors.cardBg,
+                          color: colors.text,
+                        }}
+                        title={flatValidation.reason || 'Optional flat adjustment'}
+                      />
+                      {flatStr && !flatValidation.valid && (
+                        <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
+                          {flatValidation.reason}
+                        </div>
+                      )}
+                    </td>
+                    <td style={td}>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={pctStr}
+                        placeholder="-20 or +15"
+                        onChange={(e) => updateVariantPercentAdjustment(key, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem',
+                          border: `1px solid ${pctStr && !pctValidation.valid ? colors.accentRed : colors.border}`,
+                          borderRadius: '4px',
+                          background: colors.cardBg,
+                          color: colors.text,
+                        }}
+                        title={pctValidation.reason || 'Optional percentage adjustment'}
+                      />
+                      {pctStr && !pctValidation.valid && (
+                        <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
+                          {pctValidation.reason}
+                        </div>
+                      )}
+                    </td>
+                    <td style={td}>
+                      <input
+                        type="number"
+                        min={0}
+                        value={variant.stockQty ?? 0}
+                        onChange={(e) => updateVariantStock(idx, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem',
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: '4px',
+                          background: colors.cardBg,
+                          color: colors.text,
+                        }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
+};
+
+// Small inline helper for the bulk-action inputs.
+const BulkInput: React.FC<{
+  label: string;
+  placeholder: string;
+  onApply: (value: string) => void;
+  sanitize: (value: string) => string;
+  validate: (value: string) => { valid: boolean; reason?: string };
+}> = ({ label, placeholder, onApply, sanitize, validate }) => {
+  const { colors } = useTheme();
+  const [value, setValue] = React.useState('');
+  const validation = validate(value);
+  const handleApply = () => {
+    if (value === '' || !validation.valid) return;
+    onApply(sanitize(value));
+    setValue('');
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+      <label style={{ color: colors.textMuted, fontSize: '0.75rem' }}>{label}</label>
+      <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => setValue(sanitize(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleApply();
+            }
+          }}
+          style={{
+            flex: 1,
+            padding: '0.4rem',
+            border: `1px solid ${value && !validation.valid ? colors.accentRed : colors.border}`,
+            borderRadius: '4px',
+            background: colors.cardBg,
+            color: colors.text,
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleApply}
+          disabled={value === '' || !validation.valid}
+          style={{
+            background: colors.buttonGradient,
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.4rem 0.7rem',
+            cursor: value === '' || !validation.valid ? 'not-allowed' : 'pointer',
+            opacity: value === '' || !validation.valid ? 0.5 : 1,
+            fontSize: '0.85rem',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Apply
+        </button>
+      </div>
+      {value && !validation.valid && (
+        <div style={{ color: colors.accentRed, fontSize: '0.7rem' }}>{validation.reason}</div>
+      )}
+    </div>
+  );
+};
+
+// Shared table cell styles used by the per-combination table.
+const th: React.CSSProperties = {
+  padding: '0.6rem 0.5rem',
+  textAlign: 'left',
+  color: '#999',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
+const td: React.CSSProperties = {
+  padding: '0.5rem',
+  verticalAlign: 'top',
 };
