@@ -7,21 +7,20 @@ interface VariantEditorProps {
   variants: Variant[];
   onChange: (variants: Variant[]) => void;
   uploadImage?: (file: File) => Promise<string | null>;
-  attributeAdjustments?: Record<string, Record<string, number>>;
-  onAttributeAdjustmentsChange?: (next: Record<string, Record<string, number>>) => void;
-  /** Per-combination (per-variant) flat adjustments. Key is the joined
-   *  selected values of all attributes (e.g. "Red|Medium"). */
-  variantAdjustments?: Record<string, number>;
-  onVariantAdjustmentsChange?: (next: Record<string, number>) => void;
-  /** Per-combination percentage adjustments (e.g. -20 = -20%). */
-  variantPercentAdjustments?: Record<string, number>;
-  onVariantPercentAdjustmentsChange?: (next: Record<string, number>) => void;
-  /** Minimum effective unit price (in product currency). Defaults to 0.01
-   *  when not provided — used to bound the per-combination adjustment so it
-   *  cannot zero out any tier. */
+  /** The combination whose tier prices are the canonical priceTiers values.
+   *  Key format: joined selected values of all attributes (e.g. "Red|Medium"). */
+  baseCombination?: string;
+  onBaseCombinationChange?: (next: string) => void;
+  /** Per-combination OFFSET from the base combination. Key: "<val1>|<val2>|..."
+   *  Value: number (positive = surcharge over base, negative = discount).
+   *  Missing entry = 0 (= same price as base). */
+  combinationOffsets?: Record<string, number>;
+  onCombinationOffsetsChange?: (next: Record<string, number>) => void;
+  /** Minimum effective unit price (in product currency). Defaults to 0.01.
+   *  Used to floor the final (tier + offset) price. */
   minEffectiveUnitPrice?: number;
-  /** Price tiers — used to compute the max-negative adjustment that won't
-   *  zero out the cheapest tier. */
+  /** Price tiers — needed to compute the max-negative offset that won't
+   *  drop the cheapest tier below the floor. */
   priceTiers?: Array<{ minQty: number; unitPrice: number }>;
 }
 
@@ -62,20 +61,17 @@ const nearestColorNameFromHex = (hex: string) => {
   const target = hexToRgb(hex);
   let bestName = 'Black';
   let bestDistance = Number.POSITIVE_INFINITY;
-
   Object.entries(COLOR_NAME_BY_HEX).forEach(([candidateHex, candidateName]) => {
     const candidate = hexToRgb(candidateHex);
     const distance =
       (target.r - candidate.r) ** 2 +
       (target.g - candidate.g) ** 2 +
       (target.b - candidate.b) ** 2;
-
     if (distance < bestDistance) {
       bestDistance = distance;
       bestName = candidateName;
     }
   });
-
   return bestName;
 };
 const colorNameFromHex = (hex: string) => {
@@ -86,9 +82,7 @@ const colorNameFromHex = (hex: string) => {
 const colorHexFromValue = (value: string) => {
   const normalized = value.trim().toLowerCase();
   const hexMatch = normalized.match(/#([0-9a-f]{6})/i);
-  if (hexMatch) {
-    return `#${hexMatch[1]}`.toLowerCase();
-  }
+  if (hexMatch) return `#${hexMatch[1]}`.toLowerCase();
   const plainName = normalized.replace(/\s*\(#?[0-9a-f]{6}\)\s*/i, '').trim();
   const match = Object.entries(COLOR_NAME_BY_HEX).find(([, label]) => label.toLowerCase() === plainName);
   return match?.[0] || '#000000';
@@ -99,16 +93,30 @@ const getVariantAttributeTitle = (variant: Variant, fallbackIndex: number) => {
   return keys[0] || `Attribute ${fallbackIndex + 1}`;
 };
 
+/**
+ * Build the deterministic per-combination key used by combinationOffsets.
+ * Sorts the attribute titles alphabetically so the same combination always
+ * produces the same key regardless of declaration order.
+ */
+const buildCombinationKey = (variant: Variant): string => {
+  const titles = Object.keys(variant.attributes || {}).sort();
+  return titles
+    .map((t) => {
+      const v = (variant.attributes as Record<string, unknown>)[t];
+      return v == null || v === '' ? '' : String(v);
+    })
+    .filter((p) => p !== '')
+    .join('|');
+};
+
 export const VariantEditor: React.FC<VariantEditorProps> = ({
   variants,
   onChange,
   uploadImage,
-  attributeAdjustments = {},
-  onAttributeAdjustmentsChange,
-  variantAdjustments = {},
-  onVariantAdjustmentsChange,
-  variantPercentAdjustments = {},
-  onVariantPercentAdjustmentsChange,
+  baseCombination = '',
+  onBaseCombinationChange,
+  combinationOffsets = {},
+  onCombinationOffsetsChange,
   minEffectiveUnitPrice = 0.01,
   priceTiers = [],
 }) => {
@@ -120,9 +128,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     const groups = new Map<string, number[]>();
     variants.forEach((variant, index) => {
       const title = getVariantAttributeTitle(variant, index);
-      if (!groups.has(title)) {
-        groups.set(title, []);
-      }
+      if (!groups.has(title)) groups.set(title, []);
       groups.get(title)?.push(index);
     });
     return Array.from(groups.entries()).map(([title, indexes]) => ({ title, indexes }));
@@ -130,12 +136,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
 
   const updateVariants = (updater: (current: Variant[]) => Variant[]) => {
     onChange(updater(variants));
-  };
-
-  const updateAdjustments = (
-    updater: (current: Record<string, Record<string, number>>) => Record<string, Record<string, number>>
-  ) => {
-    onAttributeAdjustmentsChange?.(updater(attributeAdjustments));
   };
 
   const createOption = (attributeTitle: string, optionValue = ''): Variant => ({
@@ -153,7 +153,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       counter += 1;
       nextTitle = `Attribute ${counter}`;
     }
-
     updateVariants((current) => [...current, createOption(nextTitle)]);
     setDraftAttributeTitles((prev) => ({ ...prev, [nextTitle]: nextTitle }));
   };
@@ -171,15 +170,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
         return { ...variant, attributes: nextAttributes };
       }),
     );
-    // Also rename the adjustments key
-    if (attributeAdjustments[oldTitle]) {
-      updateAdjustments((current) => {
-        const next = { ...current };
-        next[cleanTitle] = next[oldTitle] || {};
-        delete next[oldTitle];
-        return next;
-      });
-    }
   };
 
   const removeAttributeGroup = (title: string) => {
@@ -189,14 +179,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       delete next[title];
       return next;
     });
-    // Also remove from adjustments
-    if (attributeAdjustments[title]) {
-      updateAdjustments((current) => {
-        const next = { ...current };
-        delete next[title];
-        return next;
-      });
-    }
   };
 
   const addOptionToGroup = (title: string) => {
@@ -204,50 +186,50 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
   };
 
   const removeOption = (variantIndex: number) => {
-    const removedVariant = variants[variantIndex];
-    const removedAttrTitle = Object.keys(removedVariant.attributes || {})[0];
-    const removedAttrValue = removedVariant.attributes?.[removedAttrTitle];
     updateVariants((current) => current.filter((_, index) => index !== variantIndex));
-    // Also remove the adjustment for that specific value if no other variant uses it
-    if (removedAttrTitle && removedAttrValue != null && removedAttrValue !== '') {
-      const stillUsed = variants.some(
-        (v, idx) => idx !== variantIndex && v.attributes?.[removedAttrTitle] === removedAttrValue
-      );
-      if (!stillUsed) {
-        updateAdjustments((current) => {
-          const next = { ...current };
-          if (next[removedAttrTitle]) {
-            const attrMap = { ...next[removedAttrTitle] };
-            delete attrMap[removedAttrValue];
-            next[removedAttrTitle] = attrMap;
-          }
-          return next;
-        });
-      }
-    }
   };
 
   const updateOption = (variantIndex: number, updater: (variant: Variant) => Variant) => {
     updateVariants((current) => current.map((variant, index) => (index === variantIndex ? updater(variant) : variant)));
   };
 
-  // ------------------------------------------------------------------
-  // Helpers for per-combination adjustments & per-variant stock (Phase 3).
-  // ------------------------------------------------------------------
-
-  /** Build the per-combination key from a variant's attribute values. */
-  const buildVariantKey = (variant: Variant): string => {
-    const titles = Object.keys(variant.attributes || {}).sort();
-    return titles
-      .map((t) => {
-        const v = (variant.attributes as Record<string, unknown>)[t];
-        return v == null || v === '' ? '' : String(v);
-      })
-      .filter((p) => p !== '')
-      .join('|');
+  const handleOptionImages = async (variantIndex: number, files: FileList | null) => {
+    if (!files || !uploadImage) return;
+    const uploadedUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      const imageUrl = await uploadImage(file);
+      if (imageUrl) uploadedUrls.push(imageUrl);
+    }
+    if (!uploadedUrls.length) return;
+    updateOption(variantIndex, (variant) => ({
+      ...variant,
+      imageUrls: [...(variant.imageUrls || []), ...uploadedUrls],
+    }));
   };
 
-  /** Max negative adjustment allowed without zeroing out the cheapest tier. */
+  const removeOptionImage = (variantIndex: number, imageUrl: string) => {
+    updateOption(variantIndex, (variant) => ({
+      ...variant,
+      imageUrls: (variant.imageUrls || []).filter((url) => url !== imageUrl),
+    }));
+  };
+
+  const updateOptionName = (variantIndex: number, attrTitle: string, newValue: string) => {
+    updateOption(variantIndex, (variant) => ({
+      ...variant,
+      attributes: { [attrTitle]: newValue },
+    }));
+  };
+
+  // ------------------------------------------------------------------
+  // Helpers for the new pricing model: base combination + per-combination
+  // offsets. All per-variant SKUs are kept; per-variant stock is editable.
+  // ------------------------------------------------------------------
+
+  /**
+   * Most-negative offset allowed before the cheapest tier's effective
+   * unit price drops below minEffectiveUnitPrice.
+   */
   const cheapestTierUnitPrice = (() => {
     let cheapest = Number.POSITIVE_INFINITY;
     for (const t of priceTiers || []) {
@@ -256,8 +238,10 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     }
     return Number.isFinite(cheapest) ? cheapest : 0;
   })();
-  const maxAllowedFlatAdjustment =
-    cheapestTierUnitPrice > 0 ? cheapestTierUnitPrice - Math.max(0, Number(minEffectiveUnitPrice) || 0) : 0;
+  const minOffsetAllowed =
+    cheapestTierUnitPrice > 0
+      ? Math.max(0, Number(minEffectiveUnitPrice) || 0) - cheapestTierUnitPrice
+      : 0;
 
   /** Sanitize: keep only one leading +/-, digits, one decimal point. */
   const sanitizeNumberInput = (raw: string): string => {
@@ -277,69 +261,53 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     return sign + cleaned;
   };
 
-  /** Validation for a flat per-combination adjustment. Empty / lone sign /
-   *  lone dot are treated as in-progress; otherwise must parse to a finite
-   *  non-zero number that is not lower than the tier-flooring limit. */
-  const validateFlatAdjustment = (value: string): { valid: boolean; reason?: string } => {
+  /** Validation for an offset value. Zero is ALLOWED (means "same as base"). */
+  const validateOffset = (value: string): { valid: boolean; reason?: string } => {
     if (value === '' || value === '-' || value === '+' || value === '.' || value === '-.') {
       return { valid: true };
     }
     const num = parseFloat(value);
     if (!Number.isFinite(num)) return { valid: false, reason: 'Not a number' };
-    if (num === 0) return { valid: false, reason: 'Zero is not allowed' };
     if (
       cheapestTierUnitPrice > 0 &&
-      num < maxAllowedFlatAdjustment
+      num < minOffsetAllowed
     ) {
       return {
         valid: false,
-        reason: `Too low — would zero out cheapest tier (${cheapestTierUnitPrice}). Minimum is ${maxAllowedFlatAdjustment.toFixed(2)}.`,
+        reason: `Too low — would drop cheapest tier (${cheapestTierUnitPrice}) below the floor (${Math.max(0, Number(minEffectiveUnitPrice) || 0)}). Minimum is ${minOffsetAllowed.toFixed(2)}.`,
       };
     }
     return { valid: true };
   };
 
-  const validatePercentAdjustment = (value: string): { valid: boolean; reason?: string } => {
-    if (value === '' || value === '-' || value === '+' || value === '.' || value === '-.') {
-      return { valid: true };
+  /** Persist an offset value for a combination. Empty / invalid → delete entry. */
+  const setCombinationOffset = (key: string, raw: string) => {
+    if (!onCombinationOffsetsChange) return;
+    const cleaned = sanitizeNumberInput(raw);
+    const validation = validateOffset(cleaned);
+    onCombinationOffsetsChange((current) => {
+      const next = { ...(current || {}) };
+      if (cleaned === '' || !validation.valid) {
+        delete next[key];
+      } else {
+        next[key] = parseFloat(cleaned);
+      }
+      return next;
+    });
+  };
+
+  /** Set the base combination (called by the explicit dropdown). */
+  const setBaseCombination = (key: string) => {
+    onBaseCombinationChange?.(key);
+    // The base implicitly has offset 0 — strip it from the offsets map if it
+    // was accidentally stored there.
+    if (key && combinationOffsets?.[key] !== undefined) {
+      onCombinationOffsetsChange?.((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
     }
-    const num = parseFloat(value);
-    if (!Number.isFinite(num)) return { valid: false, reason: 'Not a number' };
-    if (num === 0) return { valid: false, reason: 'Zero is not allowed' };
-    if (Math.abs(num) > 1000) return { valid: false, reason: 'Out of range (-1000, 1000)' };
-    return { valid: true };
-  };
-
-  /** Persist a per-combination flat adjustment. Empty / invalid → delete entry. */
-  const updateVariantAdjustment = (key: string, raw: string) => {
-    const cleaned = sanitizeNumberInput(raw);
-    const validation = validateFlatAdjustment(cleaned);
-    if (!onVariantAdjustmentsChange) return;
-    onVariantAdjustmentsChange((current) => {
-      const next = { ...(current || {}) };
-      if (cleaned === '' || !validation.valid) {
-        delete next[key];
-      } else {
-        next[key] = parseFloat(cleaned);
-      }
-      return next;
-    });
-  };
-
-  /** Persist a per-combination percentage adjustment. */
-  const updateVariantPercentAdjustment = (key: string, raw: string) => {
-    const cleaned = sanitizeNumberInput(raw);
-    const validation = validatePercentAdjustment(cleaned);
-    if (!onVariantPercentAdjustmentsChange) return;
-    onVariantPercentAdjustmentsChange((current) => {
-      const next = { ...(current || {}) };
-      if (cleaned === '' || !validation.valid) {
-        delete next[key];
-      } else {
-        next[key] = parseFloat(cleaned);
-      }
-      return next;
-    });
   };
 
   /** Update a variant's stockQty directly via the variants onChange. */
@@ -349,15 +317,15 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     onChange(variants.map((v, i) => (i === variantIndex ? { ...v, stockQty: num } : v)));
   };
 
-  /** Bulk-apply: set every per-combination flat adjustment to a single value. */
-  const bulkApplyFlat = (raw: string) => {
+  /** Bulk: set every combination's offset to a single value. */
+  const bulkApplyOffset = (raw: string) => {
     const cleaned = sanitizeNumberInput(raw);
-    const validation = validateFlatAdjustment(cleaned);
-    if (!validation.valid || !onVariantAdjustmentsChange) return;
-    onVariantAdjustmentsChange(() => {
+    const validation = validateOffset(cleaned);
+    if (!validation.valid || !onCombinationOffsetsChange) return;
+    onCombinationOffsetsChange(() => {
       const next: Record<string, number> = {};
       for (const v of variants) {
-        const key = buildVariantKey(v);
+        const key = buildCombinationKey(v);
         if (!key) continue;
         next[key] = parseFloat(cleaned);
       }
@@ -365,102 +333,26 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     });
   };
 
-  /** Bulk-apply: set every per-combination percentage adjustment. */
-  const bulkApplyPercent = (raw: string) => {
-    const cleaned = sanitizeNumberInput(raw);
-    const validation = validatePercentAdjustment(cleaned);
-    if (!validation.valid || !onVariantPercentAdjustmentsChange) return;
-    onVariantPercentAdjustmentsChange(() => {
-      const next: Record<string, number> = {};
-      for (const v of variants) {
-        const key = buildVariantKey(v);
-        if (!key) continue;
-        next[key] = parseFloat(cleaned);
-      }
-      return next;
-    });
-  };
-
-  /** Bulk-apply: set every variant's stockQty. */
+  /** Bulk: set every variant's stock to a single value. */
   const bulkApplyStock = (raw: string) => {
     const num = parseInt(raw, 10);
     if (!Number.isFinite(num) || num < 0) return;
     onChange(variants.map((v) => ({ ...v, stockQty: num })));
   };
 
-  /** Reset: clear every per-combination adjustment (flat + percent). */
-  const resetAllAdjustments = () => {
-    onVariantAdjustmentsChange?.(() => ({}));
-    onVariantPercentAdjustmentsChange?.(() => ({}));
+  /** Reset: clear every combination offset (flat + percent). */
+  const resetAllOffsets = () => {
+    onCombinationOffsetsChange?.(() => ({}));
   };
 
-  const updateAdjustmentForOption = (attrTitle: string, attrValue: string, raw: string) => {
-    const num = parseFloat(raw);
-    updateAdjustments((current) => {
-      const next = { ...current };
-      const attrMap = { ...(next[attrTitle] || {}) };
-      if (raw === '' || isNaN(num)) {
-        delete attrMap[attrValue];
-      } else {
-        attrMap[attrValue] = num;
-      }
-      next[attrTitle] = attrMap;
-      return next;
-    });
-  };
-
-  const handleOptionImages = async (variantIndex: number, files: FileList | null) => {
-    if (!files || !uploadImage) return;
-    const uploadedUrls: string[] = [];
-    for (const file of Array.from(files)) {
-      const imageUrl = await uploadImage(file);
-      if (imageUrl) uploadedUrls.push(imageUrl);
-    }
-    if (!uploadedUrls.length) return;
-
-    updateOption(variantIndex, (variant) => ({
-      ...variant,
-      imageUrls: [...(variant.imageUrls || []), ...uploadedUrls],
-    }));
-  };
-
-  const removeOptionImage = (variantIndex: number, imageUrl: string) => {
-    updateOption(variantIndex, (variant) => ({
-      ...variant,
-      imageUrls: (variant.imageUrls || []).filter((url) => url !== imageUrl),
-    }));
-  };
-
-  // When option name changes, also move adjustment entry
-  const updateOptionName = (variantIndex: number, attrTitle: string, newValue: string) => {
-    const oldValue = variants[variantIndex].attributes?.[attrTitle];
-    updateOption(variantIndex, (variant) => ({
-      ...variant,
-      attributes: { [attrTitle]: newValue },
-    }));
-    // Move adjustment from old value to new value (if no other variant uses old)
-    if (oldValue != null && oldValue !== '' && oldValue !== newValue) {
-      const stillUsedOld = variants.some(
-        (v, idx) => idx !== variantIndex && v.attributes?.[attrTitle] === oldValue
-      );
-      updateAdjustments((current) => {
-        const next = { ...current };
-        const attrMap = { ...(next[attrTitle] || {}) };
-        if (!stillUsedOld) {
-          delete attrMap[oldValue];
-        }
-        if (newValue !== '' && attrMap[newValue] == null) {
-          // carry over adjustment to the new name if it doesn't exist
-          const existing = attrMap[oldValue];
-          if (existing != null) {
-            attrMap[newValue] = existing;
-          }
-        }
-        next[attrTitle] = attrMap;
-        return next;
-      });
-    }
-  };
+  // Build the dropdown options for the base combination selector.
+  const baseOptions = variants.map((v, i) => {
+    const key = buildCombinationKey(v);
+    const label = Object.entries(v.attributes || {})
+      .map(([k, val]) => `${k}: ${val}`)
+      .join(' / ') || `(variant ${i + 1})`;
+    return { key, label };
+  });
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -468,7 +360,10 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
         <div>
           <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.text }}>{t('attributesOptions', 'Attributes & Options')}</label>
           <div style={{ color: colors.textMuted, fontSize: '0.9rem' }}>
-            {t('attributesOptionsHelp', 'Add one attribute title like Color or Size, then add many option names under it. Each option can have its own images.')}
+            {t(
+              'attributesOptionsHelp',
+              'Add one attribute title like Color or Size, then add many option names under it. Prices are set later (after all variants are declared).'
+            )}
           </div>
         </div>
         <button
@@ -579,9 +474,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
               {group.indexes.map((variantIndex, optionOffset) => {
                 const option = variants[variantIndex];
                 const optionValue = String(option.attributes?.[group.title] ?? '');
-                const currentAdj = attributeAdjustments?.[group.title]?.[optionValue];
-                const adjValue =
-                  currentAdj === undefined || currentAdj === null ? '' : String(currentAdj);
 
                 return (
                   <div
@@ -613,7 +505,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr 130px auto' : '1.6fr 1fr 130px auto',
+                        gridTemplateColumns: colorMode ? '1.2fr 110px 70px 1fr auto' : '1.6fr 1fr auto',
                         gap: '0.75rem',
                         alignItems: 'end',
                         marginBottom: '0.9rem',
@@ -705,33 +597,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                         />
                       </div>
 
-                      <div>
-                        <label
-                          htmlFor={`adjust-price-${group.title}-${variantIndex}`}
-                          title="Adjust Price (e.g. -10 to discount this option by 10, blank = no change)"
-                          style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}
-                        >
-                          Adjust Price
-                        </label>
-                        <input
-                          id={`adjust-price-${group.title}-${variantIndex}`}
-                          type="number"
-                          step="0.01"
-                          value={adjValue}
-                          placeholder="0"
-                          onChange={(e) => updateAdjustmentForOption(group.title, optionValue, e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.55rem',
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: '6px',
-                            backgroundColor: colors.cardBg,
-                            color: colors.text,
-                            cursor: 'pointer',
-                          }}
-                        />
-                      </div>
-
                       <label
                         style={{
                           background: colors.buttonGradient,
@@ -800,7 +665,8 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       })}
 
       {/* ============================================================
-          Per-combination adjustments + per-variant stock (Phase 3)
+          BASE COMBINATION + PER-COMBINATION OFFSETS + STOCK
+          (replaces the old per-option Adjust Price field)
           ============================================================ */}
       <div
         style={{
@@ -810,11 +676,59 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
         }}
       >
         <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>
-          Per-Combination Adjustments & Stock
+          Pricing — Base Combination, Offsets & Stock
         </h4>
         <div style={{ color: colors.textMuted, fontSize: '0.85rem', marginBottom: '0.75rem' }}>
-          One row per variant. Adjust Price (flat) and Percent (%) are both optional and stack
-          together. Leave a cell blank for &quot;no change&quot;.
+          Pick which combination defines the canonical tier prices. Every other combination
+          has an offset (positive = surcharge, negative = discount, 0 = same as base). Leave a
+          cell blank for &quot;no offset&quot;.
+        </div>
+
+        {/* Base combination selector */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'flex-end',
+            marginBottom: '1rem',
+            padding: '0.75rem',
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            background: colors.inputBg,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.8rem' }}>
+              Base combination (defines the canonical tier prices)
+            </label>
+            <select
+              value={baseCombination}
+              onChange={(e) => setBaseCombination(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.55rem',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                backgroundColor: colors.cardBg,
+                color: colors.text,
+              }}
+            >
+              <option value="">— Select a combination —</option>
+              {baseOptions.map((opt) => (
+                <option key={opt.key} value={opt.key}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {cheapestTierUnitPrice > 0 && (
+            <div style={{ color: colors.textMuted, fontSize: '0.8rem', alignSelf: 'center' }}>
+              Cheapest tier: <strong style={{ color: colors.text }}>{cheapestTierUnitPrice.toFixed(2)}</strong>
+              {' '}→ min offset:{' '}
+              <strong style={{ color: colors.text }}>{minOffsetAllowed.toFixed(2)}</strong>
+            </div>
+          )}
         </div>
 
         {/* Bulk actions */}
@@ -831,18 +745,11 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
           }}
         >
           <BulkInput
-            label="Apply flat to all"
+            label="Apply offset to all"
             placeholder="e.g. -10 or +5"
-            onApply={bulkApplyFlat}
+            onApply={bulkApplyOffset}
             sanitize={sanitizeNumberInput}
-            validate={(v) => validateFlatAdjustment(v)}
-          />
-          <BulkInput
-            label="Apply % to all"
-            placeholder="e.g. -20 or +15"
-            onApply={bulkApplyPercent}
-            sanitize={sanitizeNumberInput}
-            validate={(v) => validatePercentAdjustment(v)}
+            validate={(v) => validateOffset(v)}
           />
           <BulkInput
             label="Set stock on all"
@@ -853,7 +760,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
           />
           <button
             type="button"
-            onClick={resetAllAdjustments}
+            onClick={resetAllOffsets}
             style={{
               alignSelf: 'end',
               background: 'transparent',
@@ -866,20 +773,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
               whiteSpace: 'nowrap',
             }}
           >
-            Reset all adjustments
+            Reset all offsets
           </button>
         </div>
-
-        {cheapestTierUnitPrice > 0 && (
-          <div style={{ marginBottom: '0.75rem', color: colors.textMuted, fontSize: '0.8rem' }}>
-            Cheapest tier: {currencySymbol}
-            {cheapestTierUnitPrice.toFixed(2)} → minimum allowed flat adjustment:{' '}
-            <strong style={{ color: colors.text }}>
-              {currencySymbol}
-              {maxAllowedFlatAdjustment.toFixed(2)}
-            </strong>
-          </div>
-        )}
 
         {/* Per-combination table */}
         <div
@@ -889,25 +785,26 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
             overflowX: 'auto',
           }}
         >
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
             <thead>
               <tr style={{ background: colors.cardBg }}>
                 <th style={th}>Combination</th>
                 <th style={th}>SKU</th>
-                <th style={th}>Adjust Price</th>
-                <th style={th}>Percent %</th>
+                <th style={th}>Offset from base</th>
                 <th style={th}>Stock</th>
               </tr>
             </thead>
             <tbody>
               {variants.map((variant, idx) => {
-                const key = buildVariantKey(variant);
-                const flatVal = variantAdjustments?.[key];
-                const pctVal = variantPercentAdjustments?.[key];
-                const flatStr = flatVal == null ? '' : String(flatVal);
-                const pctStr = pctVal == null ? '' : String(pctVal);
-                const flatValidation = validateFlatAdjustment(flatStr);
-                const pctValidation = validatePercentAdjustment(pctStr);
+                const key = buildCombinationKey(variant);
+                const isBase = !!baseCombination && key === baseCombination;
+                const storedOffset = combinationOffsets?.[key];
+                const offsetStr = isBase
+                  ? '0 (base)'
+                  : storedOffset == null
+                  ? ''
+                  : String(storedOffset);
+                const validation = validateOffset(isBase ? '0' : offsetStr);
                 const combinationLabel = Object.entries(variant.attributes || {})
                   .map(([k, v]) => `${k}: ${v}`)
                   .join(' / ') || '(empty)';
@@ -921,49 +818,41 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                       <code style={{ color: colors.textMuted, fontSize: '0.8rem' }}>{variant.sku}</code>
                     </td>
                     <td style={td}>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={flatStr}
-                        placeholder="-10 or +5"
-                        onChange={(e) => updateVariantAdjustment(key, e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.4rem',
-                          border: `1px solid ${flatStr && !flatValidation.valid ? colors.accentRed : colors.border}`,
-                          borderRadius: '4px',
-                          background: colors.cardBg,
-                          color: colors.text,
-                        }}
-                        title={flatValidation.reason || 'Optional flat adjustment'}
-                      />
-                      {flatStr && !flatValidation.valid && (
-                        <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
-                          {flatValidation.reason}
+                      {isBase ? (
+                        <div
+                          style={{
+                            padding: '0.4rem 0.6rem',
+                            color: colors.textMuted,
+                            fontSize: '0.85rem',
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          0 (base combination — defines the canonical tier prices)
                         </div>
-                      )}
-                    </td>
-                    <td style={td}>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={pctStr}
-                        placeholder="-20 or +15"
-                        onChange={(e) => updateVariantPercentAdjustment(key, e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.4rem',
-                          border: `1px solid ${pctStr && !pctValidation.valid ? colors.accentRed : colors.border}`,
-                          borderRadius: '4px',
-                          background: colors.cardBg,
-                          color: colors.text,
-                        }}
-                        title={pctValidation.reason || 'Optional percentage adjustment'}
-                      />
-                      {pctStr && !pctValidation.valid && (
-                        <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
-                          {pctValidation.reason}
-                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={offsetStr}
+                            placeholder="blank = same as base"
+                            onChange={(e) => setCombinationOffset(key, e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.4rem',
+                              border: `1px solid ${offsetStr && !validation.valid ? colors.accentRed : colors.border}`,
+                              borderRadius: '4px',
+                              background: colors.cardBg,
+                              color: colors.text,
+                            }}
+                            title={validation.reason || 'Optional offset from the base combination'}
+                          />
+                          {offsetStr && !validation.valid && (
+                            <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
+                              {validation.reason}
+                            </div>
+                          )}
+                        </>
                       )}
                     </td>
                     <td style={td}>

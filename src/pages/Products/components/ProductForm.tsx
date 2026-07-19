@@ -34,9 +34,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     currency: 'EUR',
     moq: 1,
     priceTiers: [{ minQty: 1, unitPrice: 0 }],
-    attributeAdjustments: {},
-    variantAdjustments: {},
-    variantPercentAdjustments: {},
+    baseCombination: '',
+    combinationOffsets: {},
     minEffectiveUnitPrice: 0.01,
     hasVariants: false,
     stockQty: 0,
@@ -385,12 +384,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 variants={formData.variants || []}
                 onChange={(variants) => setFormData(prev => ({ ...prev, variants }))}
                 uploadImage={uploadProductImage}
-                attributeAdjustments={formData.attributeAdjustments}
-                onAttributeAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, attributeAdjustments: v }))}
-                variantAdjustments={(formData as any).variantAdjustments}
-                onVariantAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, variantAdjustments: v }))}
-                variantPercentAdjustments={(formData as any).variantPercentAdjustments}
-                onVariantPercentAdjustmentsChange={(v) => setFormData(prev => ({ ...prev, variantPercentAdjustments: v }))}
+                baseCombination={(formData as any).baseCombination}
+                onBaseCombinationChange={(v) => setFormData(prev => ({ ...prev, baseCombination: v }))}
+                combinationOffsets={(formData as any).combinationOffsets}
+                onCombinationOffsetsChange={(v) => setFormData(prev => ({ ...prev, combinationOffsets: v }))}
                 minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}
                 priceTiers={formData.priceTiers}
               />

@@ -20,7 +20,23 @@ export interface Product {
   attributeSetId?: string | null;
   moq: number;
   priceTiers: PriceTier[];
-  attributeAdjustments?: Record<string, Record<string, number>>;
+  /**
+   * The combination whose tier prices are the canonical priceTiers values.
+   * Key format: joined selected values of all attributes (e.g. "Red|Medium").
+   */
+  baseCombination?: string;
+  /**
+   * Per-combination OFFSET from the base combination. Key: "<val1>|<val2>|..."
+   * Value: number (positive = surcharge over base, negative = discount).
+   * Missing entry = 0 (= same price as base).
+   */
+  combinationOffsets?: Record<string, number>;
+  /**
+   * Minimum effective unit price (in product currency). The final
+   * (tier + offset) price is floored at this value so a vendor can't
+   * accidentally drive a combination's price to or below zero.
+   */
+  minEffectiveUnitPrice?: number;
   stockQty: number;
   hasVariants: boolean;
   variants: Variant[];
@@ -53,9 +69,8 @@ export interface ProductFormData {
   currency?: 'EUR' | 'TRY' | 'USD';
   moq: number;
   priceTiers: PriceTier[];
-  attributeAdjustments?: Record<string, Record<string, number>>;
-  variantAdjustments?: Record<string, number>;
-  variantPercentAdjustments?: Record<string, number>;
+  baseCombination?: string;
+  combinationOffsets?: Record<string, number>;
   minEffectiveUnitPrice?: number;
   hasVariants: boolean;
   stockQty?: number;
