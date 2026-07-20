@@ -260,6 +260,7 @@ export const ProductDetail: React.FC = () => {
                     <tr>
                     <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('skuLabel', 'SKU')}</th>
                     <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('productLabel', 'Attributes')}</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', color: colors.text }}>{t('stockLabel', 'Stock')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -273,9 +274,22 @@ export const ProductDetail: React.FC = () => {
                             </span>
                           ))}
                         </td>
+                        <td style={{ padding: '0.5rem', color: colors.textMuted, fontWeight: 600 }}>
+                          {Number(variant.stockQty || 0)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan={2} style={{ padding: '0.5rem', color: colors.text, fontWeight: 600, textAlign: 'right' }}>
+                        {t('overallStockLabel', 'Overall stock')}:
+                      </td>
+                      <td style={{ padding: '0.5rem', color: colors.text, fontWeight: 600 }}>
+                        {product.variants.reduce((sum, v) => sum + Number(v.stockQty || 0), 0)}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

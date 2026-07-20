@@ -664,6 +664,26 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                         />
                       </div>
 
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>
+                          {t('optionStockLabel', 'Option stock')}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={Number(option.stockQty || 0)}
+                          onChange={(e) => updateVariantStock(variantIndex, e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.55rem',
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: '6px',
+                            backgroundColor: colors.cardBg,
+                            color: colors.text,
+                          }}
+                        />
+                      </div>
+
                       <label
                         style={{
                           background: colors.buttonGradient,

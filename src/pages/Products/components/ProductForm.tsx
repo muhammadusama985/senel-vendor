@@ -82,15 +82,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const { name, value } = e.target;
     const numericValue = parseFloat(value) || 0;
     setFormData(prev => {
-      if (name === 'stockQty' && prev.hasVariants) {
-        return {
-          ...prev,
-          stockQty: numericValue,
-          variants: (prev.variants || []).map((variant) => ({
-            ...variant,
-            stockQty: numericValue,
-          })),
-        };
+      if (name === 'stockQty') {
+        if (prev.hasVariants) {
+          // For variant products the main stockQty represents the OVERALL
+          // inventory (= sum of per-option stocks). Do NOT overwrite each
+          // variant's stockQty here — they are edited individually in the
+          // VariantEditor. We still record the value so the form stays
+          // consistent if the vendor toggles off "hasVariants" later.
+          return { ...prev, stockQty: numericValue };
+        }
+        return { ...prev, stockQty: numericValue };
       }
       return { ...prev, [name]: numericValue };
     });
@@ -182,10 +183,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     await onSubmit({
       ...formData,
       stockQty: Number(formData.stockQty) || 0,
+      // For variant products, preserve the per-option stockQty entered in
+      // the VariantEditor. For non-variant products, stockQty on the variant
+      // is unused anyway (variants array is empty in that case).
       variants: formData.hasVariants
         ? (formData.variants || []).map((variant) => ({
             ...variant,
-            stockQty: Number(formData.stockQty) || 0,
+            stockQty: Number(variant.stockQty) || 0,
           }))
         : formData.variants,
       imageUrls: [...formData.imageUrls],
@@ -364,19 +368,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                {t('stockLabel')} {t('qtyShort')}
+                {formData.hasVariants
+                  ? t('overallStockLabel', 'Overall stock (sum of all options)')
+                  : `${t('stockLabel')} ${t('qtyShort')}`}
               </label>
-              <input
-                type="number"
-                name="stockQty"
-                value={formData.stockQty}
-                onChange={handleNumberChange}
-                min="0"
-                style={{
-                  ...inputStyle,
-                  width: '200px',
-                }}
-              />
+              {formData.hasVariants ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="number"
+                    value={(formData.variants || []).reduce(
+                      (sum: number, v: any) => sum + (Number(v.stockQty) || 0),
+                      0
+                    )}
+                    readOnly
+                    style={{
+                      ...inputStyle,
+                      width: '200px',
+                      opacity: 0.7,
+                      cursor: 'not-allowed',
+                    }}
+                  />
+                  <span style={{ color: colors.textMuted, fontSize: '0.85rem' }}>
+                    {t('overallStockHint', 'Auto-summed from each option below')}
+                  </span>
+                </div>
+              ) : (
+                <input
+                  type="number"
+                  name="stockQty"
+                  value={formData.stockQty}
+                  onChange={handleNumberChange}
+                  min="0"
+                  style={{
+                    ...inputStyle,
+                    width: '200px',
+                  }}
+                />
+              )}
             </div>
 
             {formData.hasVariants ? (
