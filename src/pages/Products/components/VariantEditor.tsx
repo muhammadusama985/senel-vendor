@@ -280,36 +280,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     return { valid: true };
   };
 
-  /** Persist an offset value for a combination. Empty / invalid → delete entry. */
-  const setCombinationOffset = (key: string, raw: string) => {
-    if (!onCombinationOffsetsChange) return;
-    const cleaned = sanitizeNumberInput(raw);
-    const validation = validateOffset(cleaned);
-    onCombinationOffsetsChange((current) => {
-      const next = { ...(current || {}) };
-      if (cleaned === '' || !validation.valid) {
-        delete next[key];
-      } else {
-        next[key] = parseFloat(cleaned);
-      }
-      return next;
-    });
-  };
-
-  /** Set the base combination (called by the explicit dropdown). */
-  const setBaseCombination = (key: string) => {
-    onBaseCombinationChange?.(key);
-    // The base implicitly has offset 0 — strip it from the offsets map if it
-    // was accidentally stored there.
-    if (key && combinationOffsets?.[key] !== undefined) {
-      onCombinationOffsetsChange?.((current) => {
-        const next = { ...current };
-        delete next[key];
-        return next;
-      });
-    }
-  };
-
   /** Update a variant's stockQty directly via the variants onChange. */
   const updateVariantStock = (variantIndex: number, raw: string) => {
     const num = parseInt(raw, 10);
@@ -317,42 +287,120 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     onChange(variants.map((v, i) => (i === variantIndex ? { ...v, stockQty: num } : v)));
   };
 
-  /** Bulk: set every combination's offset to a single value. */
-  const bulkApplyOffset = (raw: string) => {
-    const cleaned = sanitizeNumberInput(raw);
+  // -- Composer state (replaces the per-combination table / base dropdown) --
+  // one dropdown per attribute title, one offset input, one "set as base"
+  // toggle, and the list of saved combinations below.
+  const [composerSelection, setComposerSelection] = useState<Record<string, string>>({});
+  const [composerOffset, setComposerOffset] = useState('');
+  const [composerIsBase, setComposerIsBase] = useState(false);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+
+  // Unique attribute titles (sorted alphabetically) and their option lists.
+  const allAttributeTitles = useMemo(() => {
+    const titles = new Set<string>();
+    variants.forEach((v) => {
+      Object.keys(v.attributes || {}).forEach((t) => {
+        if (t) titles.add(t);
+      });
+    });
+    return Array.from(titles).sort();
+  }, [variants]);
+
+  const attributeOptions = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    allAttributeTitles.forEach((title) => {
+      const opts = new Set<string>();
+      variants.forEach((v) => {
+        const val = v.attributes?.[title];
+        if (val != null && String(val) !== '') opts.add(String(val));
+      });
+      map[title] = Array.from(opts).sort();
+    });
+    return map;
+  }, [allAttributeTitles, variants]);
+
+  // List of all combinations the vendor has explicitly priced (base or has
+  // an explicit offset). Used to render the "saved combinations" list.
+  const savedCombinations = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: Array<{ key: string; label: string; isBase: boolean; offset: number | undefined }> = [];
+    variants.forEach((v, i) => {
+      const key = buildCombinationKey(v);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      const label = Object.entries(v.attributes || {})
+        .map(([k, val]) => `${k}: ${val}`)
+        .join(' / ') || `(variant ${i + 1})`;
+      const isBase = !!baseCombination && key === baseCombination;
+      const offset = isBase ? 0 : combinationOffsets?.[key];
+      const isPriced = isBase || offset !== undefined;
+      if (!isPriced) return;
+      rows.push({ key, label, isBase, offset });
+    });
+    rows.sort((a, b) => {
+      if (a.isBase !== b.isBase) return a.isBase ? -1 : 1;
+      return a.label.localeCompare(b.label);
+    });
+    return rows;
+  }, [variants, baseCombination, combinationOffsets]);
+
+  /** Save (or update) the combination currently in the composer. */
+  const handleSaveCombination = () => {
+    // Every attribute must have a selection.
+    for (const title of allAttributeTitles) {
+      if (!composerSelection[title]) return;
+    }
+    const titles = Object.keys(composerSelection).sort();
+    const key = titles.map((t) => composerSelection[t]).join('|');
+    const cleaned = sanitizeNumberInput(composerOffset);
     const validation = validateOffset(cleaned);
-    if (!validation.valid || !onCombinationOffsetsChange) return;
-    onCombinationOffsetsChange(() => {
-      const next: Record<string, number> = {};
-      for (const v of variants) {
-        const key = buildCombinationKey(v);
-        if (!key) continue;
-        next[key] = parseFloat(cleaned);
-      }
+
+    if (composerIsBase) {
+      onBaseCombinationChange?.(key);
+      onCombinationOffsetsChange?.((current) => {
+        const next = { ...(current || {}) };
+        delete next[key];
+        return next;
+      });
+    } else {
+      if (cleaned === '' || !validation.valid) return;
+      const num = parseFloat(cleaned);
+      onCombinationOffsetsChange?.((current) => ({ ...(current || {}), [key]: num }));
+      if (baseCombination === key) onBaseCombinationChange?.('');
+    }
+
+    if (editingKey !== key) {
+      setComposerOffset('');
+      setComposerIsBase(false);
+    }
+    setEditingKey(null);
+  };
+
+  /** Load an existing row back into the composer for editing. */
+  const handleEditCombination = (key: string) => {
+    const variant = variants.find((v) => buildCombinationKey(v) === key);
+    if (!variant) return;
+    setComposerSelection({ ...variant.attributes });
+    const isBase = key === baseCombination;
+    setComposerOffset(isBase ? '0' : String(combinationOffsets?.[key] ?? ''));
+    setComposerIsBase(isBase);
+    setEditingKey(key);
+  };
+
+  /** Remove a combination's price (and clear the base if it was the base). */
+  const handleDeleteCombination = (key: string) => {
+    if (key === baseCombination) onBaseCombinationChange?.('');
+    onCombinationOffsetsChange?.((current) => {
+      const next = { ...(current || {}) };
+      delete next[key];
       return next;
     });
+    if (editingKey === key) {
+      setComposerOffset('');
+      setComposerIsBase(false);
+      setEditingKey(null);
+    }
   };
-
-  /** Bulk: set every variant's stock to a single value. */
-  const bulkApplyStock = (raw: string) => {
-    const num = parseInt(raw, 10);
-    if (!Number.isFinite(num) || num < 0) return;
-    onChange(variants.map((v) => ({ ...v, stockQty: num })));
-  };
-
-  /** Reset: clear every combination offset (flat + percent). */
-  const resetAllOffsets = () => {
-    onCombinationOffsetsChange?.(() => ({}));
-  };
-
-  // Build the dropdown options for the base combination selector.
-  const baseOptions = variants.map((v, i) => {
-    const key = buildCombinationKey(v);
-    const label = Object.entries(v.attributes || {})
-      .map(([k, val]) => `${k}: ${val}`)
-      .join(' / ') || `(variant ${i + 1})`;
-    return { key, label };
-  });
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -668,7 +716,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
           BASE COMBINATION + PER-COMBINATION OFFSETS + STOCK
           (replaces the old per-option Adjust Price field)
           ============================================================ */}
-      <div
+            <div
         style={{
           marginTop: '1.5rem',
           borderTop: `1px solid ${colors.border}`,
@@ -676,290 +724,272 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
         }}
       >
         <h4 style={{ color: colors.text, marginBottom: '0.5rem' }}>
-          Pricing — Base Combination, Offsets & Stock
+          Pricing — Compose combinations & offsets
         </h4>
         <div style={{ color: colors.textMuted, fontSize: '0.85rem', marginBottom: '0.75rem' }}>
-          Pick which combination defines the canonical tier prices. Every other combination
-          has an offset (positive = surcharge, negative = discount, 0 = same as base). Leave a
-          cell blank for &quot;no offset&quot;.
+          Pick one option from each attribute dropdown, enter its offset (positive = surcharge,
+          negative = discount), then save. Tick &quot;Set as base combination&quot; for the
+          combination whose tier prices are the canonical ones shown in the form above.
+          Leave the offset blank when the combination has the same price as base.
         </div>
 
-        {/* Base combination selector */}
+        {/* Composer: N dropdowns + offset + base toggle + save button. */}
         <div
           style={{
             display: 'flex',
-            gap: '0.5rem',
+            flexWrap: 'wrap',
+            gap: '0.6rem',
             alignItems: 'flex-end',
-            marginBottom: '1rem',
-            padding: '0.75rem',
+            padding: '0.85rem',
             border: `1px solid ${colors.border}`,
             borderRadius: '8px',
             background: colors.inputBg,
-            flexWrap: 'wrap',
+            marginBottom: '0.75rem',
           }}
         >
-          <div style={{ flex: 1, minWidth: '220px' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.8rem' }}>
-              Base combination (defines the canonical tier prices)
+          {allAttributeTitles.map((title) => (
+            <div key={title} style={{ flex: '1 1 140px', minWidth: '140px' }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.75rem' }}>
+                {title}
+              </label>
+              <select
+                value={composerSelection[title] || ''}
+                onChange={(e) =>
+                  setComposerSelection((prev) => ({
+                    ...prev,
+                    [title]: e.target.value,
+                  }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '0.55rem',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '6px',
+                  background: colors.cardBg,
+                  color: colors.text,
+                }}
+              >
+                <option value="">— pick {title} —</option>
+                {(attributeOptions[title] || []).map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+
+          <div style={{ flex: '1 1 140px', minWidth: '140px' }}>
+            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.75rem' }}>
+              Offset from base
             </label>
-            <select
-              value={baseCombination}
-              onChange={(e) => setBaseCombination(e.target.value)}
+            <input
+              type="text"
+              inputMode="decimal"
+              value={composerOffset}
+              placeholder={composerIsBase ? '0 (base = tier prices)' : 'e.g. -10 or +5'}
+              onChange={(e) => setComposerOffset(sanitizeNumberInput(e.target.value))}
+              disabled={composerIsBase}
               style={{
                 width: '100%',
                 padding: '0.55rem',
-                border: `1px solid ${colors.border}`,
+                border: `1px solid ${(composerOffset && !validateOffset(composerOffset).valid) ? colors.accentRed : colors.border}`,
                 borderRadius: '6px',
-                backgroundColor: colors.cardBg,
+                background: composerIsBase ? colors.cardBg : colors.inputBg,
                 color: colors.text,
               }}
-            >
-              <option value="">— Select a combination —</option>
-              {baseOptions.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              title={
+                composerIsBase
+                  ? 'Base combination has implicit offset 0'
+                  : 'Offset added to each tier price (positive = surcharge, negative = discount). Blank = same as base.'
+              }
+            />
           </div>
-          {cheapestTierUnitPrice > 0 && (
-            <div style={{ color: colors.textMuted, fontSize: '0.8rem', alignSelf: 'center' }}>
-              Cheapest tier: <strong style={{ color: colors.text }}>{cheapestTierUnitPrice.toFixed(2)}</strong>
-              {' '}→ min offset:{' '}
-              <strong style={{ color: colors.text }}>{minOffsetAllowed.toFixed(2)}</strong>
-            </div>
-          )}
-        </div>
 
-        {/* Bulk actions */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            padding: '0.75rem',
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
-            background: colors.inputBg,
-          }}
-        >
-          <BulkInput
-            label="Apply offset to all"
-            placeholder="e.g. -10 or +5"
-            onApply={bulkApplyOffset}
-            sanitize={sanitizeNumberInput}
-            validate={(v) => validateOffset(v)}
-          />
-          <BulkInput
-            label="Set stock on all"
-            placeholder="e.g. 100"
-            onApply={(v) => bulkApplyStock(v.replace(/\D/g, ''))}
-            sanitize={(v) => v.replace(/\D/g, '')}
-            validate={(v) => ({ valid: v !== '' && Number.isFinite(parseInt(v, 10)) && parseInt(v, 10) >= 0 })}
-          />
-          <button
-            type="button"
-            onClick={resetAllOffsets}
+          <label
             style={{
-              alignSelf: 'end',
-              background: 'transparent',
-              color: colors.accentRed,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '4px',
-              padding: '0.55rem 0.85rem',
-              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.55rem 0.5rem',
+              color: colors.text,
               fontSize: '0.85rem',
               whiteSpace: 'nowrap',
+              cursor: 'pointer',
+            }}
+            title="Tick to make THIS combination the base (its tier prices are the canonical ones)."
+          >
+            <input
+              type="checkbox"
+              checked={composerIsBase}
+              onChange={(e) => setComposerIsBase(e.target.checked)}
+            />
+            Set as base
+          </label>
+
+          <button
+            type="button"
+            onClick={handleSaveCombination}
+            disabled={
+              allAttributeTitles.length === 0 ||
+              allAttributeTitles.some((t) => !composerSelection[t]) ||
+              (!composerIsBase && (composerOffset === '' || !validateOffset(composerOffset).valid))
+            }
+            style={{
+              background: colors.buttonGradient,
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '0.6rem 1rem',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              opacity:
+                allAttributeTitles.length === 0 ||
+                allAttributeTitles.some((t) => !composerSelection[t]) ||
+                (!composerIsBase && (composerOffset === '' || !validateOffset(composerOffset).valid))
+                  ? 0.5
+                  : 1,
             }}
           >
-            Reset all offsets
+            {editingKey ? 'Update this combination' : 'Save this combination'}
           </button>
         </div>
 
-        {/* Per-combination table */}
+        {/* Validation hint (visible only when user typed an invalid offset). */}
+        {composerOffset && !composerIsBase && !validateOffset(composerOffset).valid && (
+          <div style={{ color: colors.accentRed, fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+            {validateOffset(composerOffset).reason}
+          </div>
+        )}
+
+        {/* Live reference: cheapest tier / floor. */}
+        {cheapestTierUnitPrice > 0 && (
+          <div style={{ marginBottom: '0.75rem', color: colors.textMuted, fontSize: '0.8rem' }}>
+            Cheapest tier base price:{' '}
+            <strong style={{ color: colors.text }}>{cheapestTierUnitPrice.toFixed(2)}</strong>
+            {' · '}Minimum allowed offset:{' '}
+            <strong style={{ color: colors.text }}>{minOffsetAllowed.toFixed(2)}</strong>
+            {' '}(offset more negative than this would zero out the cheapest tier).
+          </div>
+        )}
+
+        {/* Saved combinations list (the prices the vendor has entered). */}
         <div
           style={{
             border: `1px solid ${colors.border}`,
             borderRadius: '8px',
-            overflowX: 'auto',
+            overflow: 'hidden',
           }}
         >
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
-            <thead>
-              <tr style={{ background: colors.cardBg }}>
-                <th style={th}>Combination</th>
-                <th style={th}>SKU</th>
-                <th style={th}>Offset from base</th>
-                <th style={th}>Stock</th>
-              </tr>
-            </thead>
-            <tbody>
-              {variants.map((variant, idx) => {
-                const key = buildCombinationKey(variant);
-                const isBase = !!baseCombination && key === baseCombination;
-                const storedOffset = combinationOffsets?.[key];
-                const offsetStr = isBase
-                  ? '0 (base)'
-                  : storedOffset == null
-                  ? ''
-                  : String(storedOffset);
-                const validation = validateOffset(isBase ? '0' : offsetStr);
-                const combinationLabel = Object.entries(variant.attributes || {})
-                  .map(([k, v]) => `${k}: ${v}`)
-                  .join(' / ') || '(empty)';
-                return (
-                  <tr key={idx} style={{ borderTop: `1px solid ${colors.border}` }}>
-                    <td style={td}>
-                      <div style={{ color: colors.text, fontWeight: 500 }}>{combinationLabel}</div>
-                      <div style={{ color: colors.textMuted, fontSize: '0.75rem' }}>key: {key || '—'}</div>
-                    </td>
-                    <td style={td}>
-                      <code style={{ color: colors.textMuted, fontSize: '0.8rem' }}>{variant.sku}</code>
-                    </td>
-                    <td style={td}>
-                      {isBase ? (
-                        <div
-                          style={{
-                            padding: '0.4rem 0.6rem',
-                            color: colors.textMuted,
-                            fontSize: '0.85rem',
-                            fontStyle: 'italic',
-                          }}
-                        >
-                          0 (base combination — defines the canonical tier prices)
-                        </div>
-                      ) : (
-                        <>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={offsetStr}
-                            placeholder="blank = same as base"
-                            onChange={(e) => setCombinationOffset(key, e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '0.4rem',
-                              border: `1px solid ${offsetStr && !validation.valid ? colors.accentRed : colors.border}`,
-                              borderRadius: '4px',
-                              background: colors.cardBg,
-                              color: colors.text,
-                            }}
-                            title={validation.reason || 'Optional offset from the base combination'}
-                          />
-                          {offsetStr && !validation.valid && (
-                            <div style={{ marginTop: '0.15rem', color: colors.accentRed, fontSize: '0.7rem' }}>
-                              {validation.reason}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </td>
-                    <td style={td}>
-                      <input
-                        type="number"
-                        min={0}
-                        value={variant.stockQty ?? 0}
-                        onChange={(e) => updateVariantStock(idx, e.target.value)}
+          <div
+            style={{
+              padding: '0.55rem 0.8rem',
+              background: colors.cardBg,
+              color: '#999',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              borderBottom: `1px solid ${colors.border}`,
+            }}
+          >
+            Saved combinations ({savedCombinations.length})
+          </div>
+          {savedCombinations.length === 0 ? (
+            <div style={{ padding: '1rem', color: colors.textMuted, fontStyle: 'italic', textAlign: 'center' }}>
+              No combinations priced yet. Use the composer above to set prices.
+            </div>
+          ) : (
+            savedCombinations.map((row) => {
+              const offsetValidation = row.isBase
+                ? { valid: true }
+                : validateOffset(String(row.offset ?? ''));
+              const isEditing = editingKey === row.key;
+              return (
+                <div
+                  key={row.key}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1.6fr 1fr 1fr auto',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.6rem 0.8rem',
+                    borderTop: `1px solid ${colors.border}`,
+                    background: isEditing ? colors.inputBg : 'transparent',
+                  }}
+                >
+                  <div style={{ color: colors.text, fontWeight: 500 }}>
+                    {row.label}
+                    {row.isBase && (
+                      <span
                         style={{
-                          width: '100%',
-                          padding: '0.4rem',
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: '4px',
-                          background: colors.cardBg,
-                          color: colors.text,
+                          marginLeft: '0.5rem',
+                          padding: '0.15rem 0.45rem',
+                          background: colors.buttonGradient,
+                          color: '#ffffff',
+                          borderRadius: '999px',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
                         }}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      >
+                        BASE
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: colors.text, fontSize: '0.9rem' }}>
+                    {row.isBase ? (
+                      <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>
+                        0 (base = canonical tier prices)
+                      </span>
+                    ) : (
+                      <span style={{ color: offsetValidation.valid ? colors.text : colors.accentRed }}>
+                        {row.offset === undefined ? '—' : `${row.offset >= 0 ? '+' : ''}${row.offset}`}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: colors.textMuted, fontSize: '0.7rem' }}>
+                    key: {row.key}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleEditCombination(row.key)}
+                      style={{
+                        background: 'transparent',
+                        color: colors.textMuted,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: '4px',
+                        padding: '0.3rem 0.6rem',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {isEditing ? 'Cancel' : 'Edit'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCombination(row.key)}
+                      style={{
+                        background: 'transparent',
+                        color: colors.accentRed,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: '4px',
+                        padding: '0.3rem 0.6rem',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
   );
-};
-
-// Small inline helper for the bulk-action inputs.
-const BulkInput: React.FC<{
-  label: string;
-  placeholder: string;
-  onApply: (value: string) => void;
-  sanitize: (value: string) => string;
-  validate: (value: string) => { valid: boolean; reason?: string };
-}> = ({ label, placeholder, onApply, sanitize, validate }) => {
-  const { colors } = useTheme();
-  const [value, setValue] = React.useState('');
-  const validation = validate(value);
-  const handleApply = () => {
-    if (value === '' || !validation.valid) return;
-    onApply(sanitize(value));
-    setValue('');
-  };
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-      <label style={{ color: colors.textMuted, fontSize: '0.75rem' }}>{label}</label>
-      <div style={{ display: 'flex', gap: '0.4rem' }}>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={value}
-          placeholder={placeholder}
-          onChange={(e) => setValue(sanitize(e.target.value))}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleApply();
-            }
-          }}
-          style={{
-            flex: 1,
-            padding: '0.4rem',
-            border: `1px solid ${value && !validation.valid ? colors.accentRed : colors.border}`,
-            borderRadius: '4px',
-            background: colors.cardBg,
-            color: colors.text,
-          }}
-        />
-        <button
-          type="button"
-          onClick={handleApply}
-          disabled={value === '' || !validation.valid}
-          style={{
-            background: colors.buttonGradient,
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '0.4rem 0.7rem',
-            cursor: value === '' || !validation.valid ? 'not-allowed' : 'pointer',
-            opacity: value === '' || !validation.valid ? 0.5 : 1,
-            fontSize: '0.85rem',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Apply
-        </button>
-      </div>
-      {value && !validation.valid && (
-        <div style={{ color: colors.accentRed, fontSize: '0.7rem' }}>{validation.reason}</div>
-      )}
-    </div>
-  );
-};
-
-// Shared table cell styles used by the per-combination table.
-const th: React.CSSProperties = {
-  padding: '0.6rem 0.5rem',
-  textAlign: 'left',
-  color: '#999',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-};
-const td: React.CSSProperties = {
-  padding: '0.5rem',
-  verticalAlign: 'top',
 };
