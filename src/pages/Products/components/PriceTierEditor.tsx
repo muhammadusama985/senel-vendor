@@ -72,13 +72,23 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               placeholder="Enter min quantity"
               onChange={(e) => updateTier(index, 'minQty', parseInt(e.target.value, 10) || 0)}
               min="0"
+              title={
+                index === 0 && moq && tier.minQty > moq
+                  ? `First tier min quantity (${tier.minQty}) cannot exceed MOQ (${moq})`
+                  : ""
+              }
               style={{
                 padding: '0.5rem',
-                border: `1px solid ${colors.border}`,
+                border: index === 0 && moq && tier.minQty > moq
+                  ? "1px solid #dc2626"
+                  : `1px solid ${colors.border}`,
                 borderRadius: '4px',
                 width: '100%',
                 backgroundColor: colors.inputBg,
                 color: colors.text,
+                boxShadow: index === 0 && moq && tier.minQty > moq
+                  ? "0 0 0 1px #dc2626"
+                  : undefined,
               }}
             />
             <input
