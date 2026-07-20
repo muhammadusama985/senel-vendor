@@ -124,15 +124,27 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
   const { t } = useI18n();
   const [draftAttributeTitles, setDraftAttributeTitles] = useState<Record<string, string>>({});
 
+  // The "Attributes & Options" section must only show the per-option entries
+  // the vendor created (each with exactly one attribute title + value +
+  // SKU + images). Combination variants (full-attribute entries the
+  // composer produces) must NOT be rendered as option cards here — they
+  // live in the "Pricing — Compose combinations & offsets" list and the
+  // customer-side variant lookup. We filter them out by keeping only
+  // entries with exactly ONE attribute key.
+  const singleAttributeVariants = useMemo(
+    () => variants.filter((v) => Object.keys(v.attributes || {}).length === 1),
+    [variants]
+  );
+
   const attributeGroups = useMemo<AttributeGroup[]>(() => {
     const groups = new Map<string, number[]>();
-    variants.forEach((variant, index) => {
+    singleAttributeVariants.forEach((variant, index) => {
       const title = getVariantAttributeTitle(variant, index);
       if (!groups.has(title)) groups.set(title, []);
       groups.get(title)?.push(index);
     });
     return Array.from(groups.entries()).map(([title, indexes]) => ({ title, indexes }));
-  }, [variants]);
+  }, [singleAttributeVariants]);
 
   const updateVariants = (updater: (current: Variant[]) => Variant[]) => {
     onChange(updater(variants));
@@ -356,14 +368,17 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     const map: Record<string, string[]> = {};
     allAttributeTitles.forEach((title) => {
       const opts = new Set<string>();
-      variants.forEach((v) => {
+      // Only collect option values from single-attribute entries, so the
+      // dropdowns in the composer are sourced from the per-option list above
+      // (not from the full-combination rows).
+      singleAttributeVariants.forEach((v) => {
         const val = v.attributes?.[title];
         if (val != null && String(val) !== '') opts.add(String(val));
       });
       map[title] = Array.from(opts).sort();
     });
     return map;
-  }, [allAttributeTitles, variants]);
+  }, [allAttributeTitles, singleAttributeVariants]);
 
   // Cartesian product of every attribute's options. Each entry is a
   // fully-specified combination like { Color: 'Blue', Size: 'Small' }. This is
