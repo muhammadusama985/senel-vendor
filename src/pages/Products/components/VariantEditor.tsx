@@ -320,6 +320,15 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     const titles = Object.keys(combo).sort();
     const key = titles.map((t) => combo[t]).join('|');
     const existing = findCombinationVariant(combo);
+    // Always keep every existing variant entry (including the per-option
+    // single-attribute ones with their images). The previous "drop
+    // overlapping single-attribute entries" rule was destroying the
+    // per-option images the vendor had attached to each individual option,
+    // and also hid the option itself from the Attributes & Options section
+    // because the editor grouped variants by their first attribute key.
+    // The customer's variant lookup already uses full-attribute matching
+    // (`Object.entries(selectedAttributes).every(...)`), so it correctly
+    // picks the combination entry over any single-attribute fallback.
     // Build / update the combination variant.
     const sku = patch.sku || existing?.sku || `VAR-${(variants.length + 1).toString().padStart(3, '0')}-${key.replace(/\|/g, '-')}`;
     const combinationVariant: Variant = {
@@ -329,19 +338,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       stockQty: patch.stockQty ?? existing?.stockQty ?? 0,
       imageUrls: existing?.imageUrls || [],
     };
-    // Drop any stale single-attribute entries that share the same value
-    // in any of the combo's attribute titles — they would otherwise mask
-    // the combination variant on the customer page.
-    const filtered = variants.filter((v) => {
-      const keys = Object.keys(v.attributes || {});
-      if (keys.length === 0) return true;
-      // Keep full-combination entries (they are the new source of truth).
-      if (keys.length === titles.length) return true;
-      // Drop single-attribute entries that overlap the combo in any title.
-      const overlaps = titles.some((t) => String(v.attributes?.[t] || '') !== '' && v.attributes?.[t] === combo[t]);
-      return !overlaps;
-    });
-    return [...filtered, combinationVariant];
+    return [...variants, combinationVariant];
   };
 
   // Unique attribute titles (sorted alphabetically) and their option lists.
