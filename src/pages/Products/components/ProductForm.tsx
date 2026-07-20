@@ -180,12 +180,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       return;
     }
 
+    // For variant products, the vendor configures stock PER COMBINATION in
+    // the composer. The product-level stockQty is therefore auto-summed
+    // from those combination stocks so the backend / product list never
+    // shows a stale number.
+    const variantStockSum = (formData.variants || []).reduce(
+      (sum: number, v: any) => sum + (Number(v.stockQty) || 0),
+      0,
+    );
+    const submittedStockQty = formData.hasVariants
+      ? variantStockSum
+      : Number(formData.stockQty) || 0;
+
     await onSubmit({
       ...formData,
-      stockQty: Number(formData.stockQty) || 0,
-      // For variant products, preserve the per-option stockQty entered in
-      // the VariantEditor. For non-variant products, stockQty on the variant
-      // is unused anyway (variants array is empty in that case).
+      stockQty: submittedStockQty,
+      // Stock is owned by the per-combination variant entries the composer
+      // produces; for non-variant products stockQty on the variant is
+      // unused (variants array is empty in that case).
       variants: formData.hasVariants
         ? (formData.variants || []).map((variant) => ({
             ...variant,
@@ -389,7 +401,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     }}
                   />
                   <span style={{ color: colors.textMuted, fontSize: '0.85rem' }}>
-                    {t('overallStockHint', 'Auto-summed from each option below')}
+                    {t('overallStockHint', 'Auto-summed from each combination below')}
                   </span>
                 </div>
               ) : (

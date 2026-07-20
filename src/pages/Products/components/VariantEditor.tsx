@@ -280,20 +280,69 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     return { valid: true };
   };
 
-  /** Update a variant's stockQty directly via the variants onChange. */
-  const updateVariantStock = (variantIndex: number, raw: string) => {
-    const num = parseInt(raw, 10);
-    if (!Number.isFinite(num) || num < 0) return;
-    onChange(variants.map((v, i) => (i === variantIndex ? { ...v, stockQty: num } : v)));
-  };
 
   // -- Composer state (replaces the per-combination table / base dropdown) --
-  // one dropdown per attribute title, one offset input, one "set as base"
-  // toggle, and the list of saved combinations below.
+  // one dropdown per attribute title, one offset input, one stock input,
+  // one "set as base" toggle, and the list of saved combinations below.
   const [composerSelection, setComposerSelection] = useState<Record<string, string>>({});
   const [composerOffset, setComposerOffset] = useState('');
+  const [composerStock, setComposerStock] = useState<string>('');
   const [composerIsBase, setComposerIsBase] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+
+  /**
+   * Look up the variant entry that represents a full combination (every
+   * attribute key + value selected). Returns null if no such variant has
+   * been created yet. Combination variants carry the stockQty that the
+   * vendor set in the composer.
+   */
+  const findCombinationVariant = (combo: Record<string, string>): Variant | null => {
+    const titles = Object.keys(combo).sort();
+    if (titles.length === 0) return null;
+    return (
+      variants.find((v) => {
+        const keys = Object.keys(v.attributes || {});
+        if (keys.length !== titles.length) return false;
+        return titles.every((t) => String(v.attributes?.[t] || '') === String(combo[t] || ''));
+      }) || null
+    );
+  };
+
+  /**
+   * Upsert a combination variant entry. Returns a new variants array with
+   * the combination variant present (and any orphan single-attribute
+   * entries for the same combo removed to keep the data clean).
+   */
+  const upsertCombinationVariant = (
+    combo: Record<string, string>,
+    patch: Partial<Pick<Variant, 'stockQty' | 'sku'>>
+  ): Variant[] => {
+    const titles = Object.keys(combo).sort();
+    const key = titles.map((t) => combo[t]).join('|');
+    const existing = findCombinationVariant(combo);
+    // Build / update the combination variant.
+    const sku = patch.sku || existing?.sku || `VAR-${(variants.length + 1).toString().padStart(3, '0')}-${key.replace(/\|/g, '-')}`;
+    const combinationVariant: Variant = {
+      ...(existing || {}),
+      sku,
+      attributes: { ...combo },
+      stockQty: patch.stockQty ?? existing?.stockQty ?? 0,
+      imageUrls: existing?.imageUrls || [],
+    };
+    // Drop any stale single-attribute entries that share the same value
+    // in any of the combo's attribute titles — they would otherwise mask
+    // the combination variant on the customer page.
+    const filtered = variants.filter((v) => {
+      const keys = Object.keys(v.attributes || {});
+      if (keys.length === 0) return true;
+      // Keep full-combination entries (they are the new source of truth).
+      if (keys.length === titles.length) return true;
+      // Drop single-attribute entries that overlap the combo in any title.
+      const overlaps = titles.some((t) => String(v.attributes?.[t] || '') !== '' && v.attributes?.[t] === combo[t]);
+      return !overlaps;
+    });
+    return [...filtered, combinationVariant];
+  };
 
   // Unique attribute titles (sorted alphabetically) and their option lists.
   const allAttributeTitles = useMemo(() => {
@@ -343,9 +392,16 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
 
   // List of all combinations the vendor has explicitly priced (base or has
   // an explicit offset). Derived from `allCombinations` (the cross product),
-  // not from the flat `variants` array.
+  // not from the flat `variants` array. Stock is read from the matching
+  // combination-variant entry in `variants`.
   const savedCombinations = useMemo(() => {
-    const rows: Array<{ key: string; label: string; isBase: boolean; offset: number | undefined }> = [];
+    const rows: Array<{
+      key: string;
+      label: string;
+      isBase: boolean;
+      offset: number | undefined;
+      stockQty: number;
+    }> = [];
     for (const combo of allCombinations) {
       const titles = Object.keys(combo).sort();
       const key = titles.map((t) => combo[t]).join('|');
@@ -354,14 +410,15 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       const offset = isBase ? 0 : combinationOffsets?.[key];
       const isPriced = isBase || offset !== undefined;
       if (!isPriced) continue;
-      rows.push({ key, label, isBase, offset });
+      const variant = findCombinationVariant(combo);
+      rows.push({ key, label, isBase, offset, stockQty: Number(variant?.stockQty || 0) });
     }
     rows.sort((a, b) => {
       if (a.isBase !== b.isBase) return a.isBase ? -1 : 1;
       return a.label.localeCompare(b.label);
     });
     return rows;
-  }, [allCombinations, baseCombination, combinationOffsets]);
+  }, [allCombinations, baseCombination, combinationOffsets, variants]);
 
   /** Save (or update) the combination currently in the composer. */
   const handleSaveCombination = () => {
@@ -390,9 +447,22 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     }
     onCombinationOffsetsChange?.(nextOffsets);
 
+    // Persist the per-combination stock as a real variant entry so the
+    // customer side (variant lookup, cart validation, order checkout)
+    // can match the combination by its full attribute set and read its
+    // stockQty. Blank stock → 0.
+    const stockNum = parseInt(sanitizeNumberInput(composerStock), 10);
+    const safeStock = Number.isFinite(stockNum) && stockNum >= 0 ? stockNum : 0;
+    onChange(upsertCombinationVariant(composerSelection, { stockQty: safeStock }));
+
     if (editingKey !== key) {
       setComposerOffset('');
+      setComposerStock('');
       setComposerIsBase(false);
+    } else {
+      // Keep the stock in the composer while the user keeps editing the
+      // same row so the input reflects the just-saved value.
+      setComposerStock(String(safeStock));
     }
     setEditingKey(null);
   };
@@ -404,6 +474,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     setComposerSelection({ ...variant.attributes });
     const isBase = key === baseCombination;
     setComposerOffset(isBase ? '0' : String(combinationOffsets?.[key] ?? ''));
+    setComposerStock(String(Number(variant.stockQty || 0)));
     setComposerIsBase(isBase);
     setEditingKey(key);
   };
@@ -664,25 +735,6 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                         />
                       </div>
 
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.85rem' }}>
-                          {t('optionStockLabel', 'Option stock')}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={Number(option.stockQty || 0)}
-                          onChange={(e) => updateVariantStock(variantIndex, e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.55rem',
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: '6px',
-                            backgroundColor: colors.cardBg,
-                            color: colors.text,
-                          }}
-                        />
-                      </div>
 
                       <label
                         style={{
@@ -845,6 +897,29 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
             />
           </div>
 
+          <div style={{ flex: '1 1 140px', minWidth: '140px' }}>
+            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted, fontSize: '0.75rem' }}>
+              Stock (units available)
+            </label>
+            <input
+              type="number"
+              inputMode='numeric'
+              min='0'
+              value={composerStock}
+              placeholder={'e.g. 50'}
+              onChange={(e) => setComposerStock(sanitizeNumberInput(e.target.value))}
+              style={{
+                width: '100%',
+                padding: '0.55rem',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                backgroundColor: colors.inputBg,
+                color: colors.text,
+              }}
+              title={'How many units of THIS combination are in stock. This is what customers see and what the cart validates against.'}
+            />
+          </div>
+
           <label
             style={{
               display: 'flex',
@@ -951,7 +1026,7 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                   key={row.key}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '1.6fr 1fr 1fr auto',
+                    gridTemplateColumns: '1.6fr 0.9fr 1fr 1.1fr auto',
                     alignItems: 'center',
                     gap: '0.6rem',
                     padding: '0.6rem 0.8rem',
@@ -987,6 +1062,10 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
                         {row.offset === undefined ? '—' : `${row.offset >= 0 ? '+' : ''}${row.offset}`}
                       </span>
                     )}
+                  </div>
+                  <div style={{ color: colors.text, fontSize: '0.9rem' }}>
+                    <span style={{ fontWeight: 600 }}>{row.stockQty}</span>
+                    <span style={{ color: colors.textMuted, marginLeft: '0.25rem' }}>units</span>
                   </div>
                   <div style={{ color: colors.textMuted, fontSize: '0.7rem' }}>
                     key: {row.key}
