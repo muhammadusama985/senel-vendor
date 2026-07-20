@@ -387,7 +387,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 baseCombination={(formData as any).baseCombination}
                 onBaseCombinationChange={(v) => setFormData(prev => ({ ...prev, baseCombination: v }))}
                 combinationOffsets={(formData as any).combinationOffsets}
-                onCombinationOffsetsChange={(v) => setFormData(prev => ({ ...prev, combinationOffsets: v }))}
+                onCombinationOffsetsChange={(v) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    combinationOffsets:
+                      typeof v === 'function' ? v(prev.combinationOffsets) : v,
+                  }))
+                }
                 minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}
                 priceTiers={formData.priceTiers}
               />

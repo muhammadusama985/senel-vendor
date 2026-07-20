@@ -355,19 +355,21 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     const cleaned = sanitizeNumberInput(composerOffset);
     const validation = validateOffset(cleaned);
 
+    // Compute the NEXT combinationOffsets object from the current prop value
+    // (the parent handler treats the argument as a plain value, not a
+    // function). Set as the new base combination when toggled.
+    const nextOffsets = { ...(combinationOffsets || {}) };
+
     if (composerIsBase) {
       onBaseCombinationChange?.(key);
-      onCombinationOffsetsChange?.((current) => {
-        const next = { ...(current || {}) };
-        delete next[key];
-        return next;
-      });
+      delete nextOffsets[key]; // base has implicit offset 0
     } else {
       if (cleaned === '' || !validation.valid) return;
       const num = parseFloat(cleaned);
-      onCombinationOffsetsChange?.((current) => ({ ...(current || {}), [key]: num }));
+      nextOffsets[key] = num;
       if (baseCombination === key) onBaseCombinationChange?.('');
     }
+    onCombinationOffsetsChange?.(nextOffsets);
 
     if (editingKey !== key) {
       setComposerOffset('');
@@ -390,11 +392,9 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
   /** Remove a combination's price (and clear the base if it was the base). */
   const handleDeleteCombination = (key: string) => {
     if (key === baseCombination) onBaseCombinationChange?.('');
-    onCombinationOffsetsChange?.((current) => {
-      const next = { ...(current || {}) };
-      delete next[key];
-      return next;
-    });
+    const nextOffsets = { ...(combinationOffsets || {}) };
+    delete nextOffsets[key];
+    onCombinationOffsetsChange?.(nextOffsets);
     if (editingKey === key) {
       setComposerOffset('');
       setComposerIsBase(false);
