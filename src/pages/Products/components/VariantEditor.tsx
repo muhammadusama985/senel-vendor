@@ -319,30 +319,49 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
     return map;
   }, [allAttributeTitles, variants]);
 
+  // Cartesian product of every attribute's options. Each entry is a
+  // fully-specified combination like { Color: 'Blue', Size: 'Small' }. This is
+  // what the vendor's composer keys target and what the saved-combinations list
+  // iterates over. (The flat `variants` array only stores one attribute-value
+  // per entry, not full combinations, so we can't iterate over it.)
+  const allCombinations = useMemo(() => {
+    const titles = allAttributeTitles;
+    if (titles.length === 0) return [];
+    const build = (idx: number, current: Record<string, string>): Array<Record<string, string>> => {
+      if (idx === titles.length) return [current];
+      const title = titles[idx];
+      const options = attributeOptions[title] || [];
+      if (options.length === 0) return build(idx + 1, current);
+      const result: Array<Record<string, string>> = [];
+      for (const opt of options) {
+        result.push(...build(idx + 1, { ...current, [title]: opt }));
+      }
+      return result;
+    };
+    return build(0, {});
+  }, [allAttributeTitles, attributeOptions]);
+
   // List of all combinations the vendor has explicitly priced (base or has
-  // an explicit offset). Used to render the "saved combinations" list.
+  // an explicit offset). Derived from `allCombinations` (the cross product),
+  // not from the flat `variants` array.
   const savedCombinations = useMemo(() => {
-    const seen = new Set<string>();
     const rows: Array<{ key: string; label: string; isBase: boolean; offset: number | undefined }> = [];
-    variants.forEach((v, i) => {
-      const key = buildCombinationKey(v);
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      const label = Object.entries(v.attributes || {})
-        .map(([k, val]) => `${k}: ${val}`)
-        .join(' / ') || `(variant ${i + 1})`;
+    for (const combo of allCombinations) {
+      const titles = Object.keys(combo).sort();
+      const key = titles.map((t) => combo[t]).join('|');
+      const label = titles.map((t) => `${t}: ${combo[t]}`).join(' / ');
       const isBase = !!baseCombination && key === baseCombination;
       const offset = isBase ? 0 : combinationOffsets?.[key];
       const isPriced = isBase || offset !== undefined;
-      if (!isPriced) return;
+      if (!isPriced) continue;
       rows.push({ key, label, isBase, offset });
-    });
+    }
     rows.sort((a, b) => {
       if (a.isBase !== b.isBase) return a.isBase ? -1 : 1;
       return a.label.localeCompare(b.label);
     });
     return rows;
-  }, [variants, baseCombination, combinationOffsets]);
+  }, [allCombinations, baseCombination, combinationOffsets]);
 
   /** Save (or update) the combination currently in the composer. */
   const handleSaveCombination = () => {
