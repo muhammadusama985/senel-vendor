@@ -205,7 +205,23 @@ export const ProductDetail: React.FC = () => {
         <div>
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('descriptionLabel', 'Description')}</h3>
-            <p style={{ color: colors.textMuted, lineHeight: '1.6' }}>{product.description || t('noDescriptionProvided', 'No description provided.')}</p>
+            <div
+              className="vendor-product-description-scroller"
+              style={{
+                // Fixed ceiling so long descriptions scroll inside this card
+                // instead of pushing the rest of the view page down.
+                maxHeight: '220px',
+                overflowY: 'auto',
+                paddingRight: '0.5rem',
+              }}
+            >
+              <p
+                className="vendor-product-description-text"
+                style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0 }}
+              >
+                {product.description || t('noDescriptionProvided', 'No description provided.')}
+              </p>
+            </div>
           </div>
 
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
