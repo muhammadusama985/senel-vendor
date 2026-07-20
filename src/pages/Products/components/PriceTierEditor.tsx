@@ -16,10 +16,10 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
   const addTier = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const lastTier = tiers[tiers.length - 1];
-    const newMinQty = lastTier ? lastTier.minQty + 50 : moq || 50;
-    const newTiers = [...tiers, { minQty: newMinQty, unitPrice: 0 }];
-    onChange(newTiers.sort((a, b) => a.minQty - b.minQty));
+    // New tiers start with empty minQty/unitPrice so the vendor types the
+    // exact quantity and price they want — no auto-fill +50 logic.
+    const newTiers = [...tiers, { minQty: 0, unitPrice: 0 }];
+    onChange(newTiers);
   };
 
   const removeTier = (index: number, e: React.MouseEvent) => {
@@ -33,7 +33,11 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
     const newTiers = [...tiers];
     newTiers[index] = { ...newTiers[index], [field]: value };
     if (field === 'minQty') {
-      newTiers.sort((a, b) => a.minQty - b.minQty);
+      // Skip the auto-sort when the field is 0 (empty/unfilled) so the
+      // vendor can type a new minQty without it jumping to the front.
+      if (value > 0) {
+        newTiers.sort((a, b) => a.minQty - b.minQty);
+      }
     }
     onChange(newTiers);
   };
@@ -63,9 +67,11 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
           >
             <input
               type="number"
-              value={tier.minQty}
+              inputMode="numeric"
+              value={tier.minQty || ""}
+              placeholder="Enter min quantity"
               onChange={(e) => updateTier(index, 'minQty', parseInt(e.target.value, 10) || 0)}
-              min="1"
+              min="0"
               style={{
                 padding: '0.5rem',
                 border: `1px solid ${colors.border}`,
@@ -77,7 +83,9 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
             />
             <input
               type="number"
-              value={tier.unitPrice}
+              inputMode="decimal"
+              value={tier.unitPrice || ""}
+              placeholder="Enter unit price"
               onChange={(e) => updateTier(index, 'unitPrice', parseFloat(e.target.value) || 0)}
               min="0"
               step="0.01"
@@ -91,6 +99,7 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               }}
             />
             <button
+              type="button"
               onClick={(e) => removeTier(index, e)}
               disabled={tiers.length <= 1}
               style={{
@@ -124,7 +133,7 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
         </button>
 
         <p style={{ fontSize: '0.85rem', color: colors.textMuted, marginTop: '0.5rem' }}>
-          {moq ? t('firstTierMoqHint').replace('{{moq}}', String(moq)) : ''}
+          Set the minimum quantity and unit price for each tier you want to offer. Customers see the tier that matches their order quantity.
         </p>
       </div>
     </div>

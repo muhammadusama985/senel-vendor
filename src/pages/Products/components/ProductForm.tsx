@@ -32,8 +32,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     attributeSetId: '',
     country: '',
     currency: 'EUR',
-    moq: 1,
-    priceTiers: [{ minQty: 1, unitPrice: 0 }],
+    // Default to 0 so the inputs render empty (state stays as a number
+    // for the backend contract; the "|| ''" trick in the inputs blanks
+    // the field at first paint until the vendor types a value).
+    moq: 0,
+    priceTiers: [{ minQty: 0, unitPrice: 0 }],
     baseCombination: '',
     combinationOffsets: {},
     minEffectiveUnitPrice: 0.01,
@@ -141,11 +144,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const duplicateTierQty = sortedTiers.find((tier, index) => index > 0 && tier.minQty === sortedTiers[index - 1].minQty);
     if (duplicateTierQty) {
       alert(`${t('pricingTiersLabel')}: ${duplicateTierQty.minQty}`);
-      return;
-    }
-
-    if (sortedTiers[0].minQty > formData.moq) {
-      alert(t('firstTierMoqHint').replace('{{moq}}', String(formData.moq)));
       return;
     }
 
@@ -332,8 +330,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </label>
               <input
                 type="number"
+                inputMode="numeric"
                 name="moq"
-                value={formData.moq}
+                value={formData.moq || ''}
+                placeholder="Enter MOQ"
                 onChange={handleNumberChange}
                 min="1"
                 required
@@ -472,8 +472,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   name="lengthCm"
-                  value={formData.lengthCm ?? 0}
+                  value={formData.lengthCm ?? ''}
+                  placeholder="Enter length"
                   onChange={handleNumberChange}
                   min="0"
                   step="0.01"
@@ -486,8 +488,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   name="widthCm"
-                  value={formData.widthCm ?? 0}
+                  value={formData.widthCm ?? ''}
+                  placeholder="Enter width"
                   onChange={handleNumberChange}
                   min="0"
                   step="0.01"
@@ -500,8 +504,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   name="heightCm"
-                  value={formData.heightCm ?? 0}
+                  value={formData.heightCm ?? ''}
+                  placeholder="Enter height"
                   onChange={handleNumberChange}
                   min="0"
                   step="0.01"
