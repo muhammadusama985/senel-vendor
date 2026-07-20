@@ -237,7 +237,30 @@ export const ProductDetail: React.FC = () => {
             </div>
             <div style={cardStyle}>
               <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('stockLabel', 'Stock')}</h3>
-              <p style={{ color: colors.textMuted }}>{product.stockQty} units</p>
+              {(() => {
+                // For variant products, derive the displayed stock from the
+                // sum of per-option stocks so the card shows the real current
+                // inventory even if product.stockQty is stale.
+                const variantStocks = Array.isArray(product.variants)
+                  ? product.variants.map((v: any) => Number(v?.stockQty || 0))
+                  : [];
+                const hasVariantStock = product.hasVariants && variantStocks.length > 0;
+                const realStock = hasVariantStock
+                  ? variantStocks.reduce((sum: number, n: number) => sum + n, 0)
+                  : Number(product.stockQty || 0);
+                return (
+                  <p
+                    style={{ color: colors.textMuted }}
+                    title={
+                      hasVariantStock
+                        ? "Sum of " + variantStocks.length + " option stock(s): " + variantStocks.join(" + ")
+                        : ""
+                    }
+                  >
+                    {realStock} units
+                  </p>
+                );
+              })()}
             </div>
             <div style={cardStyle}>
               <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('countryLabel', 'Country')}</h3>

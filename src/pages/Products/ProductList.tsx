@@ -206,6 +206,19 @@ export const ProductList: React.FC = () => {
               </tr>
             ) : (
               products.map((product) => (
+                (() => {
+                  // For variant products, derive the displayed stock from the
+                  // actual per-option stocks so the table can never show a
+                  // stale product.stockQty that no longer matches reality.
+                  const variantStocks = Array.isArray(product.variants)
+                    ? product.variants.map((v: any) => Number(v?.stockQty || 0))
+                    : [];
+                  const hasVariantStock = product.hasVariants && variantStocks.length > 0;
+                  const realStock = hasVariantStock
+                    ? variantStocks.reduce((sum: number, n: number) => sum + n, 0)
+                    : Number(product.stockQty || 0);
+
+                  return (
                 <tr key={product._id} style={{ borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.cardBg }}>
                   <td style={bodyCell(colors.text)}>
                     <img
@@ -219,12 +232,17 @@ export const ProductList: React.FC = () => {
                   <td style={bodyCell(colors.text)}>{formatCurrency(product.priceTiers[0]?.unitPrice || 0, product.currency)}</td>
                   <td style={bodyCell(colors.text)}>
                     <span
+                      title={
+                        hasVariantStock
+                          ? `Overall stock = sum of ${variantStocks.length} option stock(s): ${variantStocks.join(' + ')}`
+                          : ''
+                      }
                       style={{
-                        color: product.lowStockActive ? colors.accentRed : colors.text,
+                        color: realStock <= 0 ? colors.accentRed : (product.lowStockActive ? colors.accentRed : colors.text),
                         fontWeight: product.lowStockActive ? 'bold' : 'normal',
                       }}
                     >
-                      {product.stockQty}
+                      {realStock}
                       {product.lowStockActive && ' ⚠️'}
                     </span>
                   </td>
@@ -295,8 +313,10 @@ export const ProductList: React.FC = () => {
                     </div>
                   </td>
                 </tr>
+              );
+                })()
               ))
-            )}
+            }
           </tbody>
         </table>
       </div>
