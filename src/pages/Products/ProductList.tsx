@@ -205,20 +205,19 @@ export const ProductList: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              products.map((product) => (
-                (() => {
-                  // For variant products, derive the displayed stock from the
-                  // actual per-option stocks so the table can never show a
-                  // stale product.stockQty that no longer matches reality.
-                  const variantStocks = Array.isArray(product.variants)
-                    ? product.variants.map((v: any) => Number(v?.stockQty || 0))
-                    : [];
-                  const hasVariantStock = product.hasVariants && variantStocks.length > 0;
-                  const realStock = hasVariantStock
-                    ? variantStocks.reduce((sum: number, n: number) => sum + n, 0)
-                    : Number(product.stockQty || 0);
+              products.map((product) => {
+                // For variant products, derive the displayed stock from the
+                // actual per-option stocks so the table can never show a
+                // stale product.stockQty that no longer matches reality.
+                const variantStocks = Array.isArray(product.variants)
+                  ? product.variants.map((v: any) => Number(v?.stockQty || 0))
+                  : [];
+                const hasVariantStock = product.hasVariants && variantStocks.length > 0;
+                const realStock = hasVariantStock
+                  ? variantStocks.reduce((sum: number, n: number) => sum + n, 0)
+                  : Number(product.stockQty || 0);
 
-                  return (
+                return (
                 <tr key={product._id} style={{ borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.cardBg }}>
                   <td style={bodyCell(colors.text)}>
                     <img
@@ -313,10 +312,9 @@ export const ProductList: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              );
-                })()
-              ))
-            }
+                );
+              }
+            ))}
           </tbody>
         </table>
       </div>
