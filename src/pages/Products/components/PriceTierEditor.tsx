@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { PriceTier } from '../../../types/product';
 import { useI18n } from '../../../context/I18nContext';
@@ -12,6 +12,12 @@ interface PriceTierEditorProps {
 export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChange, moq }) => {
   const { colors } = useTheme();
   const { t } = useI18n();
+  // Track which tier rows have been interacted with so we don't shout
+  // "error" at the vendor mid-keystroke — the red border is only shown
+  // once the vendor leaves the field (onBlur). The full submit-time
+  // alerts (with messages) live in ProductForm.handleSubmit and are
+  // unchanged.
+  const [touched, setTouched] = useState<Record<number, boolean>>({});
 
   const addTier = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,19 +33,32 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
     e.stopPropagation();
     if (tiers.length <= 1) return;
     onChange(tiers.filter((_, i) => i !== index));
+    // Drop the touched flag for the removed row so indices stay clean.
+    setTouched((prev) => {
+      const next: Record<number, boolean> = {};
+      Object.keys(prev).forEach((k) => {
+        const ki = Number(k);
+        if (ki < index) next[ki] = prev[ki];
+        else if (ki > index) next[ki - 1] = prev[ki];
+      });
+      return next;
+    });
   };
 
   const updateTier = (index: number, field: keyof PriceTier, value: number) => {
     const newTiers = [...tiers];
     newTiers[index] = { ...newTiers[index], [field]: value };
-    if (field === 'minQty') {
-      // Skip the auto-sort when the field is 0 (empty/unfilled) so the
-      // vendor can type a new minQty without it jumping to the front.
-      if (value > 0) {
-        newTiers.sort((a, b) => a.minQty - b.minQty);
-      }
-    }
+    // Intentionally no auto-sort on minQty here. Sorting while the vendor
+    // is still typing makes the input row jump above/below on every
+    // keystroke, which makes the field impossible to edit. Sorting and
+    // validation are handled at submit time in ProductForm.handleSubmit
+    // (alerts on save). The red border below is only shown after the
+    // vendor leaves the field (onBlur) so it never appears mid-typing.
     onChange(newTiers);
+  };
+
+  const markTouched = (index: number) => {
+    setTouched((prev) => (prev[index] ? prev : { ...prev, [index]: true }));
   };
 
   return (
@@ -60,7 +79,16 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
           <div></div>
         </div>
 
-        {tiers.map((tier, index) => (
+        {tiers.map((tier, index) => {
+          // Only flag a row as "invalid" once the vendor has finished
+          // editing it (touched). This way the red border never pops up
+          // while they're still typing the number.
+          const isInvalid =
+            !!moq &&
+            !!touched[index] &&
+            ((index === 0 && (!tier.minQty || tier.minQty !== moq)) ||
+              (index > 0 && !!tier.minQty && tier.minQty < moq));
+          return (
           <div
             key={index}
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 50px', gap: '1rem', marginBottom: '0.5rem' }}
@@ -71,6 +99,7 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               value={tier.minQty || ""}
               placeholder="Enter min quantity"
               onChange={(e) => updateTier(index, 'minQty', parseInt(e.target.value, 10) || 0)}
+              onBlur={() => markTouched(index)}
               min="0"
               title={
                 index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
@@ -81,22 +110,12 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               }
               style={{
                 padding: '0.5rem',
-                border:
-                  index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
-                    ? "1px solid #dc2626"
-                    : moq && tier.minQty && tier.minQty < moq
-                      ? "1px solid #dc2626"
-                      : `1px solid ${colors.border}`,
+                border: isInvalid ? "1px solid #dc2626" : `1px solid ${colors.border}`,
                 borderRadius: '4px',
                 width: '100%',
                 backgroundColor: colors.inputBg,
                 color: colors.text,
-                boxShadow:
-                  index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
-                    ? "0 0 0 1px #dc2626"
-                    : moq && tier.minQty && tier.minQty < moq
-                      ? "0 0 0 1px #dc2626"
-                      : undefined,
+                boxShadow: isInvalid ? "0 0 0 1px #dc2626" : undefined,
               }}
             />
             <input
@@ -132,7 +151,8 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               x
             </button>
           </div>
-        ))}
+          );
+        })}
 
         <button
           onClick={addTier}
