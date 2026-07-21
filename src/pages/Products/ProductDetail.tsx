@@ -303,7 +303,13 @@ export const ProductDetail: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {product.variants.map((variant, index) => (
+                    {/* Only show variants that combine multiple options
+                        (e.g. Color + Size). Single-option variants like
+                        "Color only" or "Size only" are hidden from the
+                        variants table as requested. */}
+                    {product.variants
+                      .filter((variant) => Object.keys(variant.attributes || {}).length > 1)
+                      .map((variant, index) => (
                       <tr key={index}>
                         <td style={{ padding: '0.5rem', color: colors.textMuted }}>{variant.sku}</td>
                         <td style={{ padding: '0.5rem', color: colors.textMuted }}>
