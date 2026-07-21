@@ -140,6 +140,33 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       alert(t('failedUpdateProduct', 'Each price tier must have a valid minimum quantity and unit price.'));
       return;
     }
+    // Every tier's minQty must be at least the product MOQ (any tier whose
+    // minQty is below MOQ would mean the customer can never order the
+    // advertised bulk quantity at that price).
+    if (formData.moq > 0 && sortedTiers.some((tier) => tier.minQty > 0 && tier.minQty < formData.moq)) {
+      alert('Each price tier minimum quantity must be at or above the MOQ (' + formData.moq + ' units).');
+      return;
+    }
+
+    // Sequential ordering rules for the tiers (left to right after sort):
+    //  1. The lowest tier (sorted first) must have minQty equal to the
+    //     product MOQ — this is the entry point the customer can reach.
+    //  2. Every subsequent tier must have a strictly larger minQty than
+    //     the previous one, so the ladder never overlaps and the customer
+    //     always moves "up" into the next price break.
+    if (formData.moq > 0 && sortedTiers.length > 0) {
+      const firstTier = sortedTiers[0];
+      if (firstTier.minQty !== formData.moq) {
+        alert('The first price tier minimum quantity must be exactly the MOQ (' + formData.moq + ' units).');
+        return;
+      }
+      for (let i = 1; i < sortedTiers.length; i++) {
+        if (sortedTiers[i].minQty <= sortedTiers[i - 1].minQty) {
+          alert('Each price tier must have a higher minimum quantity than the one before it.');
+          return;
+        }
+      }
+    }
 
     const duplicateTierQty = sortedTiers.find((tier, index) => index > 0 && tier.minQty === sortedTiers[index - 1].minQty);
     if (duplicateTierQty) {

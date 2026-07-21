@@ -350,6 +350,20 @@ export const VariantEditor: React.FC<VariantEditorProps> = ({
       stockQty: patch.stockQty ?? existing?.stockQty ?? 0,
       imageUrls: existing?.imageUrls || [],
     };
+    // Update the existing combination row in place (so we don't end up
+    // with two entries that share the same SKU after an Edit + Save
+    // round), otherwise append the new combination row.
+    if (existing) {
+      return variants.map((v) => {
+        const vKeys = Object.keys(v.attributes || {});
+        const isSameCombination =
+          vKeys.length === titles.length &&
+          titles.every(
+            (t) => String(v.attributes?.[t] || '') === String(combo[t] || ''),
+          );
+        return isSameCombination ? combinationVariant : v;
+      });
+    }
     return [...variants, combinationVariant];
   };
 

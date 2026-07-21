@@ -73,22 +73,30 @@ export const PriceTierEditor: React.FC<PriceTierEditorProps> = ({ tiers, onChang
               onChange={(e) => updateTier(index, 'minQty', parseInt(e.target.value, 10) || 0)}
               min="0"
               title={
-                index === 0 && moq && tier.minQty > moq
-                  ? `First tier min quantity (${tier.minQty}) cannot exceed MOQ (${moq})`
-                  : ""
+                index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
+                  ? `The first tier minimum quantity must be exactly the MOQ (${moq})`
+                  : moq && tier.minQty && tier.minQty < moq
+                    ? `Tier min quantity (${tier.minQty}) must be at least the MOQ (${moq})`
+                    : ""
               }
               style={{
                 padding: '0.5rem',
-                border: index === 0 && moq && tier.minQty > moq
-                  ? "1px solid #dc2626"
-                  : `1px solid ${colors.border}`,
+                border:
+                  index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
+                    ? "1px solid #dc2626"
+                    : moq && tier.minQty && tier.minQty < moq
+                      ? "1px solid #dc2626"
+                      : `1px solid ${colors.border}`,
                 borderRadius: '4px',
                 width: '100%',
                 backgroundColor: colors.inputBg,
                 color: colors.text,
-                boxShadow: index === 0 && moq && tier.minQty > moq
-                  ? "0 0 0 1px #dc2626"
-                  : undefined,
+                boxShadow:
+                  index === 0 && moq && (!tier.minQty || tier.minQty !== moq)
+                    ? "0 0 0 1px #dc2626"
+                    : moq && tier.minQty && tier.minQty < moq
+                      ? "0 0 0 1px #dc2626"
+                      : undefined,
               }}
             />
             <input
