@@ -303,13 +303,19 @@ export const ProductDetail: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Only show variants that combine multiple options
-                        (e.g. Color + Size). Single-option variants like
-                        "Color only" or "Size only" are hidden from the
-                        variants table as requested. */}
-                    {product.variants
-                      .filter((variant) => Object.keys(variant.attributes || {}).length > 1)
-                      .map((variant, index) => (
+                    {/* Show multi-attr combinations (e.g. Color + Size) when
+                        any exist. If the product has ONLY single-attribute
+                        variants (e.g. only "Color" with Red/Blue/Green),
+                        fall back to showing every variant so the table
+                        still displays the per-option stock. */}
+                    {(product.variants.some(
+                        (v) => Object.keys(v.attributes || {}).length > 1
+                      )
+                      ? product.variants.filter(
+                          (variant) => Object.keys(variant.attributes || {}).length > 1
+                        )
+                      : product.variants
+                    ).map((variant, index) => (
                       <tr key={index}>
                         <td style={{ padding: '0.5rem', color: colors.textMuted }}>{variant.sku}</td>
                         <td style={{ padding: '0.5rem', color: colors.textMuted }}>
@@ -331,7 +337,14 @@ export const ProductDetail: React.FC = () => {
                         {t('overallStockLabel', 'Overall stock')}:
                       </td>
                       <td style={{ padding: '0.5rem', color: colors.text, fontWeight: 600 }}>
-                        {product.variants.reduce((sum, v) => sum + Number(v.stockQty || 0), 0)}
+                        {(product.variants.some(
+                            (v) => Object.keys(v.attributes || {}).length > 1
+                          )
+                          ? product.variants.filter(
+                              (v) => Object.keys(v.attributes || {}).length > 1
+                            )
+                          : product.variants
+                        ).reduce((sum, v) => sum + Number(v.stockQty || 0), 0)}
                       </td>
                     </tr>
                   </tfoot>
