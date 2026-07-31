@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
 import { Product } from '../../types/product';
 import { formatCurrency } from '../../utils/formatters';
+import { sanitizeHtml } from './components/RichTextEditor';
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -215,12 +216,17 @@ export const ProductDetail: React.FC = () => {
                 paddingRight: '0.5rem',
               }}
             >
-              <p
-                className="vendor-product-description-text"
-                style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0 }}
-              >
-                {product.description || t('noDescriptionProvided', 'No description provided.')}
-              </p>
+              {product.description ? (
+                <div
+                  className="vendor-product-description-text"
+                  style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0 }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+                />
+              ) : (
+                <p className="vendor-product-description-text" style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0 }}>
+                  {t('noDescriptionProvided', 'No description provided.')}
+                </p>
+              )}
             </div>
           </div>
 

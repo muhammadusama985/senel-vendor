@@ -6,6 +6,7 @@ import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
 import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
+import { RichTextEditor } from './RichTextEditor';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -267,16 +268,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
                 {t('descriptionLabel')}
               </label>
-              <textarea
-                name="description"
+              <RichTextEditor
                 value={formData.description}
-                onChange={handleChange}
-                rows={5}
-                style={{
-                  ...inputStyle,
-                  resize: 'vertical',
-                }}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
+                colors={colors}
+                minHeight="132px"
               />
+
+
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
