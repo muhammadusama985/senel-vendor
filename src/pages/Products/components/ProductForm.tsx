@@ -459,7 +459,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   setFormData((prev) => ({
                     ...prev,
                     combinationOffsets:
-                      typeof v === 'function' ? v(prev.combinationOffsets) : v,
+                      typeof v === 'function' ? (prev.combinationOffsets) : v,
                   }))
                 }
                 minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}

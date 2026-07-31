@@ -113,6 +113,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
         ))}
       </div>
       <div
+        className="rich-text-editor-content"
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
