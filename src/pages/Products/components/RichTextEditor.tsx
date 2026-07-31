@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 
 interface RichTextEditorProps {
   value: string;
@@ -52,11 +52,13 @@ const TOOLBAR_BUTTONS = [
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, colors, minHeight = '132px' }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastValueRef = useRef(value);
+  const initializedRef = useRef(false);
 
-  useEffect(() => {
-    if (editorRef.current && value !== lastValueRef.current) {
+  useLayoutEffect(() => {
+    if (editorRef.current && (!initializedRef.current || value !== lastValueRef.current)) {
       editorRef.current.innerHTML = sanitizeHtml(value);
       lastValueRef.current = value;
+      initializedRef.current = true;
     }
   }, [value]);
 
@@ -121,7 +123,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
           lastValueRef.current = html;
           onChange(html);
         }}
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }}
         style={{
           minHeight,
           padding: '0.75rem',
