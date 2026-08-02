@@ -46,6 +46,8 @@ export const CustomProductionDetail: React.FC = () => {
   const [validDays, setValidDays] = useState<number | ''>(14);
   const [quotationMessage, setQuotationMessage] = useState('');
   const [reason, setReason] = useState('');
+  const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -81,15 +83,39 @@ export const CustomProductionDetail: React.FC = () => {
         termsAndConditions,
         validDays,
         message: quotationMessage,
+        attachments: attachmentUrls.map((u) => ({ url: u, filename: u.split('/').pop() })),
       });
       setRfq(r.data.rfq);
       toast.success('Quotation sent');
       setQuotationMessage('');
+      setAttachmentUrls([]);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to send quotation');
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploadingAttachment(true);
+    try {
+      const fd = new FormData();
+      fd.append('attachment', f);
+      const r = await api.post('/attachments/upload', fd);
+      setAttachmentUrls((prev) => [...prev, r.data.url]);
+      toast.success('Attachment uploaded');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Upload failed');
+    } finally {
+      setUploadingAttachment(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (url: string) => {
+    setAttachmentUrls((prev) => prev.filter((u) => u !== url));
   };
 
   const reject = async () => {
@@ -178,26 +204,6 @@ export const CustomProductionDetail: React.FC = () => {
           marginBottom: '1rem',
         }}
       >
-        {(() => {
-          const _productImage = resolveMediaUrl(rfq.productSnapshot?.imageUrl);
-          if (!_productImage) return null;
-          return (
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-              <img
-                src={_productImage}
-                alt={rfq.productSnapshot?.title || 'Product'}
-                style={{
-                  width: 80,
-                  height: 80,
-                  objectFit: 'cover',
-                  borderRadius: 8,
-                  border: `1px solid ${colors.border}`,
-                  flexShrink: 0,
-                }}
-              />
-            </div>
-          );
-        })()}
         <p>
           <strong>Product:</strong> {rfq.productSnapshot?.title}
         </p>
@@ -307,6 +313,36 @@ export const CustomProductionDetail: React.FC = () => {
               <span style={{ color: colors.textMuted, fontSize: '0.85rem' }}>{safeDate(m.createdAt)}</span>
             </div>
             {m.message && <p style={{ margin: '0.25rem 0', whiteSpace: 'pre-wrap' }}>{m.message}</p>}
+            {m.attachments && m.attachments.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {m.attachments.map((a, idx) => {
+                  const _url = resolveMediaUrl(a.url);
+                  if (!_url) return null;
+                  const _isImage = (a.mimeType ? a.mimeType.startsWith('image/') : true) && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(_url);
+                  return (
+                    <a
+                      key={idx}
+                      href={_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'block', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg }}
+                    >
+                      {_isImage ? (
+                        <img
+                          src={_url}
+                          alt={a.filename || a.url}
+                          style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : (
+                        <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
+                          {a.filename || a.url}
+                        </div>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -468,6 +504,53 @@ export const CustomProductionDetail: React.FC = () => {
                 boxSizing: 'border-box',
               }}
             />
+          </div>
+          <div style={{ marginTop: '0.75rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.25rem', color: colors.textMuted }}>
+              Attachments (images, optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAttachment}
+              disabled={uploadingAttachment}
+            />
+            {attachmentUrls.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {attachmentUrls.map((u) => {
+                  const _url = resolveMediaUrl(u);
+                  if (!_url) return null;
+                  const _isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(_url);
+                  return (
+                    <div
+                      key={u}
+                      style={{ position: 'relative', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg }}
+                    >
+                      <a href={_url} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
+                        {_isImage ? (
+                          <img
+                            src={_url}
+                            alt={u.split('/').pop()}
+                            style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <div style={{ padding: '0.5rem', fontSize: '0.8rem', color: colors.text, wordBreak: 'break-all' }}>
+                            {u.split('/').pop()}
+                          </div>
+                        )}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(u)}
+                        style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: 4, padding: '0.15rem 0.4rem', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             <button type="button" disabled={busy} onClick={sendQuotation} style={{background:"var(--button-gradient)",color:"#ffffff",border:"none",boxShadow:"0 10px 24px rgba(91, 46, 255, 0.22)",padding:"0.55rem 1rem",borderRadius:"8px",cursor:"pointer",fontWeight:600}}>

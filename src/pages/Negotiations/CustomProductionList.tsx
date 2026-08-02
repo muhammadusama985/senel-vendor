@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
-import { resolveMediaUrl } from '../../utils/media';
 
 interface RFQ {
   _id: string;
@@ -91,61 +90,13 @@ export const CustomProductionList: React.FC = () => {
         <p style={{ color: colors.textMuted }}>No custom production requests yet.</p>
       ) : (
         <div>
-          {items.map((r) => {
-            const productImage = resolveMediaUrl(r.productSnapshot?.imageUrl);
-            return (
+          {items.map((r) => (
             <div key={r._id} style={card}>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                {productImage ? (
-                  <img
-                    src={productImage}
-                    alt={r.productSnapshot?.title || 'Product'}
-                    style={{
-                      width: 56,
-                      height: 56,
-                      objectFit: 'cover',
-                      borderRadius: 8,
-                      border: `1px solid ${colors.border}`,
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 8,
-                      border: `1px solid ${colors.border}`,
-                      background: colors.inputBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: colors.textMuted,
-                      fontSize: '0.7rem',
-                      flexShrink: 0,
-                    }}
-                  >
-                    No image
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <strong style={{ color: colors.text }}>
-                      {r.productSnapshot?.title || 'Product'}
-                    </strong>
-                    <span
-                      style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: 999,
-                        background: colors.buttonGradient,
-                        color: '#fff',
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {r.status}
-                    </span>
-                  </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ color: colors.text }}>
+                    {r.productSnapshot?.title || 'Product'}
+                  </strong>
                   <p style={{ margin: '0.25rem 0', color: colors.textMuted }}>
                     {r.buyerSnapshot?.companyName || r.buyerSnapshot?.email || 'Buyer'} • {r.qty} units
                   </p>
@@ -158,6 +109,18 @@ export const CustomProductionList: React.FC = () => {
                     Valid until {safeDate(r.validUntil)}
                   </p>
                 </div>
+                <span
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: 999,
+                    background: colors.buttonGradient,
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {r.status}
+                </span>
               </div>
               <div style={{ marginTop: '0.75rem' }}>
               <button
@@ -178,8 +141,7 @@ export const CustomProductionList: React.FC = () => {
               </button>
               </div>
             </div>
-            );
-          })}
+          ))}
         </div>
       )}
     </div>
