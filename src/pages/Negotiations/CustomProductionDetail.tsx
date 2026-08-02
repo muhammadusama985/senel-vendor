@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
+import { resolveMediaUrl } from '../../utils/media';
 
 interface RFQ {
   _id: string;
@@ -177,6 +178,26 @@ export const CustomProductionDetail: React.FC = () => {
           marginBottom: '1rem',
         }}
       >
+        {(() => {
+          const _productImage = resolveMediaUrl(rfq.productSnapshot?.imageUrl);
+          if (!_productImage) return null;
+          return (
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <img
+                src={_productImage}
+                alt={rfq.productSnapshot?.title || 'Product'}
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  flexShrink: 0,
+                }}
+              />
+            </div>
+          );
+        })()}
         <p>
           <strong>Product:</strong> {rfq.productSnapshot?.title}
         </p>
@@ -203,15 +224,34 @@ export const CustomProductionDetail: React.FC = () => {
         {rfq.attachments && rfq.attachments.length > 0 && (
           <>
             <h4>Attachments</h4>
-            <ul>
-              {rfq.attachments.map((a, idx) => (
-                <li key={idx}>
-                  <a href={a.url} target="_blank" rel="noreferrer">
-                    {a.filename || a.url}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.5rem' }}>
+              {rfq.attachments.map((a, idx) => {
+                const _url = resolveMediaUrl(a.url);
+                if (!_url) return null;
+                const _isImage = (a.mimeType ? a.mimeType.startsWith('image/') : true) && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(_url);
+                return (
+                  <a
+                    key={idx}
+                    href={_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ display: 'block', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg }}
+                  >
+                    {_isImage ? (
+                      <img
+                        src={_url}
+                        alt={a.filename || a.url}
+                        style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
+                      />
+                    ) : (
+                      <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
+                        {a.filename || a.url}
+                      </div>
+                    )}
                   </a>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           </>
         )}
         {rfq.shippingAddress && (

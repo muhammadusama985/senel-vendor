@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
+import { resolveMediaUrl } from '../../utils/media';
 
 interface BulkOffer {
   _id: string;
@@ -141,6 +142,26 @@ export const BulkOfferDetail: React.FC = () => {
       <h2>Bulk Offer</h2>
 
       <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '1rem', marginBottom: '1rem' }}>
+        {(() => {
+          const _productImage = resolveMediaUrl(offer.productSnapshot?.imageUrl);
+          if (!_productImage) return null;
+          return (
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <img
+                src={_productImage}
+                alt={offer.productSnapshot?.title || 'Product'}
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  flexShrink: 0,
+                }}
+              />
+            </div>
+          );
+        })()}
         <p>
           <strong>Product:</strong> {offer.productSnapshot?.title}
         </p>

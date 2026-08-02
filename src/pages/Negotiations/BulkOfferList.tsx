@@ -4,6 +4,7 @@ import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
+import { resolveMediaUrl } from '../../utils/media';
 
 interface BulkOffer {
   _id: string;
@@ -92,13 +93,61 @@ export const BulkOfferList: React.FC = () => {
         <p style={{ color: colors.textMuted }}>No bulk offers yet.</p>
       ) : (
         <div>
-          {items.map((o) => (
+          {items.map((o) => {
+            const productImage = resolveMediaUrl(o.productSnapshot?.imageUrl);
+            return (
             <div key={o._id} style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ color: colors.text }}>
-                    {o.productSnapshot?.title || 'Product'}
-                  </strong>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                {productImage ? (
+                  <img
+                    src={productImage}
+                    alt={o.productSnapshot?.title || 'Product'}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: colors.textMuted,
+                      fontSize: '0.7rem',
+                      flexShrink: 0,
+                    }}
+                  >
+                    No image
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <strong style={{ color: colors.text }}>
+                      {o.productSnapshot?.title || 'Product'}
+                    </strong>
+                    <span
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: 999,
+                        background: colors.buttonGradient,
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {o.status}
+                    </span>
+                  </div>
                   <p style={{ margin: '0.25rem 0', color: colors.textMuted }}>
                     {o.buyerSnapshot?.companyName || o.buyerSnapshot?.email || 'Buyer'} •{' '}
                     {o.currentQty} units @ {o.currentUnitPrice} {o.currency}
@@ -108,18 +157,6 @@ export const BulkOfferList: React.FC = () => {
                     {safeDate(o.validUntil)}
                   </p>
                 </div>
-                <span
-                  style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: 999,
-                    background: colors.buttonGradient,
-                    color: '#fff',
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {o.status}
-                </span>
               </div>
               <div style={{ marginTop: '0.75rem' }}>
               <button
@@ -140,7 +177,8 @@ export const BulkOfferList: React.FC = () => {
               </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
