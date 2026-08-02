@@ -8,6 +8,7 @@ import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
 import api from '../../../api/client';
 import toast from 'react-hot-toast';
+import { resolveMediaUrl } from '../../../utils/media';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -88,24 +89,46 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const handleDescriptionImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setUploadingDescImg(true);
     try {
-      const fd = new FormData();
-      fd.append('attachment', f);
-      const r = await api.post('/attachments/upload', fd);
-      const url: string = r.data.url;
-      const alt = (f.name || 'image').replace(/\.[^.]+$/, '');
-      const markdown = `\n![${alt}](${url})\n`;
-      insertAtDescriptionCursor(markdown);
-      toast.success('Image inserted into description');
+      // Upload each file sequentially and insert each one at the cursor so
+      // multi-file picks produce a row of inline images in the description.
+      let inserted = 0;
+      for (const f of files) {
+        const fd = new FormData();
+        fd.append('attachment', f);
+        const r = await api.post('/attachments/upload', fd);
+        const url: string = r.data.url;
+        const alt = (f.name || 'image').replace(/\.[^.]+$/, '');
+        const markdown = `\n![${alt}](${url})\n`;
+        insertAtDescriptionCursor(markdown);
+        inserted += 1;
+      }
+      toast.success(
+        inserted === 1
+          ? 'Image inserted into description'
+          : `${inserted} images inserted into description`
+      );
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Image upload failed');
     } finally {
       setUploadingDescImg(false);
       if (descriptionImageFileRef.current) descriptionImageFileRef.current.value = '';
     }
+  };
+
+  // Extract image URLs from the description markdown so the vendor can
+  // preview the images embedded in the description.
+  const extractDescriptionImageUrls = (text: string): string[] => {
+    const urls: string[] = [];
+    const regex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(text || '')) !== null) {
+      urls.push(m[2]);
+    }
+    return urls;
   };
 
   useEffect(() => {
@@ -325,6 +348,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     ref={descriptionImageFileRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     style={{ display: 'none' }}
                     onChange={handleDescriptionImageChange}
                     disabled={uploadingDescImg}
@@ -358,6 +382,29 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   resize: 'vertical',
                 }}
               />
+              {extractDescriptionImageUrls(formData.description).length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {extractDescriptionImageUrls(formData.description).map((url, idx) => {
+                    const fullUrl = resolveMediaUrl(url);
+                    if (!fullUrl) return null;
+                    return (
+                      <img
+                        key={idx}
+                        src={fullUrl}
+                        alt=""
+                        style={{
+                          width: 80,
+                          height: 80,
+                          objectFit: 'cover',
+                          borderRadius: 6,
+                          border: `1px solid ${colors.border}`,
+                          background: colors.inputBg,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
