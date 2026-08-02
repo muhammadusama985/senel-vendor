@@ -4,6 +4,7 @@ import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
 import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
+import { RichTextEditor, RichTextEditorHandle } from './RichTextEditor';
 import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
 import api from '../../../api/client';
@@ -60,31 +61,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [showRequestCategoryModal, setShowRequestCategoryModal] = useState(false);
 
   // ----- Description image insertion (vendor side) -----
-  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+  const richTextEditorRef = useRef<RichTextEditorHandle | null>(null);
   const descriptionImageFileRef = useRef<HTMLInputElement | null>(null);
   const [uploadingDescImg, setUploadingDescImg] = useState(false);
-
-  const insertAtDescriptionCursor = (markdown: string) => {
-    const ta = descriptionRef.current;
-    if (!ta) {
-      // Fallback: append at end
-      setFormData((prev) => ({ ...prev, description: (prev.description || '') + markdown }));
-      return;
-    }
-    const start = ta.selectionStart ?? (ta.value || '').length;
-    const end = ta.selectionEnd ?? start;
-    const value = ta.value || '';
-    const next = value.substring(0, start) + markdown + value.substring(end);
-    setFormData((prev) => ({ ...prev, description: next }));
-    // Restore caret position after re-render
-    requestAnimationFrame(() => {
-      const el = descriptionRef.current;
-      if (!el) return;
-      el.focus();
-      const caret = start + markdown.length;
-      el.setSelectionRange(caret, caret);
-    });
-  };
 
   const handleDescriptionImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -93,8 +72,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!files.length) return;
     setUploadingDescImg(true);
     try {
-      // Upload each file sequentially and insert each one at the cursor so
-      // multi-file picks produce a row of inline images in the description.
+      // Upload each file sequentially and drop each one into the
+      // rich text editor at the cursor (WYSIWYG <img>).
       let inserted = 0;
       for (const f of files) {
         const fd = new FormData();
@@ -102,8 +81,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         const r = await api.post('/attachments/upload', fd);
         const url: string = r.data.url;
         const alt = (f.name || 'image').replace(/\.[^.]+$/, '');
-        const markdown = `\n![${alt}](${url})\n`;
-        insertAtDescriptionCursor(markdown);
+        richTextEditorRef.current?.insertImage(url, alt);
         inserted += 1;
       }
       toast.success(
@@ -119,14 +97,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  // Extract image URLs from the description markdown so the vendor can
-  // preview the images embedded in the description.
+  // Extract every image URL embedded in the description so the vendor can
+  // preview the images inline. Matches BOTH legacy markdown `![alt](url)`
+  // references AND the WYSIWYG <img src="..."> tags that the rich text
+  // editor now produces.
   const extractDescriptionImageUrls = (text: string): string[] => {
     const urls: string[] = [];
-    const regex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    if (!text) return urls;
+    const md = /!\[([^\]]*)\]\(([^)]+)\)/g;
     let m: RegExpExecArray | null;
-    while ((m = regex.exec(text || '')) !== null) {
+    while ((m = md.exec(text)) !== null) {
       urls.push(m[2]);
+    }
+    const img = /<img[^>]+src=["\']([^"\']+)["\'][^>]*>/g;
+    while ((m = img.exec(text)) !== null) {
+      urls.push(m[1]);
     }
     return urls;
   };
@@ -371,16 +356,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </button>
                 </div>
               </div>
-              <textarea
-                ref={descriptionRef}
-                name="description"
+              <RichTextEditor
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(next) => setFormData((prev) => ({ ...prev, description: next }))}
+                editorRef={richTextEditorRef}
                 rows={5}
-                style={{
-                  ...inputStyle,
-                  resize: 'vertical',
-                }}
+                placeholder=""
               />
               {extractDescriptionImageUrls(formData.description).length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
