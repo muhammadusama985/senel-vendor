@@ -37,12 +37,12 @@ export const CustomProductionDetail: React.FC = () => {
   const [busy, setBusy] = useState(false);
 
   // Quotation form
-  const [unitPrice, setUnitPrice] = useState(0);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [leadTimeDays, setLeadTimeDays] = useState(0);
+  const [unitPrice, setUnitPrice] = useState<number | ''>(0);
+  const [totalPrice, setTotalPrice] = useState<number | ''>(0);
+  const [leadTimeDays, setLeadTimeDays] = useState<number | ''>(0);
   const [productionNotes, setProductionNotes] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
-  const [validDays, setValidDays] = useState(14);
+  const [validDays, setValidDays] = useState<number | ''>(14);
   const [quotationMessage, setQuotationMessage] = useState('');
   const [reason, setReason] = useState('');
 
@@ -69,7 +69,7 @@ export const CustomProductionDetail: React.FC = () => {
   }, [id]);
 
   const sendQuotation = async () => {
-    if (unitPrice < 0) return toast.error('Unit price cannot be negative');
+    if (unitPrice !== '' && unitPrice < 0) return toast.error('Unit price cannot be negative');
     setBusy(true);
     try {
       const r = await api.post(`/custom-production/vendor/${id}/quotation`, {
@@ -293,7 +293,12 @@ export const CustomProductionDetail: React.FC = () => {
                 step="0.01"
                 value={unitPrice}
                 onChange={(e) => {
-                  const v = parseFloat(e.target.value) || 0;
+                  if (e.target.value === '') {
+                    setUnitPrice('');
+                    setTotalPrice('');
+                    return;
+                  }
+                  const v = Math.max(0, parseFloat(e.target.value));
                   setUnitPrice(v);
                   setTotalPrice(Number((v * rfq.qty).toFixed(2)));
                 }}
@@ -316,7 +321,7 @@ export const CustomProductionDetail: React.FC = () => {
                 min={0}
                 step="0.01"
                 value={totalPrice}
-                onChange={(e) => setTotalPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setTotalPrice(e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
@@ -335,7 +340,7 @@ export const CustomProductionDetail: React.FC = () => {
                 type="number"
                 min={0}
                 value={leadTimeDays}
-                onChange={(e) => setLeadTimeDays(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => setLeadTimeDays(e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
@@ -355,7 +360,7 @@ export const CustomProductionDetail: React.FC = () => {
                 min={1}
                 max={180}
                 value={validDays}
-                onChange={(e) => setValidDays(parseInt(e.target.value, 10) || 14)}
+                onChange={(e) => setValidDays(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',

@@ -34,10 +34,10 @@ export const BulkOfferDetail: React.FC = () => {
   const [offer, setOffer] = useState<BulkOffer | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [qty, setQty] = useState(0);
-  const [unitPrice, setUnitPrice] = useState(0);
+  const [qty, setQty] = useState<number | ''>(0);
+  const [unitPrice, setUnitPrice] = useState<number | ''>(0);
   const [notes, setNotes] = useState('');
-  const [validDays, setValidDays] = useState(7);
+  const [validDays, setValidDays] = useState<number | ''>(7);
   const [reason, setReason] = useState('');
 
   const load = async () => {
@@ -214,7 +214,7 @@ export const BulkOfferDetail: React.FC = () => {
                 type="number"
                 min={1}
                 value={qty}
-                onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
+                onChange={(e) => setQty(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
@@ -234,7 +234,7 @@ export const BulkOfferDetail: React.FC = () => {
                 min={0}
                 step="0.01"
                 value={unitPrice}
-                onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setUnitPrice(e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',
@@ -254,7 +254,7 @@ export const BulkOfferDetail: React.FC = () => {
                 min={1}
                 max={90}
                 value={validDays}
-                onChange={(e) => setValidDays(parseInt(e.target.value, 10) || 7)}
+                onChange={(e) => setValidDays(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
                 style={{
                   width: '100%',
                   padding: '0.5rem',

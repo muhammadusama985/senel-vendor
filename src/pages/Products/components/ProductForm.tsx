@@ -6,7 +6,6 @@ import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
 import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
-import { RichTextEditor } from './RichTextEditor';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -268,14 +267,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
                 {t('descriptionLabel')}
               </label>
-              <RichTextEditor
+              <textarea
+                name="description"
                 value={formData.description}
-                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
-                colors={colors}
-                minHeight="132px"
+                onChange={handleChange}
+                rows={5}
+                style={{
+                  ...inputStyle,
+                  resize: 'vertical',
+                }}
               />
-
-
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -459,7 +460,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   setFormData((prev) => ({
                     ...prev,
                     combinationOffsets:
-                      typeof v === 'function' ? (prev.combinationOffsets) : v,
+                      typeof v === 'function' ? v(prev.combinationOffsets) : v,
                   }))
                 }
                 minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}
