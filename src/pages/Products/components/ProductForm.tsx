@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
@@ -6,6 +6,8 @@ import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
 import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
+import api from '../../../api/client';
+import toast from 'react-hot-toast';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -55,6 +57,56 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const [uploading, setUploading] = useState(false);
   const [showRequestCategoryModal, setShowRequestCategoryModal] = useState(false);
+
+  // ----- Description image insertion (vendor side) -----
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+  const descriptionImageFileRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingDescImg, setUploadingDescImg] = useState(false);
+
+  const insertAtDescriptionCursor = (markdown: string) => {
+    const ta = descriptionRef.current;
+    if (!ta) {
+      // Fallback: append at end
+      setFormData((prev) => ({ ...prev, description: (prev.description || '') + markdown }));
+      return;
+    }
+    const start = ta.selectionStart ?? (ta.value || '').length;
+    const end = ta.selectionEnd ?? start;
+    const value = ta.value || '';
+    const next = value.substring(0, start) + markdown + value.substring(end);
+    setFormData((prev) => ({ ...prev, description: next }));
+    // Restore caret position after re-render
+    requestAnimationFrame(() => {
+      const el = descriptionRef.current;
+      if (!el) return;
+      el.focus();
+      const caret = start + markdown.length;
+      el.setSelectionRange(caret, caret);
+    });
+  };
+
+  const handleDescriptionImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploadingDescImg(true);
+    try {
+      const fd = new FormData();
+      fd.append('attachment', f);
+      const r = await api.post('/attachments/upload', fd);
+      const url: string = r.data.url;
+      const alt = (f.name || 'image').replace(/\.[^.]+$/, '');
+      const markdown = `\n![${alt}](${url})\n`;
+      insertAtDescriptionCursor(markdown);
+      toast.success('Image inserted into description');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Image upload failed');
+    } finally {
+      setUploadingDescImg(false);
+      if (descriptionImageFileRef.current) descriptionImageFileRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -264,10 +316,39 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
-                {t('descriptionLabel')}
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', color: colors.text }}>
+                  {t('descriptionLabel')}
+                </label>
+                <div>
+                  <input
+                    ref={descriptionImageFileRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleDescriptionImageChange}
+                    disabled={uploadingDescImg}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => descriptionImageFileRef.current?.click()}
+                    disabled={uploadingDescImg}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 6,
+                      background: colors.cardBg,
+                      color: colors.text,
+                      cursor: uploadingDescImg ? 'wait' : 'pointer',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    {uploadingDescImg ? 'Uploading...' : '+ Insert Image'}
+                  </button>
+                </div>
+              </div>
               <textarea
+                ref={descriptionRef}
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
