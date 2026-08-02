@@ -80,15 +80,24 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           if (!el) return;
           el.focus();
 
+          // Build the <img> WITHOUT setting src / alt yet. Setting
+          // img.src before the element is attached to a document is a
+          // known browser quirk where the engine inserts the URL as a
+          // text node next to the image. We attach first, then set
+          // attributes so only the visual <img> ends up in the
+          // contentEditable area -- no URL or alt text leaking out.
           const img = document.createElement('img');
-          img.src = url;
-          img.alt = alt || 'image';
           img.className = 'rte-embedded-image';
           img.style.maxWidth = '100%';
           img.style.height = 'auto';
           img.style.display = 'block';
           img.style.margin = '0.5rem 0';
           img.style.borderRadius = '4px';
+          img.setAttribute('loading', 'lazy');
+          // Use a generic alt (no URL, no filename) so the description
+          // never shows the image address as visible text on hover or
+          // when the image fails to load.
+          img.setAttribute('alt', '');
 
           const selection = window.getSelection();
           if (selection && selection.rangeCount > 0) {
@@ -98,6 +107,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             if (el.contains(range.commonAncestorContainer)) {
               range.deleteContents();
               range.insertNode(img);
+              // NOW attach src (after the image is in the DOM).
+              img.setAttribute('src', url);
               // Insert a trailing <br> so the caret lands on a new line
               // after the image instead of glued to the right edge.
               const br = document.createElement('br');
@@ -111,6 +122,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             }
           }
           el.appendChild(img);
+          img.setAttribute('src', url);
           el.appendChild(document.createElement('br'));
           syncToState();
         },
