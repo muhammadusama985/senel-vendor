@@ -4,7 +4,7 @@ import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
 import { VariantEditor } from './VariantEditor';
 import { ImageUpload } from '../../../components/common/ImageUpload';
-import { RichTextEditor, RichTextEditorHandle } from './RichTextEditor';
+import { RichTextEditor } from './RichTextEditor';
 import { useI18n } from '../../../context/I18nContext';
 import { RequestCategoryModal } from '../../../components/common/RequestCategoryModal';
 import api from '../../../api/client';
@@ -61,8 +61,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const [showRequestCategoryModal, setShowRequestCategoryModal] = useState(false);
 
-  // ----- Description image insertion (vendor side) -----
-  const richTextEditorRef = useRef<RichTextEditorHandle | null>(null);
+  // ----- Description image upload (vendor side) -----
+  // The image upload here is fully standalone: it is NOT coupled with the
+  // rich text editor. Images are saved into `formData.descriptionImages`
+  // and rendered as a clear preview grid UNDER the rich text editor so the
+  // vendor can see which images have been attached to the description.
   const descriptionImageFileRef = useRef<HTMLInputElement | null>(null);
   const [uploadingDescImg, setUploadingDescImg] = useState(false);
 
@@ -73,53 +76,53 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!files.length) return;
     setUploadingDescImg(true);
     try {
-      // Upload each file sequentially and drop each one into the
-      // rich text editor at the cursor (WYSIWYG <img>).
-      let inserted = 0;
+      // Upload each file sequentially and append the returned URL to
+      // the descriptionImages array. The preview grid under the rich
+      // text editor will display them immediately.
+      const uploadedUrls: string[] = [];
       for (const f of files) {
         const fd = new FormData();
         fd.append('attachment', f);
         const r = await api.post('/attachments/upload', fd);
-        const url: string = r.data.url;
-        const alt = (f.name || 'image').replace(/\.[^.]+$/, '');
-        richTextEditorRef.current?.insertImage(url, alt);
-        inserted += 1;
+        const url: string = r.data?.url;
+        if (url) uploadedUrls.push(url);
       }
-      toast.success(
-        inserted === 1
-          ? 'Image inserted into description'
-          : `${inserted} images inserted into description`
-      );
+      if (uploadedUrls.length) {
+        setFormData((prev) => ({
+          ...prev,
+          descriptionImages: [...(prev.descriptionImages ?? []), ...uploadedUrls],
+        }));
+      }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Image upload failed');
+      console.error('Image upload failed:', err.response?.data?.message || err.message);
     } finally {
       setUploadingDescImg(false);
       if (descriptionImageFileRef.current) descriptionImageFileRef.current.value = '';
     }
   };
 
-  // Extract every image URL embedded in the description so the vendor can
-  // preview the images inline. Matches BOTH legacy markdown `![alt](url)`
-  // references AND the WYSIWYG <img src="..."> tags that the rich text
-  // editor now produces.
-  const extractDescriptionImageUrls = (text: string): string[] => {
-    const urls: string[] = [];
-    if (!text) return urls;
-    const md = /!\[([^\]]*)\]\(([^)]+)\)/g;
-    let m: RegExpExecArray | null;
-    while ((m = md.exec(text)) !== null) {
-      urls.push(m[2]);
-    }
-    const img = /<img[^>]+src=["\']([^"\']+)["\'][^>]*>/g;
-    while ((m = img.exec(text)) !== null) {
-      urls.push(m[1]);
-    }
-    return urls;
+  const removeDescriptionImage = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      descriptionImages: (prev.descriptionImages ?? []).filter((u) => u !== url),
+    }));
   };
-
   useEffect(() => {
     if (initialData) {
-      setFormData(prev => ({ ...prev, ...initialData }));
+      // The backend stores description images as `descriptionImagesML.en`
+      // (per-language array). Mirror that into the single `descriptionImages`
+      // array the vendor form uses, so previously uploaded images still
+      // appear in the preview grid after the form is re-opened for editing.
+      const incoming: any = initialData;
+      const descriptionImages: string[] =
+        (Array.isArray(incoming.descriptionImages) && incoming.descriptionImages) ||
+        (Array.isArray(incoming.descriptionImagesML?.en) && incoming.descriptionImagesML.en) ||
+        [];
+      setFormData(prev => ({
+        ...prev,
+        ...incoming,
+        descriptionImages,
+      }));
     }
   }, [initialData]);
 
@@ -353,21 +356,74 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       fontSize: '0.85rem',
                     }}
                   >
-                    {uploadingDescImg ? 'Uploading...' : '+ Insert Image'}
+                    {uploadingDescImg ? 'Uploading...' : '+ Upload Image'}
                   </button>
                 </div>
               </div>
+              {/* Description rich text editor -- ONLY used for text formatting.
+                  Description images are managed OUTSIDE the rich text editor */}
               <RichTextEditor
                 value={formData.description}
                 onChange={(next) => setFormData((prev) => ({ ...prev, description: next }))}
-                images={formData.descriptionImages ?? []}
-                onImagesChange={(next) =>
-                  setFormData((prev) => ({ ...prev, descriptionImages: next }))
-                }
-                editorRef={richTextEditorRef}
                 rows={5}
                 placeholder=""
               />
+              {/* Standalone description image preview grid (NOT inside the
+                  rich text editor). Each tile shows which image is attached
+                  to the description, with a remove button. */}
+              {(formData.descriptionImages ?? []).length > 0 && (
+                <div
+                  style={{
+                    marginTop: '0.75rem',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {(formData.descriptionImages ?? []).map((url, idx) => (
+                    <div
+                      key={`desc-img-${idx}-${url}`}
+                      style={{
+                        position: 'relative',
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: 6,
+                        overflow: 'hidden',
+                        background: colors.inputBg,
+                      }}
+                    >
+                      <img
+                        src={resolveMediaUrl(url) || url}
+                        alt={`Description ${idx + 1}`}
+                        style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+                      />
+                      <button
+                        type="button"
+                        aria-label="Remove description image"
+                        onClick={() => removeDescriptionImage(url)}
+                        style={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          background: colors.buttonGradient,
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 22,
+                          height: 22,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.85rem',
+                          lineHeight: 1,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
