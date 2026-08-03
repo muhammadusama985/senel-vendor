@@ -52,7 +52,20 @@ export const useLocationOptions = (countryName: string) => {
       try {
         const response = await fetch(`/location-data/cities/${selectedCountry.isoCode}.json`);
         const data = (await response.json()) as CityOption[];
-        if (active) setCities(data);
+        // The cities JSON contains every settlement (villages included).
+        // For the dropdown we keep only ONE entry per state/region so the
+        // user picks a state, not a hamlet. This trims tens of thousands
+        // of entries down to ~16-80 manageable options.
+        const seen = new Set<string>();
+        const deduped: CityOption[] = [];
+        for (const entry of data) {
+          const key = entry.stateCode || entry.name;
+          if (key && !seen.has(key)) {
+            seen.add(key);
+            deduped.push(entry);
+          }
+        }
+        if (active) setCities(deduped);
       } catch {
         if (active) setCities([]);
       }
