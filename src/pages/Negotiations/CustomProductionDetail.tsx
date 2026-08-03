@@ -243,17 +243,9 @@ export const CustomProductionDetail: React.FC = () => {
                     rel="noreferrer"
                     style={{ display: 'block', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg }}
                   >
-                    {_isImage ? (
-                      <img
-                        src={_url}
-                        alt={a.filename || a.url}
-                        style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
-                      />
-                    ) : (
-                      <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
-                        {a.filename || a.url}
-                      </div>
-                    )}
+                    <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
+                      {a.filename || a.url}
+                    </div>
                   </a>
                 );
               })}
@@ -327,17 +319,9 @@ export const CustomProductionDetail: React.FC = () => {
                       rel="noreferrer"
                       style={{ display: 'block', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg }}
                     >
-                      {_isImage ? (
-                        <img
-                          src={_url}
-                          alt={a.filename || a.url}
-                          style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
-                        />
-                      ) : (
-                        <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
-                          {a.filename || a.url}
-                        </div>
-                      )}
+                      <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: colors.text, wordBreak: 'break-all' }}>
+                        {a.filename || a.url}
+                      </div>
                     </a>
                   );
                 })}
