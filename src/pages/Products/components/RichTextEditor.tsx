@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import { resolveMediaUrl } from '../../../utils/media';
 
 export interface RichTextEditorHandle {
   /**
@@ -15,6 +16,14 @@ export interface RichTextEditorHandle {
 interface RichTextEditorProps {
   value: string;
   onChange: (next: string) => void;
+  /**
+   * Image URLs to display BELOW the editor as a thumbnail strip with a
+   * delete button on each. The contentEditable never holds any image
+   * markup -- so the URL is never written as visible text in the
+   * description field. Pairs with onImagesChange / insertImage.
+   */
+  images?: string[];
+  onImagesChange?: (next: string[]) => void;
   /** Used so the parent's "Insert Image" button can call insertImage(). */
   editorRef?: React.Ref<RichTextEditorHandle>;
   rows?: number;
@@ -40,7 +49,7 @@ interface RichTextEditorProps {
  * continues 1 -> 2 -> 3 automatically.
  */
 export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
-  ({ value, onChange, rows = 5, placeholder, disabled, style }, ref) => {
+  ({ value, onChange, rows = 5, placeholder, disabled, style, images, onImagesChange }, ref) => {
     const contentRef = useRef<HTMLDivElement | null>(null);
     // Set to true right after we push an internal change into state so the
     // controlled-effect below knows to skip its next sync (otherwise the
@@ -75,60 +84,23 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     useImperativeHandle(
       ref,
       (): RichTextEditorHandle => ({
-        insertImage: (url: string, alt?: string) => {
-          const el = contentRef.current;
-          if (!el) return;
-          el.focus();
-
-          // Build the <img> WITHOUT setting src / alt yet. Setting
-          // img.src before the element is attached to a document is a
-          // known browser quirk where the engine inserts the URL as a
-          // text node next to the image. We attach first, then set
-          // attributes so only the visual <img> ends up in the
-          // contentEditable area -- no URL or alt text leaking out.
-          const img = document.createElement('img');
-          img.className = 'rte-embedded-image';
-          img.style.maxWidth = '100%';
-          img.style.height = 'auto';
-          img.style.display = 'block';
-          img.style.margin = '0.5rem 0';
-          img.style.borderRadius = '4px';
-          img.setAttribute('loading', 'lazy');
-          // Use a generic alt (no URL, no filename) so the description
-          // never shows the image address as visible text on hover or
-          // when the image fails to load.
-          img.setAttribute('alt', '');
-
-          const selection = window.getSelection();
-          if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            // Only honour the selection if it actually lives inside our
-            // editable area (otherwise insert at the end).
-            if (el.contains(range.commonAncestorContainer)) {
-              range.deleteContents();
-              range.insertNode(img);
-              // NOW attach src (after the image is in the DOM).
-              img.setAttribute('src', url);
-              // Insert a trailing <br> so the caret lands on a new line
-              // after the image instead of glued to the right edge.
-              const br = document.createElement('br');
-              img.parentNode?.insertBefore(br, img.nextSibling);
-              range.setStartAfter(br);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-              syncToState();
-              return;
+        insertImage: (url: string) => {
+          if (!url) return;
+          // The image is NOT inserted inline in the contentEditable -- it
+          // is appended to the separate `images` array and rendered as a
+          // thumbnail strip UNDER the description. This keeps the URL out
+          // of the contentEditable entirely, so it never appears as text
+          // in the description.
+          if (onImagesChange) {
+            const current = images ?? [];
+            if (current.indexOf(url) === -1) {
+              onImagesChange([...current, url]);
             }
           }
-          el.appendChild(img);
-          img.setAttribute('src', url);
-          el.appendChild(document.createElement('br'));
-          syncToState();
         },
         focus: () => contentRef.current?.focus(),
       }),
-      [syncToState],
+      [onImagesChange, images],
     );
 
     const exec = (cmd: string) => {
@@ -256,6 +228,46 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             ...style,
           }}
         />
+        {images && images.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              marginTop: 6,
+            }}
+          >
+            {images.map((url, idx) => {
+              const thumbSrc = resolveMediaUrl(url) || url;
+              return (
+                <div
+                  key={`rte-img-${idx}-${url}`}
+                  className="desc-image-chip"
+                  title={url}
+                >
+                  <img
+                    src={thumbSrc}
+                    alt=""
+                    className="desc-image-chip-thumb"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove this image from the description"
+                    className="desc-image-chip-remove"
+                    onClick={() => {
+                      if (disabled) return;
+                      if (onImagesChange) {
+                        onImagesChange((images ?? []).filter((u) => u !== url));
+                      }
+                    }}
+                  >
+                    &#8722;
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   },

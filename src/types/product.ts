@@ -63,6 +63,13 @@ export interface Product {
 export interface ProductFormData {
   title: string;
   description: string;
+  /**
+   * Image URLs embedded in the description. Stored as a separate array
+   * (rather than inline <img> tags inside `description`) so the editor
+   * UI can show them under the description text box, and so the URL is
+   * never visible as text in the contentEditable.
+   */
+  descriptionImages?: string[];
   categoryId: string;
   attributeSetId?: string;
   country?: string;

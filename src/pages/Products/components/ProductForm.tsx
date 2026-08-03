@@ -32,6 +32,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [formData, setFormData] = useState<ProductFormData>({
     title: '',
     description: '',
+    descriptionImages: [],
     categoryId: '',
     attributeSetId: '',
     country: '',
@@ -359,33 +360,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <RichTextEditor
                 value={formData.description}
                 onChange={(next) => setFormData((prev) => ({ ...prev, description: next }))}
+                images={formData.descriptionImages ?? []}
+                onImagesChange={(next) =>
+                  setFormData((prev) => ({ ...prev, descriptionImages: next }))
+                }
                 editorRef={richTextEditorRef}
                 rows={5}
                 placeholder=""
               />
-              {extractDescriptionImageUrls(formData.description).length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  {extractDescriptionImageUrls(formData.description).map((url, idx) => {
-                    const fullUrl = resolveMediaUrl(url);
-                    if (!fullUrl) return null;
-                    return (
-                      <img
-                        key={idx}
-                        src={fullUrl}
-                        alt=""
-                        style={{
-                          width: 80,
-                          height: 80,
-                          objectFit: 'cover',
-                          borderRadius: 6,
-                          border: `1px solid ${colors.border}`,
-                          background: colors.inputBg,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -565,11 +547,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 baseCombination={(formData as any).baseCombination}
                 onBaseCombinationChange={(v) => setFormData(prev => ({ ...prev, baseCombination: v }))}
                 combinationOffsets={(formData as any).combinationOffsets}
-                onCombinationOffsetsChange={(v) =>
+                onCombinationOffsetsChange={(v: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) =>
                   setFormData((prev) => ({
                     ...prev,
                     combinationOffsets:
-                      typeof v === 'function' ? v(prev.combinationOffsets) : v,
+                      typeof v === 'function' ? v(prev.combinationOffsets ?? {}) : v,
                   }))
                 }
                 minEffectiveUnitPrice={(formData as any).minEffectiveUnitPrice}
