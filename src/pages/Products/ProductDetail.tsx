@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
 import { Product } from '../../types/product';
 import { formatCurrency } from '../../utils/formatters';
+import { resolveMediaUrl } from '../../utils/media';
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -223,6 +224,53 @@ export const ProductDetail: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {(() => {
+            // Pull description images from whichever shape the backend
+            // returned -- vendors populate `descriptionImages` (single array)
+            // while admin-created products populate `descriptionImagesML.en`.
+            const dim: any = (product as any).descriptionImagesML;
+            const descImages: string[] = Array.isArray((product as any).descriptionImages)
+              ? ((product as any).descriptionImages as string[])
+              : (Array.isArray(dim?.en) ? (dim.en as string[]) : []);
+            if (!descImages.length) return null;
+            return (
+              <div style={{ ...cardStyle, marginBottom: '2rem' }}>
+                <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>
+                  {t('descriptionImagesLabel', 'Description Images')}
+                </h3>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {descImages.map((url, idx) => (
+                    <a
+                      key={`desc-img-${idx}-${url}`}
+                      href={resolveMediaUrl(url) || url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'block',
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: 6,
+                        overflow: 'hidden',
+                        background: colors.inputBg,
+                      }}
+                    >
+                      <img
+                        src={resolveMediaUrl(url) || url}
+                        alt={`Description ${idx + 1}`}
+                        style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('pricingTiersLabel', 'Pricing Tiers')}</h3>
