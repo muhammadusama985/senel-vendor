@@ -242,3 +242,57 @@ body {
   margin: 0.5rem 0;
   border-radius: 4px;
 }
+
+/* Compact image-management chip: a SMALL thumbnail of every image
+   that has been inserted into the description, with a - delete button
+   anchored to the top-right corner. Sized down (40x40) so the row stays
+   compact even when the vendor inserts many images. */
+.desc-image-chip {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  line-height: 0;
+  border-radius: 5px;
+  border: 1px solid rgba(91, 46, 255, 0.25);
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.desc-image-chip-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.desc-image-chip-remove {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: #d32f2f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.desc-image-chip-remove:hover {
+  background-color: #b71c1c;
+}
+
+.desc-image-chip-remove:focus-visible {
+  outline: 2px solid #5b2eff;
+  outline-offset: 2px;
+}
