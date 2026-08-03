@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../context/I18nContext';
@@ -7,7 +6,6 @@ import { useI18n } from '../context/I18nContext';
 export const Notifications: React.FC = () => {
   const { colors } = useTheme();
   const { language, t } = useI18n();
-  const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,24 +22,6 @@ export const Notifications: React.FC = () => {
   useEffect(() => {
     load();
   }, [language]);
-
-  // Clicking a notification marks it read AND, when the backend has set a
-  // `link` deep-link, jumps straight to that section of the app.
-  const openNotification = async (item: any) => {
-    try {
-      if (!item.isRead) {
-        await api.post(`/notifications/${item._id}/read`);
-        setItems((current) =>
-          current.map((entry) => (entry._id === item._id ? { ...entry, isRead: true } : entry))
-        );
-      }
-    } catch {
-      /* ignore */
-    }
-    if (item.link) {
-      navigate(item.link);
-    }
-  };
 
   return (
     <div style={{ backgroundColor: colors.primary, minHeight: '100vh', color: colors.text, padding: '2rem', borderRadius: '16px' }}>
@@ -73,29 +53,12 @@ export const Notifications: React.FC = () => {
           {items.map((item) => (
             <div
               key={item._id}
-              role="button"
-              tabIndex={0}
-              onClick={() => openNotification(item)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  openNotification(item);
-                }
-              }}
               style={{
                 backgroundColor: colors.cardBg,
                 border: `1px solid ${colors.border}`,
                 borderRadius: '14px',
                 padding: '1.25rem',
                 opacity: item.isRead ? 0.78 : 1,
-                cursor: 'pointer',
-                transition: 'transform 0.1s ease, border-color 0.1s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = colors.accentOrange;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = colors.border;
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
@@ -104,9 +67,9 @@ export const Notifications: React.FC = () => {
                   <button
                     className="vendor-gradient-button"
                     style={{ padding: '0.45rem 0.8rem', borderRadius: '10px', cursor: 'pointer' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openNotification(item);
+                    onClick={async () => {
+                      await api.post(`/notifications/${item._id}/read`);
+                      setItems((current) => current.map((entry) => (entry._id === item._id ? { ...entry, isRead: true } : entry)));
                     }}
                   >
                     {t('read', 'Read')}
