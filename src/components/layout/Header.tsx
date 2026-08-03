@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
+import api from '../../api/client';
 import { Logo } from '../common/Logo';
 
 interface HeaderProps {
@@ -16,6 +17,21 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const { language, setLanguage, t } = useI18n();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const fetchUnread = async () => {
+      try {
+        const response = await api.get('/notifications/me/unread-count');
+        if (alive) setUnreadCount(Number(response.data?.unread || 0));
+      } catch {
+        /* swallow -- silent badge failure */
+      }
+    };
+    void fetchUnread();
+    const id = window.setInterval(fetchUnread, 30000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [vendor]);
   const isMobile = window.innerWidth < 900;
 
   const getVendorStatus = () => {
@@ -140,6 +156,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         aria-label={t('notifications')}
         title={t('notifications')}
         style={{
+          position: 'relative',
           marginRight: '12px',
           width: '42px',
           height: '42px',
@@ -155,6 +172,30 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         }}
       >
         <BellIcon width={20} height={20} strokeWidth={2} />
+        {unreadCount > 0 ? (
+          <span
+            aria-label={`${unreadCount} unread`}
+            style={{
+              position: 'absolute',
+              top: -4,
+              right: -4,
+              minWidth: 18,
+              height: 18,
+              padding: '0 5px',
+              borderRadius: 9,
+              backgroundColor: '#ef4444',
+              color: '#ffffff',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 0 2px #fff',
+            }}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        ) : null}
       </button>
 
       <div style={{ position: 'relative' }}>
