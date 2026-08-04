@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n } from '../../context/I18nContext';
 import api from '../../api/client';
+import { hasNotificationAlertBeenSeen, markNotificationAlertSeen } from '../../utils/notificationAlertStore';
 import { Logo } from '../common/Logo';
 
 interface HeaderProps {
@@ -41,6 +42,56 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     const id = window.setInterval(fetchUnread, 30000);
     return () => { alive = false; window.clearInterval(id); };
   }, [vendor]);
+
+  // Global notification popup: whenever the vendor is signed in (on ANY page),
+  // poll the latest unread notifications and surface any brand-new ones as
+  // a toast-style alert in the top-right corner. Polled every 10s so the popup
+  // surfaces promptly after a new notification arrives.
+  const [alertItem, setAlertItem] = useState<any | null>(null);
+  const alertAutoCloseRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!vendor) {
+      setAlertItem(null);
+      return;
+    }
+    let alive = true;
+    const fetchLatest = async () => {
+      try {
+        const response = await api.get('/notifications/me', {
+          params: { unreadOnly: 'true', limit: 5 },
+        });
+        const items: any[] = Array.isArray(response.data?.items)
+          ? response.data.items
+          : [];
+        if (!alive) return;
+        // Surface the first notification that has not been alerted yet.
+        // IDs are tracked in a shared session-storage store so the
+        // notifications-page popup and this global popup never duplicate.
+        const brandNew = items.find(
+          (n) => n && n._id && !hasNotificationAlertBeenSeen(n._id)
+        );
+        if (brandNew) {
+          markNotificationAlertSeen(brandNew._id);
+          setAlertItem(brandNew);
+        }
+      } catch {
+        /* swallow -- silent popup failure */
+      }
+    };
+    void fetchLatest();
+    const id = window.setInterval(fetchLatest, 10000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [vendor]);
+
+  // Auto-dismiss the popup after 5 seconds.
+  useEffect(() => {
+    if (!alertItem) return;
+    if (alertAutoCloseRef.current) window.clearTimeout(alertAutoCloseRef.current);
+    alertAutoCloseRef.current = window.setTimeout(() => setAlertItem(null), 5000);
+    return () => {
+      if (alertAutoCloseRef.current) window.clearTimeout(alertAutoCloseRef.current);
+    };
+  }, [alertItem]);
 
   const getVendorStatus = () => {
     if (!vendor) return t('notLoggedIn');
@@ -81,6 +132,59 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         `,
       }}
     >
+      {/* Global notification popup alert (top-right, auto-dismisses after 5s).
+          Rendered here so it appears regardless of which page the vendor is on. */}
+      {alertItem ? (
+        <div
+          role="alertdialog"
+          aria-live="assertive"
+          style={{
+            position: 'fixed',
+            top: 80,
+            right: 20,
+            zIndex: 1300,
+            maxWidth: 360,
+            background: colors.cardBg,
+            border: `1px solid ${colors.border}`,
+            borderLeft: '4px solid #ef4444',
+            borderRadius: 12,
+            padding: '0.85rem 1rem',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
+            color: colors.text,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.35rem',
+          }}
+        >
+          <strong style={{ fontSize: '0.95rem' }}>{alertItem.title}</strong>
+          {alertItem.body ? (
+            <span style={{ fontSize: '0.85rem', color: colors.textMuted, lineHeight: 1.4 }}>
+              {alertItem.body}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setAlertItem(null)}
+            aria-label="Dismiss"
+            style={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              border: 'none',
+              background: 'transparent',
+              color: colors.textMuted,
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
       {toggleSidebar && (
         <button
           aria-label={t('menuOpen', 'Open drawer')}

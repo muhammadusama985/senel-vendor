@@ -13,7 +13,8 @@ export const Notifications: React.FC = () => {
     setLoading(true);
     try {
       const response = await api.get('/notifications/me');
-      setItems(response.data.items || []);
+      const next = Array.isArray(response.data.items) ? response.data.items : [];
+      setItems(next);
     } finally {
       setLoading(false);
     }
@@ -39,6 +40,7 @@ export const Notifications: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: colors.primary, minHeight: '100vh', color: colors.text, padding: '2rem', borderRadius: '16px' }}>
+      {/* Notification popup alert is rendered globally by the Header. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{t('notificationsTitle', 'Notifications')}</h1>
