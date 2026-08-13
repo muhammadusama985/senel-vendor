@@ -293,37 +293,25 @@ export const ProductList: React.FC = () => {
                         </button>
                       )}
                       {product.status === 'draft' && (
-                        <>
-                        <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
-                            {t('editLabel')}
-                          </button>
-                          <button
-                            onClick={() => handleSubmit(product._id)}
-                            disabled={submitting === product._id}
-                            style={{ ...actionButton, opacity: submitting === product._id ? 0.55 : 1, cursor: submitting === product._id ? 'not-allowed' : 'pointer' }}
-                          >
-                            {submitting === product._id ? '...' : t('submitLabel')}
-                          </button>
-                          <button onClick={() => handleDelete(product._id)} style={actionButton}>
-                            {t('deleteLabel')}
-                          </button>
-                        </>
-                      )}
-                      {/* Edit and Delete for non-draft rows where the backend
-                          allows the action (any status except 'approved',
-                          and for Edit also except 'blocked'). Drafts already
-                          render these inside the draft-only block above, so
-                          we skip them here to avoid duplicates. */}
-                      {product.status !== 'draft' && product.status !== 'approved' && (
-                        <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
-                          {t('editLabel')}
+                        <button
+                          onClick={() => handleSubmit(product._id)}
+                          disabled={submitting === product._id}
+                          style={{ ...actionButton, opacity: submitting === product._id ? 0.55 : 1, cursor: submitting === product._id ? 'not-allowed' : 'pointer' }}
+                        >
+                          {submitting === product._id ? '...' : t('submitLabel')}
                         </button>
                       )}
-                      {product.status !== 'draft' && product.status !== 'approved' && (
-                        <button onClick={() => handleDelete(product._id)} style={actionButton}>
-                          {t('deleteLabel')}
-                        </button>
-                      )}
+                      {/* Edit and Delete are rendered for EVERY product row,
+                          regardless of status. The backend may reject the action
+                          (e.g. approved products cannot be edited or deleted);
+                          in that case the existing toast in useProducts shows the
+                          server message. */}
+                      <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
+                        {t('editLabel')}
+                      </button>
+                      <button onClick={() => handleDelete(product._id)} style={actionButton}>
+                        {t('deleteLabel')}
+                      </button>
                     </div>
                   </td>
                 </tr>
