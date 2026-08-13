@@ -79,13 +79,34 @@ export const ProductEdit: React.FC = () => {
         padding: '1rem',
       }}
     >
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
-          {t('editProductTitle')}
-        </h1>
-        <p style={{ color: colors.textMuted }}>
-          {t('updateProductInformation')}
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => navigate('/products')}
+          style={{
+            background: 'transparent',
+            color: colors.text,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            padding: '0.5rem 1rem',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+          }}
+        >
+          ← {t('back')}
+        </button>
+        <div>
+          <h1 style={{ color: colors.text, fontSize: '2rem', fontWeight: 'bold' }}>
+            {t('editProductTitle')}
+          </h1>
+          <p style={{ color: colors.textMuted }}>
+            {t('updateProductInformation')}
+          </p>
+        </div>
       </div>
 
       <div
