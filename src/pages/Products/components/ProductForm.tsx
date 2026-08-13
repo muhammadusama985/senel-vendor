@@ -10,6 +10,7 @@ import { RequestCategoryModal } from '../../../components/common/RequestCategory
 import api from '../../../api/client';
 import toast from 'react-hot-toast';
 import { resolveMediaUrl } from '../../../utils/media';
+import { useLocationOptions } from '../../../hooks/useLocationOptions';
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -57,6 +58,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     heightCm: 0,
     ...initialData,
   });
+
+  const { countries } = useLocationOptions(formData.country ?? '');
 
   const [uploading, setUploading] = useState(false);
   const [showRequestCategoryModal, setShowRequestCategoryModal] = useState(false);
@@ -468,13 +471,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
                   {t('countryLabel')}
                 </label>
-                <input
-                  type="text"
+                <select
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
                   style={inputStyle}
-                />
+                >
+                  <option value="">{t('selectCountry', 'Select country')}</option>
+                  {countries.map((country) => (
+                    <option key={country.isoCode} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
