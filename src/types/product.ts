@@ -16,6 +16,13 @@ export interface Product {
   title: string;
   slug: string;
   description: string;
+  /**
+   * Vendor-facing stock-keeping unit code. Surfaced in the vendor
+   * product list so vendors can identify a product at a glance
+   * (for products with no variants). When variants are present, the
+   * code is sourced from `variants[0].sku` instead.
+   */
+  sku?: string;
   categoryId: string;
   attributeSetId?: string | null;
   moq: number;
