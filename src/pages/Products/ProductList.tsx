@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useTheme } from '../../context/ThemeContext';
@@ -308,6 +308,21 @@ export const ProductList: React.FC = () => {
                             {t('deleteLabel')}
                           </button>
                         </>
+                      )}
+                      {/* Edit and Delete for non-draft rows where the backend
+                          allows the action (any status except 'approved',
+                          and for Edit also except 'blocked'). Drafts already
+                          render these inside the draft-only block above, so
+                          we skip them here to avoid duplicates. */}
+                      {product.status !== 'draft' && product.status !== 'approved' && (
+                        <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
+                          {t('editLabel')}
+                        </button>
+                      )}
+                      {product.status !== 'draft' && product.status !== 'approved' && (
+                        <button onClick={() => handleDelete(product._id)} style={actionButton}>
+                          {t('deleteLabel')}
+                        </button>
                       )}
                     </div>
                   </td>
