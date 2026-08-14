@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import { ProductFormData, Category } from '../../../types/product';
 import { PriceTierEditor } from './PriceTierEditor';
@@ -331,38 +331,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <label style={{ display: 'block', color: colors.text }}>
-                  {t('descriptionLabel')}
-                </label>
-                <div>
-                  <input
-                    ref={descriptionImageFileRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: 'none' }}
-                    onChange={handleDescriptionImageChange}
-                    disabled={uploadingDescImg}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => descriptionImageFileRef.current?.click()}
-                    disabled={uploadingDescImg}
-                    style={{
-                      padding: '0.35rem 0.75rem',
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: 6,
-                      background: colors.cardBg,
-                      color: colors.text,
-                      cursor: uploadingDescImg ? 'wait' : 'pointer',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    {uploadingDescImg ? 'Uploading...' : '+ Upload Image'}
-                  </button>
-                </div>
-              </div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: colors.text }}>
+                {t('descriptionLabel')}
+              </label>
               {/* Description rich text editor -- ONLY used for text formatting.
                   Description images are managed OUTSIDE the rich text editor */}
               <RichTextEditor
@@ -371,6 +342,33 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 rows={5}
                 placeholder=""
               />
+              <div style={{ marginTop: '0.75rem' }}>
+                <input
+                  ref={descriptionImageFileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleDescriptionImageChange}
+                  disabled={uploadingDescImg}
+                />
+                <button
+                  type="button"
+                  onClick={() => descriptionImageFileRef.current?.click()}
+                  disabled={uploadingDescImg}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 6,
+                    background: colors.cardBg,
+                    color: colors.text,
+                    cursor: uploadingDescImg ? 'wait' : 'pointer',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {uploadingDescImg ? 'Uploading...' : 'Upload description images'}
+                </button>
+              </div>
               {/* Standalone description image preview grid (NOT inside the
                   rich text editor). Each tile shows which image is attached
                   to the description, with a remove button. */}
