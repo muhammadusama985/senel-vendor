@@ -78,7 +78,22 @@ export const useAuthStore = create<AuthState>((set) => ({
         email, 
         password
       });
-      
+
+      const user = response.data?.user;
+      // Vendor-only guard: the vendor app must only accept vendor
+      // accounts. If a customer / admin tries to log in here, refuse to
+      // store the session and surface a clear error.
+      if (!user || user.role !== 'vendor') {
+        const wrongRoleError: any = new Error(
+          'This account is not a vendor account. Please use the customer or admin login.'
+        );
+        wrongRoleError.code = 'WRONG_ROLE';
+        wrongRoleError.userRole = user?.role;
+        localStorage.removeItem('vendorToken');
+        set({ vendor: null, isLoading: false, error: wrongRoleError.message });
+        throw wrongRoleError;
+      }
+
       const { accessToken } = response.data;
       localStorage.setItem('vendorToken', accessToken);
       

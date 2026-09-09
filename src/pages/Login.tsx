@@ -119,7 +119,20 @@ export const Login: React.FC = () => {
       if (Object.keys(apiFieldErrors).length > 0) {
         setFieldErrors(apiFieldErrors);
       }
-      toast.error(err.message || t('loginFailed'), {
+      // Prefer the backend's specific message (e.g. "Email not registered",
+      // "Incorrect password"), then role-guard errors thrown by the store,
+      // then generic fallbacks.
+      let errorMsg =
+        (err.response?.data?.message) ||
+        err.response?.data?.issues?.[0]?.message ||
+        err.message ||
+        t('loginFailed');
+      if (err.response?.status === 401 && !err.response?.data?.message) {
+        errorMsg = 'Incorrect password';
+      } else if (err.response?.status === 404 && !err.response?.data?.message) {
+        errorMsg = 'Email not registered';
+      }
+      toast.error(errorMsg, {
         style: { backgroundColor: colors.accentRed, color: '#ffffff' },
       });
     } finally {
