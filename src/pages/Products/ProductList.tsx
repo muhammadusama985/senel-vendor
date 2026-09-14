@@ -301,14 +301,10 @@ export const ProductList: React.FC = () => {
                           {submitting === product._id ? '...' : t('submitLabel')}
                         </button>
                       )}
-                      {/* Edit and Delete are rendered for EVERY product row,
-                          regardless of status. The backend may reject the action
-                          (e.g. approved products cannot be edited or deleted);
-                          in that case the existing toast in useProducts shows the
+                      {/* Delete is rendered for EVERY product row, regardless
+                          of status. The backend may reject the action; in that
+                          case the existing toast in useProducts shows the
                           server message. */}
-                      <button onClick={() => navigate(`/products/${product._id}/edit`)} style={actionButton}>
-                        {t('editLabel')}
-                      </button>
                       <button onClick={() => handleDelete(product._id)} style={actionButton}>
                         {t('deleteLabel')}
                       </button>
