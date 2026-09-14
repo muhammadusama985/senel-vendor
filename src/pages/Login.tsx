@@ -84,11 +84,23 @@ export const Login: React.FC = () => {
       const { vendor } = useAuthStore.getState();
 
       if (!vendor) {
-        toast.success(t('completeVendorProfile'), {
-          style: { backgroundColor: colors.accentBlue, color: '#ffffff' },
-          duration: 4000,
-        });
-        navigate('/store/complete-profile');
+        // The account exists as a vendor user, but no vendor profile was found.
+        // If the user just registered, guide them to complete the profile.
+        // Otherwise the vendor is not registered -> show a clear error instead
+        // of silently moving them to the store page.
+        if (location.state?.fromRegistration) {
+          toast.success(t('completeVendorProfile'), {
+            style: { backgroundColor: colors.accentBlue, color: '#ffffff' },
+            duration: 4000,
+          });
+          navigate('/store/complete-profile');
+        } else {
+          toast.error(t('vendorNotRegistered'), {
+            style: { backgroundColor: colors.accentRed, color: '#ffffff' },
+            duration: 5000,
+          });
+          return;
+        }
       } else if (vendor.status === 'submitted' || vendor.status === 'under_review') {
         toast(t('accountPendingApproval'), {
           style: { backgroundColor: colors.accentOrange, color: '#ffffff' },
