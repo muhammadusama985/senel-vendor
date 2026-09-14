@@ -177,7 +177,7 @@ export const ProductDetail: React.FC = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ ...cardStyle, marginBottom: '1rem' }}>
             <img src={mainImage} alt={product.title} style={{ width: '100%', height: '400px', objectFit: 'contain' }} />
           </div>
@@ -203,7 +203,7 @@ export const ProductDetail: React.FC = () => {
           )}
         </div>
 
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ ...cardStyle, marginBottom: '2rem' }}>
             <h3 style={{ color: colors.text, marginBottom: '0.5rem' }}>{t('descriptionLabel', 'Description')}</h3>
             <div
@@ -213,12 +213,18 @@ export const ProductDetail: React.FC = () => {
                 // instead of pushing the rest of the view page down.
                 maxHeight: '220px',
                 overflowY: 'auto',
+                // Clip + wrap long unbroken strings (URLs, words) so the
+                // description never widens the layout into horizontal
+                // scrolling on the full page.
+                overflowX: 'hidden',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
                 paddingRight: '0.5rem',
               }}
             >
               <p
                 className="vendor-product-description-text"
-                style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0 }}
+                style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}
               >
                 {product.description || t('noDescriptionProvided', 'No description provided.')}
               </p>
