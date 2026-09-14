@@ -222,12 +222,44 @@ export const ProductDetail: React.FC = () => {
                 paddingRight: '0.5rem',
               }}
             >
-              <p
-                className="vendor-product-description-text"
-                style={{ color: colors.textMuted, lineHeight: '1.6', margin: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}
-              >
-                {product.description || t('noDescriptionProvided', 'No description provided.')}
-              </p>
+              {product.description ? (
+                <div
+                  className="vendor-product-description-text"
+                  style={{
+                    color: colors.textMuted,
+                    lineHeight: '1.6',
+                    margin: 0,
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: (() => {
+                      // Descriptions are stored as rich-text HTML (produced by
+                      // the WYSIWYG editor). Render it normally so the tags are
+                      // not shown literally; plain-text descriptions keep their
+                      // line breaks.
+                      let html = product.description;
+                      if (!/<[a-z][\s\S]*>/i.test(html)) {
+                        html = html.replace(/\n/g, '<br>');
+                      }
+                      return html;
+                    })(),
+                  }}
+                />
+              ) : (
+                <p
+                  className="vendor-product-description-text"
+                  style={{
+                    color: colors.textMuted,
+                    lineHeight: '1.6',
+                    margin: 0,
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {t('noDescriptionProvided', 'No description provided.')}
+                </p>
+              )}
             </div>
           </div>
 
