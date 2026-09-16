@@ -12,6 +12,7 @@ export const PendingApproval: React.FC = () => {
   const { vendor, logout } = useAuthStore();
 
   const handleLogout = () => {
+    if (!window.confirm(t('logoutConfirm', 'Are you sure you want to logout?'))) return;
     logout();
     navigate('/login');
   };

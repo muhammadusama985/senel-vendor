@@ -58,6 +58,11 @@ export interface Vendor {
   verification: VendorVerification;
   controls: VendorControls;
   isVerified: boolean;
+  status?: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'blocked';
+  isVerifiedBadge?: boolean;
+  reviewedByAdminId?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
   logoUrl?: string;
   bannerUrl?: string;
   business?: {

@@ -202,6 +202,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.title.trim()) {
+      alert('Please enter a product title.');
+      return;
+    }
+    if (!formData.categoryId) {
+      alert('Please select a category.');
+      return;
+    }
+    if (!formData.moq || Number(formData.moq) < 1) {
+      alert('Please enter a minimum order quantity (MOQ).');
+      return;
+    }
+    if (!formData.imageUrls.length) {
+      alert('Please upload at least one product image.');
+      return;
+    }
+
     const sortedTiers = [...formData.priceTiers].sort((a, b) => a.minQty - b.minQty);
     if (sortedTiers.some((tier) => tier.minQty < 1 || tier.unitPrice < 0)) {
       alert(t('failedUpdateProduct', 'Each price tier must have a valid minimum quantity and unit price.'));
@@ -325,7 +342,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                required
                 style={inputStyle}
               />
             </div>
@@ -436,7 +452,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   name="categoryId"
                   value={formData.categoryId}
                   onChange={handleChange}
-                  required
                   style={inputStyle}
                 >
                   <option value="" style={{ color: colors.text }}>{t('category')} *</option>
@@ -517,7 +532,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 placeholder="Enter MOQ"
                 onChange={handleNumberChange}
                 min="1"
-                required
                 style={{
                   ...inputStyle,
                   width: '200px',

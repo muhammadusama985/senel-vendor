@@ -315,7 +315,7 @@ export const CustomProductionDetail: React.FC = () => {
             {m.message && <p style={{ margin: '0.25rem 0', whiteSpace: 'pre-wrap' }}>{m.message}</p>}
             {m.attachments && m.attachments.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
-                {m.attachments.map((a, idx) => {
+                {m.attachments.map((a: any, idx: number) => {
                   const _url = resolveMediaUrl(a.url);
                   if (!_url) return null;
                   const _isImage = (a.mimeType ? a.mimeType.startsWith('image/') : true) && /\.(png|jpe?g|gif|webp|bmp|svg|tiff?|heic|heif|avif|apng|jxl|ico)(\?|#|$)/i.test(_url);

@@ -434,6 +434,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <button
                 onClick={() => {
                   setShowDropdown(false);
+                  if (!window.confirm(t('logoutConfirm', 'Are you sure you want to logout?'))) return;
                   logout();
                 }}
                 style={{ ...menuButtonStyle(colors), color: '#d32f2f', fontWeight: 'bold' }}
