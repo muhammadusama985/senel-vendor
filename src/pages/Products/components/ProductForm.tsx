@@ -279,7 +279,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         Object.entries(variant.attributes || {}).some(([key, value]) => !String(key || '').trim() || !String(value || '').trim())
       );
       if (hasInvalidAttributes) {
-        alert(t('attributesOptionsHelp'));
+        alert('Please enter all values.');
         return;
       }
     }
